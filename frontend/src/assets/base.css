@@ -21,33 +21,44 @@
   --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
 }
 
-/* semantic color variables for this project */
 :root {
-  --color-background: var(--vt-c-white);
-  --color-background-soft: var(--vt-c-white-soft);
-  --color-background-mute: var(--vt-c-white-mute);
+  /* --- 羊皮纸浅色系 (Light Mode Palette) --- */
+  --dnd-parchment-bg: #f0e6d2; /* 大背景：米黄羊皮纸 */
+  --dnd-parchment-card: #e6d8b8; /* 卡片/侧边栏：深一点的羊皮纸 */
+  --dnd-ink-primary: #2b2118; /* 文字：深褐色墨水 */
+  --dnd-ink-secondary: #75604e; /* 次要文字：浅褐色 */
 
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
+  /* --- 地牢深色系 (Dark Mode Palette) --- */
+  --dnd-dungeon-bg: #1a1b20; /* 大背景：深岩灰 */
+  --dnd-dungeon-card: #25262e; /* 卡片/侧边栏：稍亮的岩石 */
+  --dnd-mithral-text: #e0e0e0; /* 文字：秘银白 */
+  --dnd-stone-text: #a0a0b0; /* 次要文字：石头灰 */
 
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: var(--vt-c-text-light-1);
-
-  --section-gap: 160px;
+  /* --- 通用强调色 (Accents) --- */
+  --dnd-dragon-red: #8a1c1c; /* 龙血红：用于主按钮、重要链接 */
+  --dnd-dragon-red-hover: #a62222; /* 龙血红高亮 */
+  --dnd-gold: #c5a059; /* 古金：用于边框、图标 */
+  --dnd-gold-dim: rgba(197, 160, 89, 0.2); /* 金色微光背景 */
+  --dnd-magic-blue: #5b8bd1; /* 魔法蓝：用于选中态或链接 */
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-background: var(--vt-c-black);
-    --color-background-soft: var(--vt-c-black-soft);
-    --color-background-mute: var(--vt-c-black-mute);
+:root {
+  --color-background: var(--dnd-parchment-bg);
+  --color-background-soft: var(--dnd-parchment-card);
+  --color-background-mute: var(--dnd-parchment-card); /* 用于侧边栏 */
 
-    --color-border: var(--vt-c-divider-dark-2);
-    --color-border-hover: var(--vt-c-divider-dark-1);
+  --color-border: #d4c5a3; /* 浅色边框 */
+  --color-border-hover: var(--dnd-gold);
 
-    --color-heading: var(--vt-c-text-dark-1);
-    --color-text: var(--vt-c-text-dark-2);
-  }
+  --color-heading: var(--dnd-ink-primary);
+  --color-text: var(--dnd-ink-primary);
+  --color-text-soft: var(--dnd-ink-secondary);
+
+  --color-primary: var(--dnd-dragon-red); /* 新增：主色 */
+  --color-primary-hover: var(--dnd-dragon-red-hover);
+  --color-accent: var(--dnd-gold); /* 新增：强调色 */
+
+  --section-gap: 160px;
 }
 
 *,

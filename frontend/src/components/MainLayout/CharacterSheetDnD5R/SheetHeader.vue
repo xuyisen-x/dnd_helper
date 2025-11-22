@@ -12,6 +12,14 @@ const sheet = computed({
 })
 
 const { totalLevel } = useDnd5rLogic(sheet)
+
+// 处理只允许输入正整数的函数
+const handleNumberInput = (e: Event) => {
+  const target = e.target as HTMLInputElement
+  const cleanValue = target.value.replace(/\D/g, '') // 1. 移除所有非数字字符
+  target.value = cleanValue === '' ? '0' : cleanValue // 2. 更新输入框显示
+  sheet.value.basic.xp = cleanValue === '' ? 0 : Number(cleanValue) // 3. 更新数据模型
+}
 </script>
 
 <template>
@@ -37,12 +45,17 @@ const { totalLevel } = useDnd5rLogic(sheet)
           <label>背景</label>
         </div>
         <div class="field-group">
-          <input type="text" v-model.number="sheet.basic.xp" />
+          <input
+            type="text"
+            :value="sheet.basic.xp"
+            inputmode="numeric"
+            @input="handleNumberInput"
+          />
           <label>经验值</label>
         </div>
 
         <div class="field-group highlight-group">
-          <input class="static-val" type="text" v-model.number="totalLevel" disabled />
+          <input class="static-val" type="text" :value="totalLevel" disabled />
           <label>总等级</label>
         </div>
       </div>

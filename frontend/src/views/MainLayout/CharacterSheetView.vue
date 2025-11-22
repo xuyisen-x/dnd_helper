@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import CharacterSheetDnD5R from '@/components/MainLayout/CharacterSheetDnD5R.vue'
+import { defineAsyncComponent } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
+
+const CharacterSheetDnD5R = defineAsyncComponent(
+  () => import('@/components/MainLayout/CharacterSheetDnD5R.vue'),
+)
 
 const activeCharacterStore = useActiveCharacterStore()
 

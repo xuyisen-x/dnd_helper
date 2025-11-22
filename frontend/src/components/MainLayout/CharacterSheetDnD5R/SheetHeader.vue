@@ -1,17 +1,50 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useActiveCharacterStore } from '@/stores/active-character'
+import type { Dnd5rData } from '@/stores/rules/dnd5r'
+import { useDnd5rLogic } from '@/composables/rules/useDnd5rLogic'
+
+const store = useActiveCharacterStore()
+
+const sheet = computed({
+  get: () => store.data as Dnd5rData,
+  set: (val) => (store.data = val),
+})
+
+const { totalLevel } = useDnd5rLogic(sheet)
+</script>
+
 <template>
-  <header class="sheet-header">
-    <div class="header-main">
+  <header class="sheet-header" v-if="sheet">
+    <div class="top-section">
       <div class="char-name-box">
-        <input type="text" class="input-title" />
+        <input
+          type="text"
+          v-model="sheet.basic.name"
+          class="input-title"
+          placeholder="未命名角色"
+        />
         <label>角色姓名</label>
       </div>
-      <div class="char-info-grid">
-        <div class="field-group"><input type="text" /><label>职业 & 等级</label></div>
-        <div class="field-group"><input type="text" /><label>背景</label></div>
-        <div class="field-group"><input type="text" /><label>玩家名称</label></div>
-        <div class="field-group"><input type="text" /><label>种族</label></div>
-        <div class="field-group"><input type="text" /><label>阵营</label></div>
-        <div class="field-group"><input type="text" /><label>经验值</label></div>
+
+      <div class="info-grid">
+        <div class="field-group">
+          <input type="text" v-model="sheet.basic.race" />
+          <label>种族</label>
+        </div>
+        <div class="field-group">
+          <input type="text" v-model="sheet.basic.background" />
+          <label>背景</label>
+        </div>
+        <div class="field-group">
+          <input type="text" v-model.number="sheet.basic.xp" />
+          <label>经验值</label>
+        </div>
+
+        <div class="field-group highlight-group">
+          <input class="static-val" type="text" v-model.number="totalLevel" disabled />
+          <label>总等级</label>
+        </div>
       </div>
     </div>
   </header>
@@ -20,41 +53,95 @@
 <style scoped>
 .sheet-header {
   margin-bottom: 20px;
-  border-bottom: 3px double var(--dnd-gold, #c5a059);
-  padding-bottom: 10px;
-}
-.header-main {
-  display: flex;
-  gap: 20px;
-}
-.char-name-box {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  gap: 15px;
+}
+
+/* --- 上半部分布局 --- */
+.top-section {
+  display: flex;
+  gap: 20px;
+  align-items: flex-end; /* 底部对齐 */
+}
+
+/* 姓名栏 */
+.char-name-box {
+  flex: 1; /* 占据剩余空间 */
+  min-width: 200px;
 }
 .input-title {
-  font-size: 1.5rem;
+  font-size: 2rem; /* 姓名特别大 */
   font-weight: bold;
-  height: 40px;
+  height: 50px;
+  font-family: 'Georgia', serif;
 }
-.char-info-grid {
+
+/* 右侧信息网格 */
+.info-grid {
   flex: 2;
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 10px;
-  background: var(--color-background-soft);
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid var(--color-border);
+  grid-template-columns: 1fr 1fr 1fr 80px; /* 最后一列给总等级留窄一点 */
+  gap: 15px;
+  padding: 10px 15px;
+  background-color: rgba(0, 0, 0, 0.03); /* 极淡的背景区分 */
+  border-radius: 6px;
+  border: 1px solid var(--color-border, #e0e0e0);
 }
+
+.class-row {
+  display: flex;
+  gap: 15px;
+  align-items: flex-end;
+  margin-bottom: 8px;
+  background: rgba(255, 255, 255, 0.3);
+  padding: 5px;
+  border-radius: 4px;
+}
+
+.col-class {
+  flex: 1.5;
+}
+.col-subclass {
+  flex: 2;
+}
+.col-level {
+  width: 60px;
+}
+.col-actions {
+  width: 30px;
+  display: flex;
+  justify-content: center;
+  padding-bottom: 5px;
+}
+
+/* 文本居中辅助类 */
+.text-center {
+  text-align: center;
+}
+
+/* --- 通用 Label 样式 (复用 D&D 风格) --- */
 .field-group {
   display: flex;
-  flex-direction: column-reverse; /* Label 在下 */
+  flex-direction: column-reverse;
 }
 .field-group label {
-  font-size: 0.7rem;
-  text-transform: uppercase;
+  font-size: 1rem;
   color: var(--dnd-ink-secondary);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.highlight-group .static-val {
+  font-weight: bold;
+  color: var(--dnd-dragon-red);
+}
+
+.info-grid input {
+  font-size: 1.2rem;
+  text-align: center;
+  color: var(--dnd-ink-primary);
 }
 </style>

@@ -88,7 +88,6 @@ export interface Dnd5rData {
   // --- 基础信息 ---
   basic: {
     name: string
-    playerName: string
     background: string
     race: string
     classes: ClassItemDnd5r[] // 职业列表
@@ -149,7 +148,6 @@ export function createEmptyDnd5rData(): Dnd5rData {
   return {
     basic: {
       name: '',
-      playerName: '',
       classes: [],
       background: '',
       race: '',

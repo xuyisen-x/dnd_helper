@@ -70,16 +70,4 @@
   min-height: 400px;
   min-width: 500px;
 }
-
-.icon {
-  margin-right: 6px;
-}
-
-::v-deep(.loading-container) {
-  display: flex;
-  justify-content: center; /* 水平居中 */
-  align-items: center; /* 垂直居中 */
-  height: 100%; /* 保证填满父容器 */
-  width: 100%;
-}
 </style>

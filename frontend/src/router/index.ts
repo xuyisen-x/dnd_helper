@@ -10,6 +10,7 @@ const router = createRouter({
     {
       path: '/main',
       name: 'main',
+      redirect: '/main/character-sheet',
       component: () => import('../views/MainLayout.vue'),
       children: [
         {

@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import CharacterSheetV5 from '@/views/MainLayout/CharacterSheetViewCompents/CharacterSheetV5R.vue'
+import CharacterSheetDnD5R from '@/components/MainLayout/CharacterSheetDnD5R.vue'
+import { useActiveCharacterStore } from '@/stores/active-character'
+
+const activeCharacterStore = useActiveCharacterStore()
 
 // 这里是后续连接后端逻辑的入口
 const handleSave = () => {
@@ -20,7 +23,7 @@ const handleLoad = () => {
         <button class="dnd-btn btn-primary" @click="handleLoad">读取档案</button>
         <button class="dnd-btn btn-primary" @click="handleSave">保存角色</button>
       </div>
-      <CharacterSheetV5 />
+      <CharacterSheetDnD5R v-if="activeCharacterStore.rule === 'dnd5r'" />
     </div>
   </div>
 </template>

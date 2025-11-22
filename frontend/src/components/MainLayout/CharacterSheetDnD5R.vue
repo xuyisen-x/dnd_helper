@@ -63,6 +63,20 @@ const currentComponent = computed(() => tabs[currentTab.value]) // 计算当前�
   background-color: rgba(255, 255, 255, 0.2);
 }
 
+/* 可以点击的东西 */
+:deep(.clickable) {
+  cursor: pointer;
+  transition:
+    opacity 0.2s,
+    color 0.2s;
+}
+:deep(.clickable:hover) {
+  color: var(--dnd-dragon-red);
+}
+:deep(.clickable:active) {
+  transform: scale(0.95);
+}
+
 /* --- Tabs --- */
 .sheet-tabs {
   display: flex;

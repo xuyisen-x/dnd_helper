@@ -25,7 +25,12 @@
     <div class="divider"></div>
 
     <footer class="credits-section">
-      <h3>致谢 Credits</h3>
+      <h3>Tips</h3>
+      <div class="credit-item">
+        <p>单击调整值，可以在计算基础上添加额外调整值</p>
+      </div>
+      <br />
+      <h3>致谢</h3>
       <div class="credit-item">
         <strong>Icons / 图标素材</strong>
         <p>

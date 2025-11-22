@@ -81,7 +81,41 @@ export interface ClassItemDnd5r {
 }
 
 // ==========================================
-// 2. 核心数据结构定义
+// 2. 辅助映射表
+// ==========================================
+
+export const DND5R_ABILITY_FULL_NAMES: Record<SixAbilityKeysDnd5r, string> = {
+  str: '力量',
+  dex: '敏捷',
+  con: '体质',
+  int: '智力',
+  wis: '感知',
+  cha: '魅力',
+}
+
+export const DND5R_SKILL_FULL_NAMES: Record<keyof SkillsListDnd5r, string> = {
+  athletics: '运动',
+  acrobatics: '体操',
+  sleight_of_hand: '巧手',
+  stealth: '隐匿',
+  arcana: '奥秘',
+  history: '历史',
+  investigation: '调查',
+  nature: '自然',
+  religion: '宗教',
+  animal_handling: '驯兽',
+  insight: '洞悉',
+  medicine: '医药',
+  perception: '察觉',
+  survival: '求生',
+  deception: '欺瞒',
+  intimidation: '威吓',
+  performance: '表演',
+  persuasion: '说服',
+}
+
+// ==========================================
+// 3. 核心数据结构定义
 // ==========================================
 
 export interface Dnd5rData {
@@ -141,7 +175,7 @@ export interface Dnd5rData {
 }
 
 // ==========================================
-// 3. 工厂函数 (类型也随之更新)
+// 4. 工厂函数 (类型也随之更新)
 // ==========================================
 
 export function createEmptyDnd5rData(): Dnd5rData {

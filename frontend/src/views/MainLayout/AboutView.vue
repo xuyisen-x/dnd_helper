@@ -27,7 +27,7 @@
     <footer class="credits-section">
       <h3>Tips</h3>
       <div class="credit-item">
-        <p>单击调整值，可以在计算基础上添加额外调整值</p>
+        <p>单击调整值，可以在计算得到的调整值基础上添加额外调整值</p>
       </div>
       <br />
       <h3>致谢</h3>
@@ -54,7 +54,7 @@
   max-width: 600px;
   margin: 0 auto;
   padding: 40px 20px;
-  color: var(--dnd-ink-primary, #333); /* 适配你的主题色 */
+  color: var(--dnd-ink-primary); /* 适配你的主题色 */
 }
 
 /* 简介区域 */
@@ -64,11 +64,11 @@
 }
 .intro-section h2 {
   margin-bottom: 1rem;
-  color: var(--dnd-dragon-red, #8a1c1c); /* 标题用主题红 */
+  color: var(--dnd-dragon-red); /* 标题用主题红 */
 }
 .description {
   line-height: 1.6;
-  color: var(--dnd-ink-secondary, #666);
+  color: var(--dnd-ink-secondary);
 }
 
 /* GitHub 链接卡片 */
@@ -118,15 +118,15 @@
   font-size: 1rem;
   margin-bottom: 1rem;
   text-transform: uppercase;
-  color: var(--dnd-ink-secondary, #666);
-  border-left: 3px solid var(--dnd-gold, #c5a059); /* 左侧加个金色装饰条 */
+  color: var(--dnd-ink-secondary);
+  border-left: 3px solid var(--dnd-gold); /* 左侧加个金色装饰条 */
   padding-left: 10px;
 }
 
 .credit-item p {
   margin: 4px 0;
   line-height: 1.5;
-  color: var(--dnd-ink-secondary, #555);
+  color: var(--dnd-ink-secondary);
 }
 
 .license-info {
@@ -137,7 +137,7 @@
 
 /* 链接样式 */
 a {
-  color: var(--dnd-dragon-red, #b93b3b);
+  color: var(--dnd-dragon-red);
   text-decoration: none;
 }
 a:hover {

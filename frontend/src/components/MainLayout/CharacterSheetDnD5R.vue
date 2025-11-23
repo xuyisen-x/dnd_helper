@@ -35,9 +35,7 @@ const currentComponent = computed(() => tabs[currentTab.value]) // 计算当前�
 
 <style scoped>
 .dnd-sheet {
-  /* A4 纸张比例模拟，但在网页上自适应宽度 */
-  width: 100%;
-  max-width: 1000px;
+  width: 1000px;
   background-color: var(--dnd-parchment-bg, #f0e6d2);
   color: var(--dnd-ink-primary, #2b2118);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);

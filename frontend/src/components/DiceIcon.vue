@@ -2,10 +2,23 @@
 import { useAttrs } from 'vue'
 defineOptions({ inheritAttrs: false })
 const attrs = useAttrs()
+const emit = defineEmits<{
+  (e: 'click', ev: MouseEvent): void
+}>()
+
+const handleClick = (ev: MouseEvent) => {
+  emit('click', ev)
+}
 </script>
 
 <template>
-  <svg class="icon" :class="attrs.class" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <svg
+    class="icon"
+    :class="attrs.class"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 512 512"
+    @click="handleClick"
+  >
     <title>{{ attrs.title }}</title>
     <g class="" style="" transform="translate(0,0)">
       <path

@@ -172,6 +172,37 @@ export interface Dnd5rData {
     list: string[]
     ability: 'int' | 'wis' | 'cha' | ''
   }
+
+  extra_modify: {
+    save: {
+      str: number
+      dex: number
+      con: number
+      int: number
+      wis: number
+      cha: number
+    }
+    skill: {
+      athletics: number
+      acrobatics: number
+      sleight_of_hand: number
+      stealth: number
+      arcana: number
+      history: number
+      investigation: number
+      nature: number
+      religion: number
+      animal_handling: number
+      insight: number
+      medicine: number
+      perception: number
+      survival: number
+      deception: number
+      intimidation: number
+      performance: number
+      persuasion: number
+    }
+  }
 }
 
 // ==========================================
@@ -230,6 +261,29 @@ export function createEmptyDnd5rData(): Dnd5rData {
       slots: Array.from({ length: 10 }, () => ({ total: 0, used: 0 })),
       list: [],
       ability: '',
+    },
+    extra_modify: {
+      save: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+      skill: {
+        athletics: 0,
+        acrobatics: 0,
+        sleight_of_hand: 0,
+        stealth: 0,
+        arcana: 0,
+        history: 0,
+        investigation: 0,
+        nature: 0,
+        religion: 0,
+        animal_handling: 0,
+        insight: 0,
+        medicine: 0,
+        perception: 0,
+        survival: 0,
+        deception: 0,
+        intimidation: 0,
+        performance: 0,
+        persuasion: 0,
+      },
     },
   }
 }

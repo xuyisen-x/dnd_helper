@@ -18,7 +18,7 @@ const sheet = computed({
 })
 
 // 获取 DnD5R 规则逻辑相关的计算属性和方法
-const { abilityModifies } = useDnd5rLogic(sheet)
+const { formatWithSign, abilityModifies, saveModifies, skillModifies } = useDnd5rLogic(sheet)
 
 // 筛选当前属性下的技能
 const currentSkills = (Object.keys(sheet.value.skills) as Array<keyof SkillsListDnd5r>).filter(
@@ -33,11 +33,6 @@ const handleScoreInput = (e: Event) => {
   target.value = cleanValue === '' ? '0' : cleanValue // 3. 更新输入框显示
   sheet.value.abilities[props.abilityKey].score = cleanValue === '' ? 0 : Number(cleanValue) // 4. 更新数据模型
 }
-
-// 给数添加符号
-const formatWithSign = (num: number): string => {
-  return num > 0 ? `+${num}` : `${num}`
-}
 </script>
 
 <template>
@@ -49,7 +44,7 @@ const formatWithSign = (num: number): string => {
     <!-- 属性值和调整值 -->
     <div class="main-stats">
       <div class="mod-container">
-        <div class="mod-circle clickable">
+        <div class="mod-circle">
           <span class="placeholder-big">{{
             formatWithSign(abilityModifies[props.abilityKey])
           }}</span>
@@ -85,7 +80,9 @@ const formatWithSign = (num: number): string => {
           :class="{ checked: sheet.abilities[abilityKey].save }"
           @click="sheet.abilities[abilityKey].save = !sheet.abilities[abilityKey].save"
         ></div>
-        <div class="underline-val clickable" title="豁免调整值">TD</div>
+        <div class="underline-val clickable" title="豁免调整值">
+          {{ formatWithSign(saveModifies[props.abilityKey]) }}
+        </div>
         <div class="text-label bold">豁免</div>
         <DiceIcon class="clickable" title="roll!!!" />
       </div>
@@ -97,7 +94,9 @@ const formatWithSign = (num: number): string => {
           :class="{ checked: sheet.skills[skillKey].prof }"
           @click="sheet.skills[skillKey].prof = !sheet.skills[skillKey].prof"
         ></div>
-        <div class="underline-val clickable" title="技能调整值">TD</div>
+        <div class="underline-val clickable" title="技能调整值">
+          {{ formatWithSign(skillModifies[skillKey]) }}
+        </div>
         <div class="text-label">{{ DND5R_SKILL_FULL_NAMES[skillKey] }}</div>
         <div
           title="专精"
@@ -168,9 +167,6 @@ const formatWithSign = (num: number): string => {
   justify-content: center;
 
   box-shadow: 2px 2px 6px rgba(43, 33, 24, 0.15);
-}
-.mod-circle:hover {
-  border-color: var(--dnd-dragon-red);
 }
 
 .placeholder-big {

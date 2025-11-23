@@ -7,6 +7,7 @@ import { useDnd5rLogic, formatWithSign } from '@/composables/rules/useDnd5rLogic
 import DiceIcon from '@/components/DiceIcon.vue'
 import EditPopover from './EditPopover.vue'
 import SkillDetailsPopover from './SkillDetailsPopover.vue'
+import SaveDetailsPopover from './SaveDetailsPopover.vue'
 
 // 接收唯一的参数：属性枚举 Key
 const props = defineProps<{
@@ -38,6 +39,46 @@ const handleScoreInput = (e: Event) => {
 
 // 当前哪个气泡正在弹出
 const currentEditPopover = ref<'save' | keyof SkillsListDnd5r | null>(null)
+// 当前哪个技能详情气泡正在显示
+const hoverTargetKey = ref<'save' | keyof SkillsListDnd5r | null>(null)
+const showDetails = ref(false) // <--- 新增：最终的显示开关
+const hoverTimer = ref<number | null>(null)
+
+const modifyNumClicked = (skillKey: keyof SkillsListDnd5r | 'save') => {
+  if (hoverTimer.value !== null) {
+    clearTimeout(hoverTimer.value)
+    hoverTimer.value = null
+  }
+  showDetails.value = false
+  hoverTargetKey.value = null
+  currentEditPopover.value = skillKey
+}
+
+const startDetailsTimer = (skillKey: keyof SkillsListDnd5r | 'save') => {
+  if (currentEditPopover.value === skillKey) {
+    return
+  }
+
+  hoverTargetKey.value = skillKey
+
+  if (hoverTimer.value !== null) {
+    clearTimeout(hoverTimer.value)
+  }
+
+  hoverTimer.value = window.setTimeout(() => {
+    showDetails.value = true
+  }, 800) // 等待800ms
+}
+
+// 停止计时器并隐藏 Popover
+const stopDetailsTimer = () => {
+  if (hoverTimer.value !== null) {
+    clearTimeout(hoverTimer.value)
+    hoverTimer.value = null
+  }
+  showDetails.value = false
+  hoverTargetKey.value = null
+}
 </script>
 
 <template>
@@ -85,12 +126,22 @@ const currentEditPopover = ref<'save' | keyof SkillsListDnd5r | null>(null)
           :class="{ checked: sheet.abilities[abilityKey].save }"
           @click="sheet.abilities[abilityKey].save = !sheet.abilities[abilityKey].save"
         ></div>
-        <div class="modify-num clickable" title="豁免调整值" @click="currentEditPopover = 'save'">
+        <div
+          class="modify-num clickable"
+          @click="modifyNumClicked('save')"
+          @mouseenter="startDetailsTimer('save')"
+          @mouseleave="stopDetailsTimer"
+        >
           {{ formatWithSign(saveModifies[props.abilityKey]) }}
           <EditPopover
             v-if="currentEditPopover === 'save'"
             v-model="sheet.extra_modify.save[props.abilityKey]"
             @close="currentEditPopover = null"
+            @click.stop
+          />
+          <SaveDetailsPopover
+            v-if="hoverTargetKey === 'save' && showDetails"
+            :ability="props.abilityKey"
             @click.stop
           />
         </div>
@@ -105,7 +156,12 @@ const currentEditPopover = ref<'save' | keyof SkillsListDnd5r | null>(null)
           :class="{ checked: sheet.skills[skillKey].prof }"
           @click="sheet.skills[skillKey].prof = !sheet.skills[skillKey].prof"
         ></div>
-        <div class="modify-num clickable" title="技能调整值" @click="currentEditPopover = skillKey">
+        <div
+          class="modify-num clickable"
+          @click="modifyNumClicked(skillKey)"
+          @mouseenter="startDetailsTimer(skillKey)"
+          @mouseleave="stopDetailsTimer"
+        >
           {{ formatWithSign(skillModifies[skillKey]) }}
           <EditPopover
             v-if="currentEditPopover === skillKey"
@@ -113,7 +169,11 @@ const currentEditPopover = ref<'save' | keyof SkillsListDnd5r | null>(null)
             @close="currentEditPopover = null"
             @click.stop
           />
-          <SkillDetailsPopover :skill-key="skillKey" />
+          <SkillDetailsPopover
+            v-if="hoverTargetKey === skillKey && showDetails"
+            :skill-key="skillKey"
+            @click.stop
+          />
         </div>
         <div class="text-label">{{ DND5R_SKILL_FULL_NAMES[skillKey] }}</div>
         <div

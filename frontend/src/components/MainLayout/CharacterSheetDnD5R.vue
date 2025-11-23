@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import SheetHeader from './CharacterSheetDnD5R/SheetHeader.vue'
+import SheetHeader from './CharacterSheetDnD5R/MainSheet/SheetHeader.vue'
 import MainSheet from './CharacterSheetDnD5R/MainSheet.vue'
 import BackgroundSheet from './CharacterSheetDnD5R/BackgroundSheet.vue'
 import SpellsSheet from './CharacterSheetDnD5R/SpellsSheet.vue'

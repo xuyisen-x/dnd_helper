@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import AbilityShield from './AbilityShield.vue'
-import ProficiencyShield from './ProficiencyShield.vue'
-import InspirationShield from './InspirationShield.vue'
+import AbilityShield from './MainSheet/AbilityShield.vue'
+import ProficiencyShield from './MainSheet/ProficiencyShield.vue'
+import InspirationShield from './MainSheet/InspirationShield.vue'
 </script>
 
 <template>

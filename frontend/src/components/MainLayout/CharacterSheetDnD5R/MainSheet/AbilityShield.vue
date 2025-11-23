@@ -8,6 +8,7 @@ import DiceIcon from '@/components/DiceIcon.vue'
 import EditPopover from './EditPopover.vue'
 import SkillDetailsPopover from './SkillDetailsPopover.vue'
 import SaveDetailsPopover from './SaveDetailsPopover.vue'
+import OneAutoFitText from '@/components/OneRowAutoFitText.vue'
 
 // 接收唯一的参数：属性枚举 Key
 const props = defineProps<{
@@ -41,7 +42,7 @@ const handleScoreInput = (e: Event) => {
 const currentEditPopover = ref<'save' | keyof SkillsListDnd5r | null>(null)
 // 当前哪个技能详情气泡正在显示
 const hoverTargetKey = ref<'save' | keyof SkillsListDnd5r | null>(null)
-const showDetails = ref(false) // <--- 新增：最终的显示开关
+const showDetails = ref(false)
 const hoverTimer = ref<number | null>(null)
 
 const modifyNumClicked = (skillKey: keyof SkillsListDnd5r | 'save') => {
@@ -132,7 +133,12 @@ const stopDetailsTimer = () => {
           @mouseenter="startDetailsTimer('save')"
           @mouseleave="stopDetailsTimer"
         >
-          {{ formatWithSign(saveModifies[props.abilityKey]) }}
+          <OneAutoFitText :min-size="10" :max-size="16">
+            <span class="modify-num-text">{{
+              formatWithSign(saveModifies[props.abilityKey])
+            }}</span>
+          </OneAutoFitText>
+
           <EditPopover
             v-if="currentEditPopover === 'save'"
             v-model="sheet.extra_modify.save[props.abilityKey]"
@@ -162,7 +168,9 @@ const stopDetailsTimer = () => {
           @mouseenter="startDetailsTimer(skillKey)"
           @mouseleave="stopDetailsTimer"
         >
-          {{ formatWithSign(skillModifies[skillKey]) }}
+          <OneAutoFitText :min-size="10" :max-size="16">
+            <span class="modify-num-text"> {{ formatWithSign(skillModifies[skillKey]) }}</span>
+          </OneAutoFitText>
           <EditPopover
             v-if="currentEditPopover === skillKey"
             v-model="sheet.extra_modify.skill[skillKey]"
@@ -358,11 +366,14 @@ const stopDetailsTimer = () => {
   width: 25px;
   text-align: center;
   border-bottom: 1px solid var(--dnd-ink-secondary);
-  font-weight: bold;
   margin-right: 6px;
   color: var(--dnd-ink-primary);
 
   position: relative;
+}
+.modify-num-text {
+  font-weight: bold;
+  height: 100%;
 }
 .text-label {
   font-size: 0.9rem;

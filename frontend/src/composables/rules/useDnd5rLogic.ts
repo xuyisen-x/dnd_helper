@@ -2,12 +2,11 @@ import type { Ref } from 'vue'
 import { computed, reactive } from 'vue'
 import type { Dnd5rData, SixAbilityKeysDnd5r } from '@/stores/rules/dnd5r'
 
-export function useDnd5rLogic(sheet: Ref<Dnd5rData>) {
-  // 给数添加符号
-  const formatWithSign = (num: number): string => {
-    return num > 0 ? `+${num}` : `${num}`
-  }
+export function formatWithSign(num: number): string {
+  return num > 0 ? `+${num}` : `${num}`
+}
 
+export function useDnd5rLogic(sheet: Ref<Dnd5rData>) {
   const totalLevel = computed(() => {
     const classes = sheet.value.basic.classes
     if (!classes || classes.length === 0) return 0
@@ -38,7 +37,7 @@ export function useDnd5rLogic(sheet: Ref<Dnd5rData>) {
     } else if (totalLevel.value <= 16) {
       return 5
     } else {
-      return 20
+      return 6
     }
   })
 
@@ -90,7 +89,6 @@ export function useDnd5rLogic(sheet: Ref<Dnd5rData>) {
   })
 
   return {
-    formatWithSign,
     totalLevel,
     abilityModifies,
     proficiencyBonus,

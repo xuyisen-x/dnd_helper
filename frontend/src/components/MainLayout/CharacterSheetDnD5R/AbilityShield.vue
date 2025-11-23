@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import { DND5R_ABILITY_FULL_NAMES, DND5R_SKILL_FULL_NAMES } from '@/stores/rules/dnd5r'
 import type { Dnd5rData, SixAbilityKeysDnd5r, SkillsListDnd5r } from '@/stores/rules/dnd5r'
-import { useDnd5rLogic } from '@/composables/rules/useDnd5rLogic'
+import { useDnd5rLogic, formatWithSign } from '@/composables/rules/useDnd5rLogic'
 import DiceIcon from '@/components/DiceIcon.vue'
+import EditPopover from './EditPopover.vue'
+import SkillDetailsPopover from './SkillDetailsPopover.vue'
 
 // 接收唯一的参数：属性枚举 Key
 const props = defineProps<{
@@ -18,7 +20,7 @@ const sheet = computed({
 })
 
 // 获取 DnD5R 规则逻辑相关的计算属性和方法
-const { formatWithSign, abilityModifies, saveModifies, skillModifies } = useDnd5rLogic(sheet)
+const { abilityModifies, saveModifies, skillModifies } = useDnd5rLogic(sheet)
 
 // 筛选当前属性下的技能
 const currentSkills = (Object.keys(sheet.value.skills) as Array<keyof SkillsListDnd5r>).filter(
@@ -33,6 +35,9 @@ const handleScoreInput = (e: Event) => {
   target.value = cleanValue === '' ? '0' : cleanValue // 3. 更新输入框显示
   sheet.value.abilities[props.abilityKey].score = cleanValue === '' ? 0 : Number(cleanValue) // 4. 更新数据模型
 }
+
+// 当前哪个气泡正在弹出
+const currentEditPopover = ref<'save' | keyof SkillsListDnd5r | null>(null)
 </script>
 
 <template>
@@ -80,8 +85,14 @@ const handleScoreInput = (e: Event) => {
           :class="{ checked: sheet.abilities[abilityKey].save }"
           @click="sheet.abilities[abilityKey].save = !sheet.abilities[abilityKey].save"
         ></div>
-        <div class="underline-val clickable" title="豁免调整值">
+        <div class="modify-num clickable" title="豁免调整值" @click="currentEditPopover = 'save'">
           {{ formatWithSign(saveModifies[props.abilityKey]) }}
+          <EditPopover
+            v-if="currentEditPopover === 'save'"
+            v-model="sheet.extra_modify.save[props.abilityKey]"
+            @close="currentEditPopover = null"
+            @click.stop
+          />
         </div>
         <div class="text-label bold">豁免</div>
         <DiceIcon class="clickable" title="roll!!!" />
@@ -94,8 +105,15 @@ const handleScoreInput = (e: Event) => {
           :class="{ checked: sheet.skills[skillKey].prof }"
           @click="sheet.skills[skillKey].prof = !sheet.skills[skillKey].prof"
         ></div>
-        <div class="underline-val clickable" title="技能调整值">
+        <div class="modify-num clickable" title="技能调整值" @click="currentEditPopover = skillKey">
           {{ formatWithSign(skillModifies[skillKey]) }}
+          <EditPopover
+            v-if="currentEditPopover === skillKey"
+            v-model="sheet.extra_modify.skill[skillKey]"
+            @close="currentEditPopover = null"
+            @click.stop
+          />
+          <SkillDetailsPopover :skill-key="skillKey" />
         </div>
         <div class="text-label">{{ DND5R_SKILL_FULL_NAMES[skillKey] }}</div>
         <div
@@ -121,7 +139,6 @@ const handleScoreInput = (e: Event) => {
   position: relative;
   font-family: 'Georgia', serif;
   color: var(--dnd-ink-primary);
-  overflow: hidden;
 }
 
 .card-header {
@@ -277,13 +294,15 @@ const handleScoreInput = (e: Event) => {
 .circle-check.checked:hover {
   background-color: var(--dnd-dragon-red);
 }
-.underline-val {
+.modify-num {
   width: 25px;
   text-align: center;
   border-bottom: 1px solid var(--dnd-ink-secondary);
   font-weight: bold;
   margin-right: 6px;
   color: var(--dnd-ink-primary);
+
+  position: relative;
 }
 .text-label {
   font-size: 0.9rem;

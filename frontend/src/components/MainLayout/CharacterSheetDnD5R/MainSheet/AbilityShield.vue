@@ -4,11 +4,11 @@ import { useActiveCharacterStore } from '@/stores/active-character'
 import { DND5R_ABILITY_FULL_NAMES, DND5R_SKILL_FULL_NAMES } from '@/stores/rules/dnd5r'
 import type { Dnd5rData, SixAbilityKeysDnd5r, SkillsListDnd5r } from '@/stores/rules/dnd5r'
 import { useDnd5rLogic, formatWithSign } from '@/composables/rules/useDnd5rLogic'
-import DiceIcon from '@/components/DiceIcon.vue'
+import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import EditPopover from './EditPopover.vue'
 import SkillDetailsPopover from './SkillDetailsPopover.vue'
 import SaveDetailsPopover from './SaveDetailsPopover.vue'
-import OneAutoFitText from '@/components/OneRowAutoFitText.vue'
+import OneAutoFitText from '@/components/Common/OneRowAutoFitText.vue'
 import { useDiceBox } from '@/composables/useDiceBox'
 
 // 接收唯一的参数：属性枚举 Key

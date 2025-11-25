@@ -9,6 +9,7 @@ import EditPopover from './EditPopover.vue'
 import SkillDetailsPopover from './SkillDetailsPopover.vue'
 import SaveDetailsPopover from './SaveDetailsPopover.vue'
 import OneAutoFitText from '@/components/OneRowAutoFitText.vue'
+import { useDiceBox } from '@/composables/useDiceBox'
 
 // 接收唯一的参数：属性枚举 Key
 const props = defineProps<{
@@ -79,6 +80,20 @@ const stopDetailsTimer = () => {
   }
   showDetails.value = false
   hoverTargetKey.value = null
+}
+
+// 获取dicebox
+
+const { roll, clearDiceBoxAfter } = useDiceBox()
+
+const rolld20 = async () => {
+  const result = await roll('1d20')
+  if (result.status === 'success') {
+    console.log(result.result)
+    clearDiceBoxAfter(1000) // 1秒后清除骰子结果
+  } else if (result.status === 'failed') {
+    console.log(result.error)
+  }
 }
 </script>
 
@@ -152,7 +167,7 @@ const stopDetailsTimer = () => {
           />
         </div>
         <div class="text-label bold">豁免</div>
-        <DiceIcon class="clickable" title="roll!!!" />
+        <DiceIcon class="clickable" title="roll!!!" @click="rolld20" />
       </div>
       <!-- 技能加值 -->
       <div v-for="skillKey in currentSkills" :key="skillKey" class="list-row">
@@ -191,7 +206,7 @@ const stopDetailsTimer = () => {
           :style="{ visibility: sheet.skills[skillKey].prof ? 'visible' : 'hidden' }"
           @click="sheet.skills[skillKey].expert = !sheet.skills[skillKey].expert"
         ></div>
-        <DiceIcon class="clickable" title="roll!!!" />
+        <DiceIcon class="clickable" title="roll!!!" @click="rolld20" />
       </div>
     </div>
   </div>

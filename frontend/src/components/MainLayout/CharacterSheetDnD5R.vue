@@ -2,14 +2,12 @@
 import { ref, computed } from 'vue'
 import SheetHeader from './CharacterSheetDnD5R/MainSheet/SheetHeader.vue'
 import MainSheet from './CharacterSheetDnD5R/MainSheet.vue'
-import BackgroundSheet from './CharacterSheetDnD5R/BackgroundSheet.vue'
 import SpellsSheet from './CharacterSheetDnD5R/SpellsSheet.vue'
 
-const currentTab = ref<'main' | 'spells' | 'background'>('main') // 用于切换页面
+const currentTab = ref<'main' | 'spells'>('main') // 用于切换页面
 // 建立一个映射表
 const tabs = {
   main: MainSheet,
-  background: BackgroundSheet,
   spells: SpellsSheet,
 }
 const currentComponent = computed(() => tabs[currentTab.value]) // 计算当前应该显示的组件
@@ -19,9 +17,6 @@ const currentComponent = computed(() => tabs[currentTab.value]) // 计算当前�
   <div class="sheet-tabs">
     <button :class="{ active: currentTab === 'main' }" @click="currentTab = 'main'">
       主要属性
-    </button>
-    <button :class="{ active: currentTab === 'background' }" @click="currentTab = 'background'">
-      背景与故事
     </button>
     <button :class="{ active: currentTab === 'spells' }" @click="currentTab = 'spells'">
       法术
@@ -35,7 +30,7 @@ const currentComponent = computed(() => tabs[currentTab.value]) // 计算当前�
 
 <style scoped>
 .dnd-sheet {
-  width: 1000px;
+  width: 1300px;
   background-color: var(--dnd-parchment-bg, #f0e6d2);
   color: var(--dnd-ink-primary, #2b2118);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
@@ -81,7 +76,7 @@ const currentComponent = computed(() => tabs[currentTab.value]) // 计算当前�
   gap: 5px;
   margin-bottom: 0;
   width: 100%;
-  max-width: 1000px;
+  /* max-width: 1000px; */
 }
 .sheet-tabs button {
   padding: 10px 20px;

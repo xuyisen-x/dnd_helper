@@ -48,7 +48,7 @@
   display: flex;
   gap: 8px;
   width: 100%;
-  max-width: 1200px; /* 限制导航内容宽度 */
+  /* max-width: 1200px; 限制导航内容宽度 */
   margin: 0 auto;
   overflow-x: auto;
   /* 隐藏滚动条 */

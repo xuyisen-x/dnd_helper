@@ -85,7 +85,7 @@
   opacity: 0.7;
 }
 
-.nav-link:hover {
+body.has-mouse .nav-link:hover {
   color: var(--dnd-dragon-red); /* 悬停变红 */
   background-color: rgba(255, 255, 255, 0.3);
   opacity: 1;
@@ -142,7 +142,7 @@
   border: 2px solid transparent;
   background-clip: content-box;
 }
-.main-content::-webkit-scrollbar-thumb:hover {
+body.has-mouse .main-content::-webkit-scrollbar-thumb:hover {
   background-color: var(--dnd-dragon-red);
 }
 

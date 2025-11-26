@@ -79,7 +79,7 @@
   border-radius: 8px;
   transition: transform 0.2s;
 }
-.link-card:hover {
+body.has-mouse .link-card:hover {
   transform: translateY(-2px);
   background-color: rgba(0, 0, 0, 0.08);
 }
@@ -140,7 +140,7 @@ a {
   color: var(--dnd-dragon-red);
   text-decoration: none;
 }
-a:hover {
+body.has-mouse a:hover {
   text-decoration: underline;
 }
 </style>

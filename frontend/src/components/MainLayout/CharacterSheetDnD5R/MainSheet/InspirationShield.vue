@@ -101,10 +101,6 @@ const toggleInspiration = () => {
   color: var(--dnd-ink-secondary);
   opacity: 0.4;
 }
-.icon-wrapper:hover {
-  color: var(--dnd-gold);
-  opacity: 0.7;
-}
 
 /* 激活状态 */
 .icon-wrapper.active {
@@ -114,7 +110,11 @@ const toggleInspiration = () => {
   filter: drop-shadow(0 0 5px var(--dnd-gold)); /* 发光效果 */
 }
 
-.icon-wrapper.active:hover {
+body.has-mouse .icon-wrapper:hover {
+  color: var(--dnd-gold);
+  opacity: 0.7;
+}
+body.has-mouse .icon-wrapper.active:hover {
   color: var(--dnd-gold); /* 变成金色 */
   opacity: 0.7;
 }

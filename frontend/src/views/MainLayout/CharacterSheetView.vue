@@ -81,7 +81,7 @@ const handleLoad = () => {
   color: var(--dnd-ink-primary);
   border: 1px solid var(--dnd-gold);
 }
-.btn-primary:hover {
+body.has-mouse .btn-primary:hover {
   background-color: var(--dnd-gold); /* 悬停变金色 */
   color: #fff;
 }

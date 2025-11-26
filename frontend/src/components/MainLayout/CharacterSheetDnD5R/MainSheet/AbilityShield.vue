@@ -10,6 +10,7 @@ import SkillDetailsPopover from './SkillDetailsPopover.vue'
 import SaveDetailsPopover from './SaveDetailsPopover.vue'
 import OneAutoFitText from '@/components/Common/OneRowAutoFitText.vue'
 import { useDiceBox } from '@/composables/useDiceBox'
+import { isUsingMouse } from '@/composables/useGlobalState'
 
 // 接收唯一的参数：属性枚举 Key
 const props = defineProps<{
@@ -46,7 +47,13 @@ const hoverTargetKey = ref<'save' | keyof SkillsListDnd5r | null>(null)
 const showDetails = ref(false)
 const hoverTimer = ref<number | null>(null)
 
+let isLongPressHappened = false
+
 const modifyNumClicked = (skillKey: keyof SkillsListDnd5r | 'save') => {
+  if (!isUsingMouse.value && isLongPressHappened) {
+    isLongPressHappened = false
+    return
+  }
   if (hoverTimer.value !== null) {
     clearTimeout(hoverTimer.value)
     hoverTimer.value = null
@@ -57,6 +64,7 @@ const modifyNumClicked = (skillKey: keyof SkillsListDnd5r | 'save') => {
 }
 
 const startDetailsTimer = (skillKey: keyof SkillsListDnd5r | 'save') => {
+  if (!isUsingMouse.value) isLongPressHappened = false
   if (currentEditPopover.value === skillKey) {
     return
   }
@@ -68,8 +76,19 @@ const startDetailsTimer = (skillKey: keyof SkillsListDnd5r | 'save') => {
   }
 
   hoverTimer.value = window.setTimeout(() => {
+    if (!isUsingMouse.value) isLongPressHappened = true
     showDetails.value = true
   }, 800) // 等待800ms
+}
+const mouseEnterDetails = (skillKey: keyof SkillsListDnd5r | 'save') => {
+  if (isUsingMouse.value) {
+    startDetailsTimer(skillKey)
+  }
+}
+const touchStartDetails = (skillKey: keyof SkillsListDnd5r | 'save') => {
+  if (!isUsingMouse.value) {
+    startDetailsTimer(skillKey)
+  }
 }
 
 // 停止计时器并隐藏 Popover
@@ -80,6 +99,16 @@ const stopDetailsTimer = () => {
   }
   showDetails.value = false
   hoverTargetKey.value = null
+}
+const mouseLeaveDetails = () => {
+  if (isUsingMouse.value) {
+    stopDetailsTimer()
+  }
+}
+const touchEndDetails = () => {
+  if (!isUsingMouse.value) {
+    stopDetailsTimer()
+  }
 }
 
 // 获取dicebox
@@ -144,9 +173,12 @@ const rolld20 = async () => {
         ></div>
         <div
           class="modify-num clickable"
+          @contextmenu.prevent
           @click="modifyNumClicked('save')"
-          @mouseenter="startDetailsTimer('save')"
-          @mouseleave="stopDetailsTimer"
+          @mouseenter="mouseEnterDetails('save')"
+          @mouseleave="mouseLeaveDetails"
+          @touchstart="touchStartDetails('save')"
+          @touchend="touchEndDetails"
         >
           <OneAutoFitText :min-size="10" :max-size="16">
             <span class="modify-num-text">{{
@@ -179,9 +211,12 @@ const rolld20 = async () => {
         ></div>
         <div
           class="modify-num clickable"
+          @contextmenu.prevent
           @click="modifyNumClicked(skillKey)"
-          @mouseenter="startDetailsTimer(skillKey)"
-          @mouseleave="stopDetailsTimer"
+          @mouseenter="mouseEnterDetails(skillKey)"
+          @mouseleave="mouseLeaveDetails"
+          @touchstart="touchStartDetails(skillKey)"
+          @touchend="touchEndDetails"
         >
           <OneAutoFitText :min-size="10" :max-size="16">
             <span class="modify-num-text"> {{ formatWithSign(skillModifies[skillKey]) }}</span>
@@ -368,15 +403,16 @@ const rolld20 = async () => {
   border-radius: 50%;
   margin-right: 6px;
 }
-.circle-check:hover {
-  border-color: var(--dnd-dragon-red);
-}
 .circle-check.checked {
   background-color: var(--dnd-ink-primary);
 }
-.circle-check.checked:hover {
+body.has-mouse .circle-check:hover {
+  border-color: var(--dnd-dragon-red);
+}
+body.has-mouse .circle-check.checked:hover {
   background-color: var(--dnd-dragon-red);
 }
+
 .modify-num {
   width: 25px;
   text-align: center;

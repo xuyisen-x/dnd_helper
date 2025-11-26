@@ -58,15 +58,19 @@ const currentComponent = computed(() => tabs[currentTab.value]) // 计算当前�
 
 /* 可以点击的东西 */
 :deep(.clickable) {
+  /* 防治长按出现问题 */
+  user-select: none;
+  -webkit-user-select: none; /* Safari/Chrome */
+  -webkit-touch-callout: none;
   cursor: pointer;
   transition:
     opacity 0.2s,
     color 0.2s;
 }
-:deep(.clickable:hover) {
+body.has-mouse .dnd-sheet :deep(.clickable:hover) {
   color: var(--dnd-dragon-red);
 }
-:deep(.clickable:active) {
+body.has-mouse .dnd-sheet :deep(.clickable:active) {
   transform: scale(0.95);
 }
 

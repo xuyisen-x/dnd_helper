@@ -5,7 +5,6 @@ import { useDiceBox } from '@/composables/useDiceBox'
 const { initDiceBox, canvasOpacity } = useDiceBox()
 onMounted(async () => {
   await initDiceBox('#dice-box-container')
-  console.log('DiceBox initialized')
 })
 </script>
 <template>

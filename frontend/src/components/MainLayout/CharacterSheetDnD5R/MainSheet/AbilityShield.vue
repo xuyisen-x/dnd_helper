@@ -113,16 +113,11 @@ const touchEndDetails = () => {
 
 // 获取dicebox
 
-const { roll, clearDiceBoxAfter } = useDiceBox()
+const { parseAndRoll } = useDiceBox()
 
 const rolld20 = async () => {
-  const result = await roll('1d20')
-  if (result.status === 'success') {
-    console.log(result.result)
-    clearDiceBoxAfter(1000) // 1秒后清除骰子结果
-  } else if (result.status === 'failed') {
-    console.log(result.error)
-  }
+  const result = await parseAndRoll('1d20')
+  console.log('Rolled d20:', result)
 }
 </script>
 

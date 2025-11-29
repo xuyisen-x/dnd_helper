@@ -9,8 +9,10 @@ import EditPopover from './EditPopover.vue'
 import SkillDetailsPopover from './SkillDetailsPopover.vue'
 import SaveDetailsPopover from './SaveDetailsPopover.vue'
 import OneAutoFitText from '@/components/Common/OneRowAutoFitText.vue'
+import RollConfigPopover from './RollConfigPopover.vue'
 import { useDiceBox } from '@/composables/useDiceBox'
 import { isUsingMouse } from '@/composables/useGlobalState'
+import { addDiceResult } from '@/stores/dice-result'
 
 // 接收唯一的参数：属性枚举 Key
 const props = defineProps<{
@@ -44,6 +46,8 @@ const handleScoreInput = (e: Event) => {
 const currentEditPopover = ref<'save' | keyof SkillsListDnd5r | null>(null)
 // 当前哪个技能详情气泡正在显示
 const hoverTargetKey = ref<'save' | keyof SkillsListDnd5r | null>(null)
+// 记录那个技能投掷详情正在配置
+const configuringSkillKey = ref<string | null>(null)
 const showDetails = ref(false)
 const hoverTimer = ref<number | null>(null)
 
@@ -115,9 +119,25 @@ const touchEndDetails = () => {
 
 const { parseAndRoll } = useDiceBox()
 
-const rolld20 = async () => {
-  const result = await parseAndRoll('1d20')
-  console.log('Rolled d20:', result)
+const roll = async (skillKey: keyof SkillsListDnd5r | 'save') => {
+  // 首先得到加值
+  const modify = skillKey === 'save' ? saveModifies[props.abilityKey] : skillModifies[skillKey]
+  // 构造掷骰字符串
+  const rollString = `1d20${modify >= 0 ? '+' : ''}${modify}`
+  // 构造描述
+  const title =
+    skillKey === 'save'
+      ? `${DND5R_ABILITY_FULL_NAMES[props.abilityKey]} 豁免检定`
+      : `${DND5R_SKILL_FULL_NAMES[skillKey]} 技能检定`
+  const result = await parseAndRoll(rollString)
+
+  if (result !== null) {
+    addDiceResult(result, rollString, title)
+  }
+}
+
+const openConfig = (skillKey: string) => {
+  configuringSkillKey.value = skillKey
 }
 </script>
 
@@ -194,7 +214,28 @@ const rolld20 = async () => {
           />
         </div>
         <div class="text-label bold">豁免</div>
-        <DiceIcon class="clickable" title="roll!!!" @click="rolld20" />
+        <div
+          @click="roll('save')"
+          @contextmenu.prevent.stop="
+            () => {
+              if (isUsingMouse) openConfig('save')
+            }
+          "
+          v-longpress="
+            () => {
+              if (!isUsingMouse) openConfig('save')
+            }
+          "
+          style="position: relative"
+        >
+          <DiceIcon class="clickable" title="roll!!!" />
+          <RollConfigPopover
+            v-if="configuringSkillKey === 'save'"
+            :title="`${DND5R_ABILITY_FULL_NAMES[props.abilityKey]} 豁免检定`"
+            :baseModifier="saveModifies[props.abilityKey]"
+            @close="configuringSkillKey = null"
+          />
+        </div>
       </div>
       <!-- 技能加值 -->
       <div v-for="skillKey in currentSkills" :key="skillKey" class="list-row">
@@ -236,7 +277,28 @@ const rolld20 = async () => {
           :style="{ visibility: sheet.skills[skillKey].prof ? 'visible' : 'hidden' }"
           @click="sheet.skills[skillKey].expert = !sheet.skills[skillKey].expert"
         ></div>
-        <DiceIcon class="clickable" title="roll!!!" @click="rolld20" />
+        <div
+          @click="roll(skillKey)"
+          @contextmenu.prevent.stop="
+            () => {
+              if (isUsingMouse) openConfig(skillKey)
+            }
+          "
+          v-longpress="
+            () => {
+              if (!isUsingMouse) openConfig(skillKey)
+            }
+          "
+          style="position: relative"
+        >
+          <DiceIcon class="clickable" title="roll!!!" />
+          <RollConfigPopover
+            v-if="configuringSkillKey === skillKey"
+            :title="`${DND5R_SKILL_FULL_NAMES[skillKey]} 技能检定`"
+            :baseModifier="skillModifies[skillKey]"
+            @close="configuringSkillKey = null"
+          />
+        </div>
       </div>
     </div>
   </div>

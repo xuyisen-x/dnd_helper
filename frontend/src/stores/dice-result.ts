@@ -14,7 +14,7 @@ export const useDiceResultStore = defineStore('dice-result', () => {
   const results = ref<RollResultItem[]>([])
   let idCounter = 0
   const MAX_Items = 3
-  const AUTO_DISMISS_TIME = 10 * 1000 // 10秒后自动移除
+  const AUTO_DISMISS_TIME = 30 * 1000 // 30秒后自动移除
 
   const addResult = (output: RollOutput, notation: string, title: string = '自定义') => {
     const id = idCounter++

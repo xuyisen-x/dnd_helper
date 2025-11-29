@@ -99,7 +99,6 @@ export function useDiceBox() {
     if (!rollResult) return null
     if (rollResult.type === 'expressionroll') {
       const realRollResult = rollResult as RealRollBase
-      console.log(realRollResult)
       for (const d of realRollResult.dice || []) {
         if (d.type !== 'number' && d.type !== 'die') {
           showToast('Unsupported roll result type in expressionroll', 'error')

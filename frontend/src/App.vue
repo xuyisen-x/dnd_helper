@@ -3,6 +3,7 @@ import { onMounted, onUnmounted } from 'vue'
 import DiceDiv from './components/Common/DiceDiv.vue'
 import DiceRollerPanel from './components/Common/DiceRollerPanel.vue'
 import ToastContainer from './components/Common/ToastContainer.vue'
+import DiceResultContainer from './components/Common/DiceResultContainer.vue'
 import { isUsingMouse } from './composables/useGlobalState'
 
 const enableHover = (e: PointerEvent) => {
@@ -40,6 +41,7 @@ onUnmounted(() => {
 <template>
   <DiceDiv />
   <DiceRollerPanel />
+  <DiceResultContainer />
   <ToastContainer />
   <router-view />
 </template>

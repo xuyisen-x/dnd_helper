@@ -4,6 +4,7 @@ import { useDiceBox } from '@/composables/useDiceBox'
 import DiceIcon from '../Icons/DiceIcon.vue'
 import MutiDiceIcon from '../Icons/MutiDiceIcon.vue'
 import { onClickOutside } from '@vueuse/core'
+import { addDiceResult } from '@/stores/dice-result'
 
 const { parseAndRoll, showAnimation } = useDiceBox()
 
@@ -48,15 +49,12 @@ const totalSelected = computed(() => {
 const handleFormulaInput = (e: Event) => {
   const target = e.target as HTMLInputElement
 
-  // 1. 正则替换：把所有 "不在白名单里" 的字符替换为空
-  const cleanValue = target.value.replace(/[^a-zA-Z0-9+\-\s]/g, '')
+  const cleanValue = target.value.replace(/[^a-zA-Z0-9+\-\s<>]/g, '')
 
-  // 2. 手动更新 DOM (防止非法字符闪现后还留在输入框里)
   if (target.value !== cleanValue) {
     target.value = cleanValue
   }
 
-  // 3. 更新响应式数据
   customFormula.value = cleanValue
 }
 
@@ -108,7 +106,11 @@ const rollDiceText = async (diceExpression: string) => {
       rollHistory.value.pop()
     }
   }
-  console.log('Rolled Dice Result:', result)
+
+  // 添加到骰子结果通知
+  if (result !== null) {
+    addDiceResult(result, diceExpression, '自定义')
+  }
 }
 
 const rollDice = async () => {

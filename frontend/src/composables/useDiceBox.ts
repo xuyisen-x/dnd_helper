@@ -17,6 +17,7 @@ type RealRollBase = RollBase & {
     critical?: string
   }>
   dice?: Array<RealRollBase>
+  ops?: Array<string>
 }
 
 export type RollOutput = {
@@ -32,6 +33,7 @@ export type RollOutput = {
       info: string
     }>
   }>
+  opts: Array<string>
 }
 
 const canvasOpacity = ref(1)
@@ -97,6 +99,7 @@ export function useDiceBox() {
     if (!rollResult) return null
     if (rollResult.type === 'expressionroll') {
       const realRollResult = rollResult as RealRollBase
+      console.log(realRollResult)
       for (const d of realRollResult.dice || []) {
         if (d.type !== 'number' && d.type !== 'die') {
           showToast('Unsupported roll result type in expressionroll', 'error')
@@ -113,6 +116,7 @@ export function useDiceBox() {
               dices: mapRolls(d.rolls),
             }
           }) || [],
+        opts: realRollResult.ops || [],
       }
     } else if (rollResult.type === 'die' || rollResult.type === 'number') {
       const realRollResult = rollResult as RealRollBase
@@ -125,6 +129,7 @@ export function useDiceBox() {
             dices: mapRolls(realRollResult.rolls),
           },
         ],
+        opts: [], // 单个骰子或数字没有加减选项
       }
     } else {
       showToast('Unsupported roll result type', 'error')

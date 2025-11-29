@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted } from 'vue'
 import DiceDiv from './components/Common/DiceDiv.vue'
+import DiceRollerPanel from './components/Common/DiceRollerPanel.vue'
 import ToastContainer from './components/Common/ToastContainer.vue'
 import { isUsingMouse } from './composables/useGlobalState'
 
@@ -38,6 +39,7 @@ onUnmounted(() => {
 
 <template>
   <DiceDiv />
+  <DiceRollerPanel />
   <ToastContainer />
   <router-view />
 </template>

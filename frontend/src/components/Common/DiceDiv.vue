@@ -26,7 +26,7 @@ onMounted(async () => {
   width: 100vw;
   height: 100vh;
 
-  /* 层级最高，不被阻挡 */
+  /* 层级高，不被阻挡，但是低于DiceRollerPanel */
   z-index: 9999;
 
   pointer-events: none;

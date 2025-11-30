@@ -133,7 +133,7 @@ const handleLevelInput = (e: Event, index: number) => {
   background: transparent;
   color: var(--dnd-ink-primary);
   font-weight: 600;
-  font-size: 0.95rem;
+  font-size: 1.2rem;
   padding: 2px 4px;
   outline: none;
   transition: border-color 0.2s;

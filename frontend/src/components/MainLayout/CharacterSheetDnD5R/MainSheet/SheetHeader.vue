@@ -127,7 +127,7 @@ const longRest = () => {
 /* --- 上半部分布局 --- */
 .top-section {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 450px 1fr;
   gap: 20px;
   align-items: flex-end; /* 底部对齐 */
 }

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
+import { showToast } from '@/stores/toast'
 
 const CharacterSheetDnD5R = defineAsyncComponent(
   () => import('@/components/MainLayout/CharacterSheetDnD5R.vue'),
@@ -8,15 +9,70 @@ const CharacterSheetDnD5R = defineAsyncComponent(
 
 const activeCharacterStore = useActiveCharacterStore()
 
-// 这里是后续连接后端逻辑的入口
+const CUSTOM_EXT = '.crst' // 自定义扩展名，方便用户识别
+
 const handleSave = () => {
-  console.log('正在保存角色卡数据...')
-  // TODO: 调用 Pinia 或 API 保存数据
+  try {
+    const dataStr = activeCharacterStore.exportData() // 获取导出的 JSON 字符串
+
+    const blob = new Blob([dataStr], { type: 'application/json' }) // 创建 Blob 对象
+
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+
+    // 获取角色名称和规则，用于生成文件名
+    const charName = activeCharacterStore.getCharacterName().replace(/[\\/:*?"<>|]/g, '_')
+    const rule = activeCharacterStore.rule
+    // 文件名格式：名字_规则_时间戳.json
+    link.download = `${charName}_${rule}_${new Date().toISOString().slice(0, 10)}${CUSTOM_EXT}`
+
+    // 触发点击并清理
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+
+    showToast('角色卡导出成功！', 'success')
+  } catch (e) {
+    console.error(e)
+    showToast('导出失败', 'error')
+  }
 }
 
 const handleLoad = () => {
-  console.log('正在读取角色卡数据...')
-  // TODO: 从后端获取 JSON 并填充到 Store 中
+  // 动态创建一个文件输入框
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = CUSTOM_EXT
+
+  // 监听文件选择
+  input.onchange = (event) => {
+    const target = event.target as HTMLInputElement
+    const file = target.files?.[0]
+
+    if (!file) return
+
+    // 读取文件内容
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      const result = e.target?.result
+      if (typeof result === 'string') {
+        activeCharacterStore.importData(result)
+        showToast('角色卡读取成功！', 'success')
+      } else {
+        showToast('文件内容无效', 'error')
+      }
+    }
+
+    reader.onerror = () => {
+      showToast('文件读取发生错误', 'error')
+    }
+
+    reader.readAsText(file)
+  }
+
+  input.click()
 }
 </script>
 

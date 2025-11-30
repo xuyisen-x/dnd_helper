@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, toRaw } from 'vue'
 import type { Dnd5rData } from './rules/dnd5r'
 import { createEmptyDnd5rData } from './rules/dnd5r'
+import { showToast } from '@/stores/toast'
 
 // 可以适配多种不同的规则
 export type RuleSystem = 'dnd5r'
@@ -11,5 +12,31 @@ export const useActiveCharacterStore = defineStore('active-character', () => {
   const rule = ref<RuleSystem>('dnd5r')
   const data = ref<CharacterData>(createEmptyDnd5rData())
 
-  return { rule, data }
+  const getCharacterName = () => {
+    if (rule.value === 'dnd5r') {
+      const tmp = (data.value as Dnd5rData).basic.name
+      return tmp ? tmp : '未命名角色'
+    }
+    return '未知角色'
+  }
+
+  const exportData = () => {
+    return JSON.stringify({ rule: rule.value, data: toRaw(data.value) })
+  }
+
+  const importData = (jsonString: string) => {
+    try {
+      const parsed = JSON.parse(jsonString)
+      if (parsed.rule && parsed.data) {
+        rule.value = parsed.rule
+        data.value = parsed.data
+      } else {
+        showToast('导入失败：数据格式不正确', 'error')
+      }
+    } catch (error) {
+      showToast('导入失败：无法解析JSON: ' + (error as Error).message, 'error')
+    }
+  }
+
+  return { rule, data, exportData, importData, getCharacterName }
 })

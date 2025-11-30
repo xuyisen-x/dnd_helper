@@ -74,6 +74,7 @@ export interface SpellSlotsDnd5r {
 
 // 职业列表中的单个职业项
 export interface ClassItemDnd5r {
+  id: number // 唯一编号
   name: string // 职业名称
   subclass: string // 子职名称
   level: number // 该职业的等级
@@ -147,8 +148,10 @@ export interface Dnd5rData {
       temp: string
     }
     hitDice: {
-      total: string
-      current: number
+      d6: { total: number; current: number }
+      d8: { total: number; current: number }
+      d10: { total: number; current: number }
+      d12: { total: number; current: number }
     }
     ac: number
     speed: number
@@ -213,7 +216,7 @@ export function createEmptyDnd5rData(): Dnd5rData {
   return {
     basic: {
       name: '',
-      classes: [],
+      classes: [{ id: 1, name: '', subclass: '', level: 0, isPrimary: true }],
       background: '',
       race: '',
       alignment: '',
@@ -229,7 +232,12 @@ export function createEmptyDnd5rData(): Dnd5rData {
     },
     combat: {
       hp: { current: 0, max: 0, temp: '' },
-      hitDice: { total: '', current: 0 },
+      hitDice: {
+        d6: { total: 0, current: 0 },
+        d8: { total: 0, current: 0 },
+        d10: { total: 0, current: 0 },
+        d12: { total: 0, current: 0 },
+      },
       ac: 10,
       speed: 30,
       inspiration: false,

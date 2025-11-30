@@ -2,6 +2,7 @@
 import AbilityShield from './MainSheet/AbilityShield.vue'
 import ProficiencyShield from './MainSheet/ProficiencyShield.vue'
 import InspirationShield from './MainSheet/InspirationShield.vue'
+import CombatStatsPanel from './MainSheet/CombatStatsPanel.vue'
 </script>
 
 <template>
@@ -22,7 +23,10 @@ import InspirationShield from './MainSheet/InspirationShield.vue'
     </aside>
 
     <main class="right-panel">
-      <div class="content-placeholder">右侧区域 (HP, AC, 攻击等)</div>
+      <div class="one-panel">
+        <CombatStatsPanel />
+      </div>
+      <div class="one-panel"></div>
     </main>
   </div>
 </template>
@@ -32,7 +36,7 @@ import InspirationShield from './MainSheet/InspirationShield.vue'
 .page-layout {
   display: grid;
   grid-template-columns: auto 1fr; /* 左侧宽度由内容决定，右侧自动占据剩余宽度 */
-  gap: 20px; /* 左右大栏之间的间距 */
+  gap: 10px; /* 左右大栏之间的间距 */
   width: 100%;
   align-items: start; /* 顶部对齐 */
 }
@@ -53,17 +57,19 @@ import InspirationShield from './MainSheet/InspirationShield.vue'
 
 /* 右侧区域样式 (示例) */
 .right-panel {
-  background-color: rgba(0, 0, 0, 0.03);
-  border: 2px dashed var(--color-border);
-  border-radius: 8px;
-  min-height: 500px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  height: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
 }
 
 .content-placeholder {
   color: var(--color-text-soft);
   font-weight: bold;
+}
+
+.one-panel {
+  display: flex;
+  flex-direction: column;
 }
 </style>

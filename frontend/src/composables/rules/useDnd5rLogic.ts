@@ -88,11 +88,33 @@ export function useDnd5rLogic(sheet: Ref<Dnd5rData>) {
     survival: computed(() => getSkillModify('survival')),
   })
 
+  const addClass = (): void => {
+    // 如果是第一个插入的职业，则是主职业，负责不是
+    const isPrimary = sheet.value.basic.classes.length === 0 ? true : false
+    const id =
+      sheet.value.basic.classes.length === 0
+        ? 1
+        : Math.max(...sheet.value.basic.classes.map((c) => c.id)) + 1
+    sheet.value.basic.classes.push({
+      id: id,
+      name: '',
+      subclass: '',
+      level: 0,
+      isPrimary: isPrimary,
+    })
+  }
+
+  const removeClass = (index: number): void => {
+    sheet.value.basic.classes.splice(index, 1)
+  }
+
   return {
     totalLevel,
     abilityModifies,
     proficiencyBonus,
     saveModifies,
     skillModifies,
+    addClass,
+    removeClass,
   }
 }

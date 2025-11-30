@@ -166,7 +166,7 @@ const handleLevelInput = (e: Event, index: number) => {
   padding: 0;
   opacity: 0.6;
 }
-.btn-delete:hover {
+body.has-mouse .btn-delete:hover {
   color: var(--dnd-dragon-red);
   opacity: 1;
   transform: scale(1.2);

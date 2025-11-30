@@ -274,7 +274,7 @@ const longRest = () => {
   color: var(--dnd-ink-primary);
 }
 
-.short-rest:hover {
+body.has-mouse .short-rest:hover {
   background-color: rgba(255, 255, 255, 0.7);
   color: var(--dnd-ink-primary);
 }
@@ -286,7 +286,7 @@ const longRest = () => {
   color: var(--dnd-mithral-text); /* 白字 */
 }
 
-.long-rest:hover {
+body.has-mouse .long-rest:hover {
   background-color: var(--dnd-dragon-red-hover);
 }
 </style>

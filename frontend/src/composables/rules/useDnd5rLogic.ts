@@ -108,6 +108,14 @@ export function useDnd5rLogic(sheet: Ref<Dnd5rData>) {
     sheet.value.basic.classes.splice(index, 1)
   }
 
+  const passivePerception = computed(() => {
+    return 10 + skillModifies.perception
+  })
+
+  const initiativeTotal = computed(() => {
+    return abilityModifies.dex + sheet.value.extra_modify.initiative
+  })
+
   return {
     totalLevel,
     abilityModifies,
@@ -116,5 +124,7 @@ export function useDnd5rLogic(sheet: Ref<Dnd5rData>) {
     skillModifies,
     addClass,
     removeClass,
+    passivePerception,
+    initiativeTotal,
   }
 }

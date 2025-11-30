@@ -3,6 +3,7 @@ import AbilityShield from './MainSheet/AbilityShield.vue'
 import ProficiencyShield from './MainSheet/ProficiencyShield.vue'
 import InspirationShield from './MainSheet/InspirationShield.vue'
 import CombatStatsPanel from './MainSheet/CombatStatsPanel.vue'
+import CombatStatsPanel2 from './MainSheet/CombatStatsPanel2.vue'
 import PortraitContainer from './MainSheet/PortraitContainer.vue'
 </script>
 
@@ -26,9 +27,11 @@ import PortraitContainer from './MainSheet/PortraitContainer.vue'
     <main class="right-panel">
       <div class="one-panel">
         <PortraitContainer />
-        <CombatStatsPanel />
       </div>
-      <div class="one-panel"></div>
+      <div class="one-panel">
+        <CombatStatsPanel />
+        <CombatStatsPanel2 />
+      </div>
     </main>
   </div>
 </template>

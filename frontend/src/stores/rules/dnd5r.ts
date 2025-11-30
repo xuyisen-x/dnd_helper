@@ -155,6 +155,7 @@ export interface Dnd5rData {
     }
     ac: number
     speed: number
+    size: string
     inspiration: boolean
     deathSaves: {
       success: number
@@ -205,6 +206,7 @@ export interface Dnd5rData {
       performance: number
       persuasion: number
     }
+    initiative: number
   }
 
   // 立绘图片的Base64字符串
@@ -243,6 +245,7 @@ export function createEmptyDnd5rData(): Dnd5rData {
       },
       ac: 10,
       speed: 30,
+      size: '中型',
       inspiration: false,
       deathSaves: { success: 0, fail: 0 },
       exhaustion: 0,
@@ -295,6 +298,7 @@ export function createEmptyDnd5rData(): Dnd5rData {
         performance: 0,
         persuasion: 0,
       },
+      initiative: 0,
     },
     portraitBase64: '',
   }

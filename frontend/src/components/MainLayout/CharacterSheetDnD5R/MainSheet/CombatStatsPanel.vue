@@ -391,7 +391,7 @@ const toggleDeathSave = (type: 'success' | 'fail', index: number) => {
 .action-btn.damage {
   background-color: var(--dnd-dragon-red);
 } /* 红 */
-.action-btn:hover {
+body.has-mouse .action-btn:hover {
   filter: brightness(1.1);
 }
 

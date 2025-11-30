@@ -5,9 +5,6 @@
         <RouterLink to="/main/character-sheet" class="nav-link">
           <span>角色卡</span>
         </RouterLink>
-        <RouterLink to="/main/dice" class="nav-link">
-          <span>电子骰子</span>
-        </RouterLink>
         <RouterLink to="/main/about" class="nav-link">
           <span>关于</span>
         </RouterLink>

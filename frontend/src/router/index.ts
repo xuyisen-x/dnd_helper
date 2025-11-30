@@ -19,11 +19,6 @@ const router = createRouter({
           component: () => import('../views/MainLayout/CharacterSheetView.vue'),
         },
         {
-          path: 'dice',
-          name: 'dice',
-          component: () => import('../views/MainLayout/DiceView.vue'),
-        },
-        {
           path: 'about',
           name: 'about',
           component: () => import('../views/MainLayout/AboutView.vue'),

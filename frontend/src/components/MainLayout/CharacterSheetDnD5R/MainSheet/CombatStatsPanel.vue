@@ -323,6 +323,8 @@ const toggleDeathSave = (type: 'success' | 'fail', index: number) => {
   width: 100%;
   text-align: center;
   line-height: 1;
+  padding: 0;
+  margin: 0;
 }
 
 .input-medium {
@@ -339,7 +341,7 @@ const toggleDeathSave = (type: 'success' | 'fail', index: number) => {
 .input-small {
   font-size: 0.9rem;
   color: var(--dnd-ink-primary);
-  width: 20px;
+  width: 30px;
   text-align: center;
 }
 

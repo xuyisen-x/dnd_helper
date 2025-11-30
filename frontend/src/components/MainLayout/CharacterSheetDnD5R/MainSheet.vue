@@ -3,6 +3,7 @@ import AbilityShield from './MainSheet/AbilityShield.vue'
 import ProficiencyShield from './MainSheet/ProficiencyShield.vue'
 import InspirationShield from './MainSheet/InspirationShield.vue'
 import CombatStatsPanel from './MainSheet/CombatStatsPanel.vue'
+import PortraitContainer from './MainSheet/PortraitContainer.vue'
 </script>
 
 <template>
@@ -24,6 +25,7 @@ import CombatStatsPanel from './MainSheet/CombatStatsPanel.vue'
 
     <main class="right-panel">
       <div class="one-panel">
+        <PortraitContainer />
         <CombatStatsPanel />
       </div>
       <div class="one-panel"></div>
@@ -52,7 +54,7 @@ import CombatStatsPanel from './MainSheet/CombatStatsPanel.vue'
 .ability-column {
   display: flex;
   flex-direction: column;
-  gap: 15px; /* 每个盾牌之间的垂直间距 */
+  gap: 10px; /* 每个盾牌之间的垂直间距 */
 }
 
 /* 右侧区域样式 (示例) */
@@ -71,5 +73,6 @@ import CombatStatsPanel from './MainSheet/CombatStatsPanel.vue'
 .one-panel {
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 </style>

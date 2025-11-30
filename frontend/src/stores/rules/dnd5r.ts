@@ -206,6 +206,9 @@ export interface Dnd5rData {
       persuasion: number
     }
   }
+
+  // 立绘图片的Base64字符串
+  portraitBase64: string
 }
 
 // ==========================================
@@ -293,5 +296,6 @@ export function createEmptyDnd5rData(): Dnd5rData {
         persuasion: 0,
       },
     },
+    portraitBase64: '',
   }
 }

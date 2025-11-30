@@ -47,7 +47,7 @@ const longRest = () => {
           <label>角色姓名</label>
         </div>
         <div class="btn-group">
-          <div class="rest-btn short-rest" @click="shortRest" title="消耗生命骰恢复生命">
+          <div class="rest-btn short-rest" @click="shortRest">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
               <g fill="currentColor">
                 <path d="M13 6h-2v1a1 1 0 1 0 2 0z" />
@@ -61,7 +61,7 @@ const longRest = () => {
             短休
           </div>
 
-          <div class="rest-btn long-rest" @click="longRest" title="恢复所有生命值和法术位">
+          <div class="rest-btn long-rest" @click="longRest">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 48 48">
               <g
                 fill="none"
@@ -222,6 +222,7 @@ const longRest = () => {
 .highlight-group .static-val {
   font-weight: bold;
   color: var(--dnd-dragon-red);
+  opacity: 1;
 }
 
 .info-grid input {

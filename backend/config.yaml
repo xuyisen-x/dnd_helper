@@ -1,0 +1,3 @@
+log_level: debug
+server:
+  port: 19156

@@ -58,6 +58,7 @@ export interface CoinsDnd5r {
 
 // 武器/攻击
 export interface AttackDnd5r {
+  id: number // 唯一编号
   name: string // 武器/攻击名称
   key: SixAbilityKeysDnd5r // 关联的属性，比如力量或敏捷
   bonus: string // 攻击加值
@@ -270,7 +271,17 @@ export function createEmptyDnd5rData(): Dnd5rData {
       performance: { key: 'cha', prof: false, expert: false },
       persuasion: { key: 'cha', prof: false, expert: false },
     },
-    attacks: [],
+    attacks: [
+      {
+        id: 1,
+        name: '徒手攻击',
+        key: 'str',
+        bonus: '',
+        damage: '1',
+        offhand: false,
+        notes: '',
+      },
+    ],
     spells: {
       slots: Array.from({ length: 10 }, () => ({ total: 0, used: 0 })),
       list: [],

@@ -52,12 +52,12 @@ async fn read_config() -> AppConfig {
 
     // 读取服务器端口配置
     match doc["server"]["port"].as_i64() {
-        Some(port) if (1024..=65535).contains(&port) => {   // 检查端口范围
+        Some(port) if (0..=65535).contains(&port) => {   // 检查端口范围
             app_config.server_port = port as u16;
         }
         Some(invalid_port) => {                             // 不在范围内，使用默认值
             tracing::warn!(
-                "server port {} is out of valid range (1024-65535), using default port {}",
+                "server port {} is out of valid range (0-65535), using default port {}",
                 invalid_port, DEFAULT_PORT
             );
         }

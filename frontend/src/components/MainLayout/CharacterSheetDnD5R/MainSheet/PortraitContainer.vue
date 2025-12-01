@@ -137,6 +137,9 @@ body.has-mouse .portrait-uploader:hover {
   height: 100%;
   object-fit: cover; /* 关键：保证图片填满且不变形 */
   display: block;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 /* 占位符样式 */

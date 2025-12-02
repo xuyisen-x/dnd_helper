@@ -8,8 +8,6 @@ use serde::Deserialize;
 
 #[derive(Debug, Deserialize)]
 struct AppConfig {
-    #[serde(default = "default_static_port")]
-    pub static_port: u16,
     #[serde(default = "default_api_port")]
     pub api_port: u16,
     #[serde(default = "default_max_database_connections")]
@@ -23,7 +21,6 @@ struct AppConfig {
 impl Default for AppConfig {
     fn default() -> Self {
         Self {
-            static_port: default_static_port(),
             api_port: default_api_port(),
             max_database_connections: default_max_database_connections(),
             log_level: default_log_level(),
@@ -84,7 +81,7 @@ async fn read_config() -> AppConfig {
 
 
 
-pub async fn init() -> (u16, u16, AppState) {
+pub async fn init() -> (u16, AppState) {
     // 读取配置文件，并初始化日志系统
     let app_config = read_config().await;
     // 初始化 SQLite 数据库连接池
@@ -94,5 +91,5 @@ pub async fn init() -> (u16, u16, AppState) {
         .await.expect("failed to create database pool");
     let app_state = AppState { database_connection_pool };
 
-    (app_config.static_port, app_config.api_port, app_state)
+    (app_config.api_port, app_state)
 }

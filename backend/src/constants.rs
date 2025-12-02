@@ -1,13 +1,9 @@
-pub const DEFAULT_STATIC_PORT: u16 = 19156;
-pub const DEFAULT_API_PORT: u16 = 19157;
+pub const DEFAULT_API_PORT: u16 = 19156;
 pub const DEFAULT_MAX_DATABASE_CONNECTIONS: u32 = 5;
 pub const DEFAULT_LOG_LEVEL: &str = "debug";
 pub const DEFAULT_SQLITE_DB_URL: &str = "sqlite://database.db";
 pub const CONFIG_FILE_PATH: &str = "./config.toml";
 
-pub fn default_static_port() -> u16 {
-    DEFAULT_STATIC_PORT
-}
 pub fn default_api_port() -> u16 {
     DEFAULT_API_PORT
 }

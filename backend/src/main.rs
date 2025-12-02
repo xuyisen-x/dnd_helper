@@ -9,6 +9,6 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[tokio::main]
 async fn main() {
-    let (static_port, api_port, app_state) = utils::lifecycle::init().await;
-    web_server::run_serve(static_port, api_port, Arc::new(app_state)).await;
+    let (api_port, app_state) = utils::lifecycle::init().await;
+    web_server::run_serve(api_port, Arc::new(app_state)).await;
 }

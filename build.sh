@@ -28,9 +28,10 @@ cargo build $CARGO_FLAGS
 echo "--> Packaging..."
 
 cd ../
-mkdir -p runable
-cp "backend/$BIN_SRC_DIR/backend" ./runable/
-cp backend/config.toml ./runable
-cp -r frontend/dist ./runable/
+mkdir -p artifacts
+mkdir -p artifacts/server
+cp "backend/$BIN_SRC_DIR/backend" ./artifacts/server
+cp backend/config.toml ./artifacts/server
+cp -r frontend/dist ./artifacts
 
-echo "=== Build Success! Artifacts are in ./runable ==="
+echo "=== Build Success! Artifacts are in ./artifacts ==="

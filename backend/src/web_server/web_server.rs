@@ -38,5 +38,14 @@ pub async fn run_serve(static_port: u16, api_port: u16, app_state: ArcAppState) 
         axum::serve(listener, api_app).await.unwrap()
     });
 
-    let _ = tokio::join!(handle_static, handle_api);
+    tokio::select! {
+        result = handle_static => {
+            tracing::error!("Static server exited unexpectedly: {:?}", result);
+        }
+        result = handle_api => {
+            tracing::error!("API server exited unexpectedly: {:?}", result);
+        }
+    }
+
+    tracing::info!("Shutting down application due to sub-service failure.");
 }

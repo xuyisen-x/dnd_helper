@@ -85,14 +85,40 @@ const handleLoad = () => {
       </div>
       <CharacterSheetDnD5R v-if="activeCharacterStore.rule === 'dnd5r'" />
     </div>
+    <div class="footnote">
+      <a href="https://beian.miit.gov.cn/" target="_blank">IPC备案号（占位）</a>
+    </div>
   </div>
 </template>
 
 <style scoped>
+.footnote {
+  width: 100%;
+  text-align: center;
+  margin-top: 10px;
+
+  font-size: 0.75rem;
+  color: var(--dnd-ink-secondary);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.footnote a {
+  text-decoration: none;
+}
+
+.footnote a:hover {
+  color: var(--dnd-dragon-red);
+  text-decoration: underline;
+}
+
 .page-container {
   width: 100%;
   height: 100%;
   display: flex;
+  flex-direction: column;
   overflow-y: auto;
   padding: 1rem 0 1rem 0;
 }

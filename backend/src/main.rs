@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 mod web_server;
 mod utils;
 mod constants;
@@ -7,6 +9,6 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 #[tokio::main]
 async fn main() {
-    let port = utils::lifecycle::init().await;
-    web_server::run_serve(port).await;
+    let (static_port, api_port, app_state) = utils::lifecycle::init().await;
+    web_server::run_serve(static_port, api_port, Arc::new(app_state)).await;
 }

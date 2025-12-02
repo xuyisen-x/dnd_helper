@@ -1,0 +1,5 @@
+static_port = 19156
+api_port = 19157
+log_level = "info"
+sqlite_db_url = "sqlite://database.db"
+max_database_connections = 5

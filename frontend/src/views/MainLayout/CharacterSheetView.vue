@@ -3,8 +3,8 @@ import { defineAsyncComponent } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import { showToast } from '@/stores/toast'
 
-const CharacterSheetDnD5R = defineAsyncComponent(
-  () => import('@/components/MainLayout/CharacterSheetDnD5R.vue'),
+const CharacterSheetDnD5 = defineAsyncComponent(
+  () => import('@/components/MainLayout/CharacterSheetDnD5.vue'),
 )
 
 const activeCharacterStore = useActiveCharacterStore()
@@ -83,7 +83,9 @@ const handleLoad = () => {
         <button class="dnd-btn btn-primary" @click="handleLoad">读取档案</button>
         <button class="dnd-btn btn-primary" @click="handleSave">保存角色</button>
       </div>
-      <CharacterSheetDnD5R v-if="activeCharacterStore.rule === 'dnd5r'" />
+      <CharacterSheetDnD5
+        v-if="activeCharacterStore.rule === 'dnd5r' || activeCharacterStore.rule === 'dnd5e'"
+      />
     </div>
     <div class="footnote">
       <a href="https://beian.miit.gov.cn/" target="_blank">IPC备案号（占位）</a>

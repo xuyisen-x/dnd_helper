@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
-import type { Dnd5rData } from '@/stores/rules/dnd5r'
+import type { Dnd5Data } from '@/stores/rules/dnd5'
 import { useDnd5rLogic } from '@/composables/rules/useDnd5rLogic'
 import ClassManager from './ClassManager.vue'
 
 const store = useActiveCharacterStore()
 
 const sheet = computed({
-  get: () => store.data as Dnd5rData,
+  get: () => store.data as Dnd5Data,
   set: (val) => (store.data = val),
 })
 

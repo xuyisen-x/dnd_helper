@@ -1,33 +1,35 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
-import { DND5R_ABILITY_FULL_NAMES } from '@/stores/rules/dnd5r'
-import type { Dnd5rData, SixAbilityKeysDnd5r } from '@/stores/rules/dnd5r'
+import { DND5R_SKILL_FULL_NAMES, DND5R_ABILITY_FULL_NAMES } from '@/stores/rules/dnd5'
+import type { Dnd5Data, SkillsListDnd5 } from '@/stores/rules/dnd5'
 import { formatWithSign, useDnd5rLogic } from '@/composables/rules/useDnd5rLogic'
 
 const props = defineProps<{
-  ability: SixAbilityKeysDnd5r
+  skillKey: keyof SkillsListDnd5
 }>()
 
 const store = useActiveCharacterStore()
 const sheet = computed({
-  get: () => store.data as Dnd5rData,
+  get: () => store.data as Dnd5Data,
   set: (val) => (store.data = val),
 })
 
-const { abilityModifies, proficiencyBonus, saveModifies } = useDnd5rLogic(sheet)
+const { skillModifies, abilityModifies, proficiencyBonus } = useDnd5rLogic(sheet)
 
-const totalModify = computed(() => saveModifies[props.ability])
-const abilityModify = computed(() => abilityModifies[props.ability])
-const isProficient = computed(() => sheet.value.abilities[props.ability].save)
-const extra_modify = computed(() => sheet.value.extra_modify.save[props.ability])
+const abilityKey = computed(() => sheet.value.skills[props.skillKey].key)
+const totalModify = computed(() => skillModifies[props.skillKey])
+const abilityModify = computed(() => abilityModifies[abilityKey.value])
+const isProficient = computed(() => sheet.value.skills[props.skillKey].prof)
+const isExpert = computed(() => sheet.value.skills[props.skillKey].expert && isProficient.value)
+const extra_modify = computed(() => sheet.value.extra_modify.skill[props.skillKey])
 </script>
 
 <template>
   <div class="details-popover-container">
     <div class="arrow"></div>
 
-    <h4 class="title">{{ DND5R_ABILITY_FULL_NAMES[props.ability] }} 豁免分解</h4>
+    <h4 class="title">{{ DND5R_SKILL_FULL_NAMES[props.skillKey] }} 调整分解</h4>
 
     <div class="detail-row total-row">
       <span class="label">总计</span>
@@ -37,13 +39,18 @@ const extra_modify = computed(() => sheet.value.extra_modify.save[props.ability]
     <div class="divider"></div>
 
     <div class="detail-row">
-      <span class="label">属性调整值 ({{ DND5R_ABILITY_FULL_NAMES[props.ability] }})</span>
+      <span class="label">属性调整值 ({{ DND5R_ABILITY_FULL_NAMES[abilityKey] }})</span>
       <span class="value">{{ formatWithSign(abilityModify) }}</span>
     </div>
 
     <div class="detail-row" :class="{ inactive: !isProficient }">
       <span class="label">熟练加值</span>
       <span class="value">{{ isProficient ? formatWithSign(proficiencyBonus) : '—' }}</span>
+    </div>
+
+    <div class="detail-row" :class="{ inactive: !isExpert }">
+      <span class="label">专精加值</span>
+      <span class="value">{{ isExpert ? formatWithSign(proficiencyBonus) : '—' }}</span>
     </div>
 
     <div class="detail-row" :class="{ inactive: extra_modify === 0 }">

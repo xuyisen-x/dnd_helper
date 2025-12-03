@@ -1,54 +1,54 @@
 // ==========================================
 // 1. 辅助类型、接口定义
 // ==========================================
-export type SixAbilityKeysDnd5r = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'
+export type SixAbilityKeysDnd5 = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'
 
 // 单个属性 (如: 力量)
-export interface AbilityDnd5r {
+export interface AbilityDnd5 {
   score: number // 属性值
   save: boolean // 是否有该属性豁免的熟练
 }
 
 // 单个技能
-export interface SkillDnd5r {
-  key: SixAbilityKeysDnd5r // 关联的属性
+export interface SkillDnd5 {
+  key: SixAbilityKeysDnd5 // 关联的属性
   prof: boolean // 是否熟练
   expert: boolean // 是否精通
 }
 
 // 显式定义包含所有 18 个技能的结构
-export interface SkillsListDnd5r {
+export interface SkillsListDnd5 {
   // 力量
-  athletics: SkillDnd5r // 运动
+  athletics: SkillDnd5 // 运动
 
   // 敏捷
-  acrobatics: SkillDnd5r // 体操
-  sleight_of_hand: SkillDnd5r // 巧手
-  stealth: SkillDnd5r // 隐匿
+  acrobatics: SkillDnd5 // 体操
+  sleight_of_hand: SkillDnd5 // 巧手
+  stealth: SkillDnd5 // 隐匿
 
   // 智力
-  arcana: SkillDnd5r // 奥秘
-  history: SkillDnd5r // 历史
-  investigation: SkillDnd5r // 调查
-  nature: SkillDnd5r // 自然
-  religion: SkillDnd5r // 宗教
+  arcana: SkillDnd5 // 奥秘
+  history: SkillDnd5 // 历史
+  investigation: SkillDnd5 // 调查
+  nature: SkillDnd5 // 自然
+  religion: SkillDnd5 // 宗教
 
   // 感知
-  animal_handling: SkillDnd5r // 驯兽
-  insight: SkillDnd5r // 洞悉
-  medicine: SkillDnd5r // 医药
-  perception: SkillDnd5r // 察觉
-  survival: SkillDnd5r // 求生
+  animal_handling: SkillDnd5 // 驯兽
+  insight: SkillDnd5 // 洞悉
+  medicine: SkillDnd5 // 医药
+  perception: SkillDnd5 // 察觉
+  survival: SkillDnd5 // 求生
 
   // 魅力
-  deception: SkillDnd5r // 欺瞒
-  intimidation: SkillDnd5r // 威吓
-  performance: SkillDnd5r // 表演
-  persuasion: SkillDnd5r // 说服
+  deception: SkillDnd5 // 欺瞒
+  intimidation: SkillDnd5 // 威吓
+  performance: SkillDnd5 // 表演
+  persuasion: SkillDnd5 // 说服
 }
 
 // 钱币
-export interface CoinsDnd5r {
+export interface CoinsDnd5 {
   cp: number // 铜币Copper Piece (CP)
   sp: number // 银币Silver Piece (SP)
   ep: number // 银金币Electrum Piece (EP)
@@ -57,10 +57,10 @@ export interface CoinsDnd5r {
 }
 
 // 武器/攻击
-export interface AttackDnd5r {
+export interface AttackDnd5 {
   id: number // 唯一编号
   name: string // 武器/攻击名称
-  key: SixAbilityKeysDnd5r // 关联的属性，比如力量或敏捷
+  key: SixAbilityKeysDnd5 // 关联的属性，比如力量或敏捷
   bonus: string // 攻击加值
   damage: string // 伤害
   offhand: boolean // 是否为副手攻击
@@ -68,13 +68,26 @@ export interface AttackDnd5r {
 }
 
 // 法术位
-export interface SpellSlotsDnd5r {
+export interface SpellSlotDnd5 {
   total: number // 法术位总数
   used: number // 已使用的法术位数
 }
 
+// 法术位们
+export interface SpellSlotsDnd5 {
+  1: SpellSlotDnd5
+  2: SpellSlotDnd5
+  3: SpellSlotDnd5
+  4: SpellSlotDnd5
+  5: SpellSlotDnd5
+  6: SpellSlotDnd5
+  7: SpellSlotDnd5
+  8: SpellSlotDnd5
+  9: SpellSlotDnd5
+}
+
 // 职业列表中的单个职业项
-export interface ClassItemDnd5r {
+export interface ClassItemDnd5 {
   id: number // 唯一编号
   name: string // 职业名称
   subclass: string // 子职名称
@@ -86,7 +99,7 @@ export interface ClassItemDnd5r {
 // 2. 辅助映射表
 // ==========================================
 
-export const DND5R_ABILITY_FULL_NAMES: Record<SixAbilityKeysDnd5r, string> = {
+export const DND5R_ABILITY_FULL_NAMES: Record<SixAbilityKeysDnd5, string> = {
   str: '力量',
   dex: '敏捷',
   con: '体质',
@@ -95,7 +108,7 @@ export const DND5R_ABILITY_FULL_NAMES: Record<SixAbilityKeysDnd5r, string> = {
   cha: '魅力',
 }
 
-export const DND5R_SKILL_FULL_NAMES: Record<keyof SkillsListDnd5r, string> = {
+export const DND5R_SKILL_FULL_NAMES: Record<keyof SkillsListDnd5, string> = {
   athletics: '运动',
   acrobatics: '体操',
   sleight_of_hand: '巧手',
@@ -120,25 +133,25 @@ export const DND5R_SKILL_FULL_NAMES: Record<keyof SkillsListDnd5r, string> = {
 // 3. 核心数据结构定义
 // ==========================================
 
-export interface Dnd5rData {
+export interface Dnd5Data {
   // --- 基础信息 ---
   basic: {
     name: string
     background: string
     race: string
-    classes: ClassItemDnd5r[] // 职业列表
+    classes: ClassItemDnd5[] // 职业列表
     alignment: string
     xp: number
   }
 
   // --- 六维属性 ---
   abilities: {
-    str: AbilityDnd5r
-    dex: AbilityDnd5r
-    con: AbilityDnd5r
-    int: AbilityDnd5r
-    wis: AbilityDnd5r
-    cha: AbilityDnd5r
+    str: AbilityDnd5
+    dex: AbilityDnd5
+    con: AbilityDnd5
+    int: AbilityDnd5
+    wis: AbilityDnd5
+    cha: AbilityDnd5
   }
 
   // --- 战斗核心 ---
@@ -166,14 +179,15 @@ export interface Dnd5rData {
   }
 
   // --- 熟练项与列表 ---
-  skills: SkillsListDnd5r
+  skills: SkillsListDnd5
 
   // --- 武器/攻击 ---
-  attacks: AttackDnd5r[] // 使用 AttackDnd5r
+  attacks: AttackDnd5[] // 使用 AttackDnd5r
 
   // --- 法术 ---
   spells: {
-    slots: SpellSlotsDnd5r[] // 使用 SpellSlotsDnd5r
+    slots: SpellSlotsDnd5
+    pact_slots: SpellSlotsDnd5
     list: string[]
     ability: 'int' | 'wis' | 'cha' | ''
   }
@@ -218,7 +232,7 @@ export interface Dnd5rData {
 // 4. 工厂函数 (类型也随之更新)
 // ==========================================
 
-export function createEmptyDnd5rData(): Dnd5rData {
+export function createEmptyDnd5Data(): Dnd5Data {
   return {
     basic: {
       name: '',
@@ -283,7 +297,28 @@ export function createEmptyDnd5rData(): Dnd5rData {
       },
     ],
     spells: {
-      slots: Array.from({ length: 10 }, () => ({ total: 0, used: 0 })),
+      slots: {
+        1: { total: 0, used: 0 },
+        2: { total: 0, used: 0 },
+        3: { total: 0, used: 0 },
+        4: { total: 0, used: 0 },
+        5: { total: 0, used: 0 },
+        6: { total: 0, used: 0 },
+        7: { total: 0, used: 0 },
+        8: { total: 0, used: 0 },
+        9: { total: 0, used: 0 },
+      },
+      pact_slots: {
+        1: { total: 0, used: 0 },
+        2: { total: 0, used: 0 },
+        3: { total: 0, used: 0 },
+        4: { total: 0, used: 0 },
+        5: { total: 0, used: 0 },
+        6: { total: 0, used: 0 },
+        7: { total: 0, used: 0 },
+        8: { total: 0, used: 0 },
+        9: { total: 0, used: 0 },
+      },
       list: [],
       ability: '',
     },

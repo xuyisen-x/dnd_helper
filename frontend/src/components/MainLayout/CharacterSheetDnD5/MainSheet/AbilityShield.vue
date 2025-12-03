@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
-import { DND5R_ABILITY_FULL_NAMES, DND5R_SKILL_FULL_NAMES } from '@/stores/rules/dnd5r'
-import type { Dnd5rData, SixAbilityKeysDnd5r, SkillsListDnd5r } from '@/stores/rules/dnd5r'
+import { DND5R_ABILITY_FULL_NAMES, DND5R_SKILL_FULL_NAMES } from '@/stores/rules/dnd5'
+import type { Dnd5Data, SixAbilityKeysDnd5, SkillsListDnd5 } from '@/stores/rules/dnd5'
 import { useDnd5rLogic, formatWithSign } from '@/composables/rules/useDnd5rLogic'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import EditPopover from './EditPopover.vue'
@@ -16,12 +16,12 @@ import { addDiceResult } from '@/stores/dice-result'
 
 // 接收唯一的参数：属性枚举 Key
 const props = defineProps<{
-  abilityKey: SixAbilityKeysDnd5r
+  abilityKey: SixAbilityKeysDnd5
 }>()
 
 const store = useActiveCharacterStore()
 const sheet = computed({
-  get: () => store.data as Dnd5rData,
+  get: () => store.data as Dnd5Data,
   set: (val) => (store.data = val),
 })
 
@@ -29,7 +29,7 @@ const sheet = computed({
 const { abilityModifies, saveModifies, skillModifies } = useDnd5rLogic(sheet)
 
 // 筛选当前属性下的技能
-const currentSkills = (Object.keys(sheet.value.skills) as Array<keyof SkillsListDnd5r>).filter(
+const currentSkills = (Object.keys(sheet.value.skills) as Array<keyof SkillsListDnd5>).filter(
   (skillKey) => sheet.value.skills[skillKey].key === props.abilityKey,
 )
 
@@ -43,9 +43,9 @@ const handleScoreInput = (e: Event) => {
 }
 
 // 当前哪个气泡正在弹出
-const currentEditPopover = ref<'save' | keyof SkillsListDnd5r | null>(null)
+const currentEditPopover = ref<'save' | keyof SkillsListDnd5 | null>(null)
 // 当前哪个技能详情气泡正在显示
-const hoverTargetKey = ref<'save' | keyof SkillsListDnd5r | null>(null)
+const hoverTargetKey = ref<'save' | keyof SkillsListDnd5 | null>(null)
 // 记录那个技能投掷详情正在配置
 const configuringSkillKey = ref<string | null>(null)
 const showDetails = ref(false)
@@ -53,7 +53,7 @@ const hoverTimer = ref<number | null>(null)
 
 let isLongPressHappened = false
 
-const modifyNumClicked = (skillKey: keyof SkillsListDnd5r | 'save') => {
+const modifyNumClicked = (skillKey: keyof SkillsListDnd5 | 'save') => {
   if (!isUsingMouse.value && isLongPressHappened) {
     isLongPressHappened = false
     return
@@ -67,7 +67,7 @@ const modifyNumClicked = (skillKey: keyof SkillsListDnd5r | 'save') => {
   currentEditPopover.value = skillKey
 }
 
-const startDetailsTimer = (skillKey: keyof SkillsListDnd5r | 'save') => {
+const startDetailsTimer = (skillKey: keyof SkillsListDnd5 | 'save') => {
   if (!isUsingMouse.value) isLongPressHappened = false
   if (currentEditPopover.value === skillKey) {
     return
@@ -84,12 +84,12 @@ const startDetailsTimer = (skillKey: keyof SkillsListDnd5r | 'save') => {
     showDetails.value = true
   }, 800) // 等待800ms
 }
-const mouseEnterDetails = (skillKey: keyof SkillsListDnd5r | 'save') => {
+const mouseEnterDetails = (skillKey: keyof SkillsListDnd5 | 'save') => {
   if (isUsingMouse.value) {
     startDetailsTimer(skillKey)
   }
 }
-const touchStartDetails = (skillKey: keyof SkillsListDnd5r | 'save') => {
+const touchStartDetails = (skillKey: keyof SkillsListDnd5 | 'save') => {
   if (!isUsingMouse.value) {
     startDetailsTimer(skillKey)
   }
@@ -119,7 +119,7 @@ const touchEndDetails = () => {
 
 const { parseAndRoll } = useDiceBox()
 
-const roll = async (skillKey: keyof SkillsListDnd5r | 'save') => {
+const roll = async (skillKey: keyof SkillsListDnd5 | 'save') => {
   // 首先得到加值
   const modify = skillKey === 'save' ? saveModifies[props.abilityKey] : skillModifies[skillKey]
   // 构造掷骰字符串

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
-import type { Dnd5rData } from '@/stores/rules/dnd5r'
+import type { Dnd5Data } from '@/stores/rules/dnd5'
 import { useDnd5rLogic, formatWithSign } from '@/composables/rules/useDnd5rLogic'
 import EditPopover from './EditPopover.vue'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
@@ -12,7 +12,7 @@ import { isUsingMouse } from '@/composables/useGlobalState'
 
 const store = useActiveCharacterStore()
 const sheet = computed({
-  get: () => store.data as Dnd5rData,
+  get: () => store.data as Dnd5Data,
   set: (val) => (store.data = val),
 })
 

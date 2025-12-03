@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import SheetHeader from './CharacterSheetDnD5R/MainSheet/SheetHeader.vue'
-import MainSheet from './CharacterSheetDnD5R/MainSheet.vue'
-import SpellsSheet from './CharacterSheetDnD5R/SpellsSheet.vue'
+import SheetHeader from './CharacterSheetDnD5/MainSheet/SheetHeader.vue'
+import MainSheet from './CharacterSheetDnD5/MainSheet.vue'
+import SpellsSheet from './CharacterSheetDnD5/SpellsSheet.vue'
 
 const currentTab = ref<'main' | 'spells'>('main') // 用于切换页面
 // 建立一个映射表

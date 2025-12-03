@@ -1,20 +1,20 @@
 import { defineStore } from 'pinia'
 import { ref, toRaw } from 'vue'
-import type { Dnd5rData } from './rules/dnd5r'
-import { createEmptyDnd5rData } from './rules/dnd5r'
+import type { Dnd5Data } from './rules/dnd5'
+import { createEmptyDnd5Data } from './rules/dnd5'
 import { showToast } from '@/stores/toast'
 
 // 可以适配多种不同的规则
-export type RuleSystem = 'dnd5r'
-export type CharacterData = Dnd5rData | Record<string, never>
+export type RuleSystem = 'dnd5r' | 'dnd5e'
+export type CharacterData = Dnd5Data | Record<string, never>
 
 export const useActiveCharacterStore = defineStore('active-character', () => {
   const rule = ref<RuleSystem>('dnd5r')
-  const data = ref<CharacterData>(createEmptyDnd5rData())
+  const data = ref<CharacterData>(createEmptyDnd5Data())
 
   const getCharacterName = () => {
-    if (rule.value === 'dnd5r') {
-      const tmp = (data.value as Dnd5rData).basic.name
+    if (rule.value === 'dnd5r' || rule.value === 'dnd5e') {
+      const tmp = (data.value as Dnd5Data).basic.name
       return tmp ? tmp : '未命名角色'
     }
     return '未知角色'

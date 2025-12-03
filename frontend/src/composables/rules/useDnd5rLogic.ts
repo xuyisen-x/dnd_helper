@@ -1,12 +1,12 @@
 import type { Ref } from 'vue'
 import { computed, reactive } from 'vue'
-import type { Dnd5rData, SixAbilityKeysDnd5r } from '@/stores/rules/dnd5r'
+import type { Dnd5Data, SixAbilityKeysDnd5 } from '@/stores/rules/dnd5'
 
 export function formatWithSign(num: number): string {
   return num > 0 ? `+${num}` : `${num}`
 }
 
-export function useDnd5rLogic(sheet: Ref<Dnd5rData>) {
+export function useDnd5rLogic(sheet: Ref<Dnd5Data>) {
   const totalLevel = computed(() => {
     const classes = sheet.value.basic.classes
     if (!classes || classes.length === 0) return 0
@@ -14,11 +14,11 @@ export function useDnd5rLogic(sheet: Ref<Dnd5rData>) {
     return classes.reduce((sum, cls) => sum + Number(cls.level || 0), 0)
   })
 
-  const getAbilityModify = (ability: SixAbilityKeysDnd5r): number => {
+  const getAbilityModify = (ability: SixAbilityKeysDnd5): number => {
     const abilityScore = sheet.value.abilities[ability].score
     return Math.floor((abilityScore - 10) / 2)
   }
-  const abilityModifies: Record<SixAbilityKeysDnd5r, number> = reactive({
+  const abilityModifies: Record<SixAbilityKeysDnd5, number> = reactive({
     str: computed(() => getAbilityModify('str')),
     dex: computed(() => getAbilityModify('dex')),
     con: computed(() => getAbilityModify('con')),
@@ -41,14 +41,14 @@ export function useDnd5rLogic(sheet: Ref<Dnd5rData>) {
     }
   })
 
-  const getSaveModify = (ability: SixAbilityKeysDnd5r): number => {
+  const getSaveModify = (ability: SixAbilityKeysDnd5): number => {
     return (
       abilityModifies[ability] + // 能力调整值
       (sheet.value.abilities[ability].save ? proficiencyBonus.value : 0) + // 如果熟练豁免加上熟练加值
       sheet.value.extra_modify.save[ability] // 加上用户自定义的额外调整值
     )
   }
-  const saveModifies: Record<SixAbilityKeysDnd5r, number> = reactive({
+  const saveModifies: Record<SixAbilityKeysDnd5, number> = reactive({
     str: computed(() => getSaveModify('str')),
     dex: computed(() => getSaveModify('dex')),
     con: computed(() => getSaveModify('con')),
@@ -57,7 +57,7 @@ export function useDnd5rLogic(sheet: Ref<Dnd5rData>) {
     cha: computed(() => getSaveModify('cha')),
   })
 
-  const getSkillModify = (skillKey: keyof Dnd5rData['skills']): number => {
+  const getSkillModify = (skillKey: keyof Dnd5Data['skills']): number => {
     const skill = sheet.value.skills[skillKey]
     const ability = skill.key
     return (
@@ -67,7 +67,7 @@ export function useDnd5rLogic(sheet: Ref<Dnd5rData>) {
       sheet.value.extra_modify.skill[skillKey] // 加上用户自定义的额外调整值
     )
   }
-  const skillModifies: Record<keyof Dnd5rData['skills'], number> = reactive({
+  const skillModifies: Record<keyof Dnd5Data['skills'], number> = reactive({
     acrobatics: computed(() => getSkillModify('acrobatics')),
     animal_handling: computed(() => getSkillModify('animal_handling')),
     arcana: computed(() => getSkillModify('arcana')),

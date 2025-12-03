@@ -1,7 +1,6 @@
 use std::net::SocketAddr;
 use axum::{Router, routing::get};
 use tower_http::trace::TraceLayer;
-use tower_http::services::{ServeDir, ServeFile};
 use crate::utils::app_state::ArcAppState;
 
 pub async fn run_serve(api_port: u16, app_state: ArcAppState) {
@@ -17,7 +16,8 @@ pub async fn run_serve(api_port: u16, app_state: ArcAppState) {
         .with_state(app_state)
         .layer(TraceLayer::new_for_http());
 
-    let addr = SocketAddr::from(([0, 0, 0, 0], api_port));
+    // 只监听本地地址，外层有nginx反向代理并负责TLS
+    let addr = SocketAddr::from(([127, 0, 0, 1], api_port));
     let listener = tokio::net::TcpListener::bind(addr).await.unwrap();
     tracing::info!("API server listening on {}", listener.local_addr().unwrap());
     axum::serve(listener, api_app).await.unwrap();

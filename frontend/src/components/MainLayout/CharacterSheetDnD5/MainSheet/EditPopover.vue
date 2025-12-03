@@ -1,55 +1,43 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { formatWithSign } from '@/composables/rules/useDnd5rLogic'
+import { computed, onMounted, ref } from 'vue'
+import { useDnd5rLogic } from '@/composables/rules/useDnd5rLogic'
+import { useActiveCharacterStore } from '@/stores/active-character'
+import type { Dnd5Data } from '@/stores/rules/dnd5'
 
-const props = defineProps<{ modelValue: number }>()
+const props = defineProps<{ modelValue: string }>()
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: number): void
+  (e: 'update:modelValue', value: string): void
   (e: 'close'): void
 }>()
 
+const store = useActiveCharacterStore()
+const sheet = computed({
+  get: () => store.data as Dnd5Data,
+  set: (val) => (store.data = val),
+})
+
+const { isValidStringWithVariables } = useDnd5rLogic(sheet)
+
 const inputRef = ref<HTMLInputElement | null>(null)
 
-const localValue = ref(formatWithSign(props.modelValue))
+const localValue = ref(props.modelValue)
+const initValue = props.modelValue
+
+const isCurrentInputValid = computed(() => isValidStringWithVariables(localValue.value))
 
 onMounted(() => {
   inputRef.value?.focus()
   inputRef.value?.select()
 })
 
-const handleInput = (e: Event) => {
-  const target = e.target as HTMLInputElement
-  let val = target.value
-
-  // 初步清洗，只保留数字和符号
-  val = val.replace(/[^\d-+]/g, '')
-
-  // 进一步处理：只允许开头有一个符号，其余位置的符号都删除
-  val = val.replace(/[-+]/g, (match, offset) => (offset === 0 ? match : ''))
-
-  // 限制数字部分位数
-  // 检测是否有符号开头
-  const hasSign = /^[-+]/.test(val)
-  const sign = hasSign ? val[0] : '' // 分割出符号部分
-  const numPart = hasSign ? val.slice(1) : val // 分割出数字部分
-  val = sign + (numPart.length > 2 ? numPart.slice(0, 2) : numPart) // 限制最大两位数
-
-  // 更新本地显示
-  localValue.value = val
-  target.value = val // 强制回填，防止非数字字符显示在框里
-}
-
 // 3. 关闭并提交
 const commitAndClose = () => {
-  let finalNum = Number(localValue.value)
-
-  if (isNaN(finalNum)) {
-    finalNum = 0
-  }
+  const finalString = isCurrentInputValid.value ? localValue.value : initValue
+  const clearString = finalString.replace(/\s/g, '')
 
   // 发送更新事件
-  emit('update:modelValue', finalNum)
+  emit('update:modelValue', clearString)
   // 发送关闭事件
   emit('close')
 }
@@ -60,13 +48,14 @@ const commitAndClose = () => {
     <div class="arrow"></div>
 
     <div class="input-wrapper">
-      <span class="label">额外调整</span>
+      <div>
+        <span class="label">额外调整</span>
+        <span class="red_label" v-show="!isCurrentInputValid">(无效)</span>
+      </div>
       <input
         ref="inputRef"
         type="text"
-        inputmode="numeric"
-        :value="localValue"
-        @input="handleInput"
+        v-model="localValue"
         @blur="commitAndClose"
         @keyup.enter="commitAndClose"
         class="popover-input"
@@ -110,13 +99,20 @@ const commitAndClose = () => {
 }
 
 .label {
-  font-size: 0.6rem;
+  font-size: 0.75rem;
   color: var(--dnd-ink-secondary);
   white-space: nowrap;
 }
 
+.red_label {
+  font-size: 0.75rem;
+  color: var(--dnd-dragon-red);
+  font-weight: bold;
+  margin-left: 2px;
+}
+
 .popover-input {
-  width: 50px;
+  width: 150px;
   text-align: center;
   border: 1px solid var(--dnd-ink-secondary);
   border-radius: 4px;
@@ -124,6 +120,7 @@ const commitAndClose = () => {
   font-weight: bold;
   color: var(--dnd-ink-primary);
   outline: none;
+  font-size: 0.8rem;
 }
 .popover-input:focus {
   border-color: var(--dnd-dragon-red);

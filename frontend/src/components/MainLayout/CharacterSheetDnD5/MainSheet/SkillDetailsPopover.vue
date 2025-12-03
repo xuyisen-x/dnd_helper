@@ -15,7 +15,8 @@ const sheet = computed({
   set: (val) => (store.data = val),
 })
 
-const { skillModifies, abilityModifies, proficiencyBonus } = useDnd5rLogic(sheet)
+const { skillModifies, abilityModifies, proficiencyBonus, evalStringWithVariables } =
+  useDnd5rLogic(sheet)
 
 const abilityKey = computed(() => sheet.value.skills[props.skillKey].key)
 const totalModify = computed(() => skillModifies[props.skillKey])
@@ -53,9 +54,11 @@ const extra_modify = computed(() => sheet.value.extra_modify.skill[props.skillKe
       <span class="value">{{ isExpert ? formatWithSign(proficiencyBonus) : '—' }}</span>
     </div>
 
-    <div class="detail-row" :class="{ inactive: extra_modify === 0 }">
+    <div class="detail-row" :class="{ inactive: extra_modify === '' }">
       <span class="label">额外调整</span>
-      <span class="value">{{ extra_modify !== 0 ? formatWithSign(extra_modify) : '—' }}</span>
+      <span class="value">{{
+        extra_modify !== '' ? evalStringWithVariables(extra_modify) : '—'
+      }}</span>
     </div>
   </div>
 </template>

@@ -194,34 +194,34 @@ export interface Dnd5Data {
 
   extra_modify: {
     save: {
-      str: number
-      dex: number
-      con: number
-      int: number
-      wis: number
-      cha: number
+      str: string
+      dex: string
+      con: string
+      int: string
+      wis: string
+      cha: string
     }
     skill: {
-      athletics: number
-      acrobatics: number
-      sleight_of_hand: number
-      stealth: number
-      arcana: number
-      history: number
-      investigation: number
-      nature: number
-      religion: number
-      animal_handling: number
-      insight: number
-      medicine: number
-      perception: number
-      survival: number
-      deception: number
-      intimidation: number
-      performance: number
-      persuasion: number
+      athletics: string
+      acrobatics: string
+      sleight_of_hand: string
+      stealth: string
+      arcana: string
+      history: string
+      investigation: string
+      nature: string
+      religion: string
+      animal_handling: string
+      insight: string
+      medicine: string
+      perception: string
+      survival: string
+      deception: string
+      intimidation: string
+      performance: string
+      persuasion: string
     }
-    initiative: number
+    initiative: string
   }
 
   // 立绘图片的Base64字符串
@@ -323,28 +323,28 @@ export function createEmptyDnd5Data(): Dnd5Data {
       ability: '',
     },
     extra_modify: {
-      save: { str: 0, dex: 0, con: 0, int: 0, wis: 0, cha: 0 },
+      save: { str: '', dex: '', con: '', int: '', wis: '', cha: '' },
       skill: {
-        athletics: 0,
-        acrobatics: 0,
-        sleight_of_hand: 0,
-        stealth: 0,
-        arcana: 0,
-        history: 0,
-        investigation: 0,
-        nature: 0,
-        religion: 0,
-        animal_handling: 0,
-        insight: 0,
-        medicine: 0,
-        perception: 0,
-        survival: 0,
-        deception: 0,
-        intimidation: 0,
-        performance: 0,
-        persuasion: 0,
+        athletics: '',
+        acrobatics: '',
+        sleight_of_hand: '',
+        stealth: '',
+        arcana: '',
+        history: '',
+        investigation: '',
+        nature: '',
+        religion: '',
+        animal_handling: '',
+        insight: '',
+        medicine: '',
+        perception: '',
+        survival: '',
+        deception: '',
+        intimidation: '',
+        performance: '',
+        persuasion: '',
       },
-      initiative: 0,
+      initiative: '',
     },
     portraitBase64: '',
   }

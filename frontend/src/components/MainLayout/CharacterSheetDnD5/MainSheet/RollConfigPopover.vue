@@ -91,19 +91,6 @@ const handleRoll = async () => {
 const toggleBonusDice = (die: keyof BonusDiceState) => {
   bonusDice.value[die] = !bonusDice.value[die]
 }
-
-// 处理自定义加值输入，过滤非法字符
-const handleFormulaInput = (e: Event) => {
-  const target = e.target as HTMLInputElement
-
-  const cleanValue = target.value.replace(/[^a-zA-Z0-9+\-\s<>]/g, '')
-
-  if (target.value !== cleanValue) {
-    target.value = cleanValue
-  }
-
-  comstomBonus.value = cleanValue
-}
 </script>
 
 <template>
@@ -153,13 +140,7 @@ const handleFormulaInput = (e: Event) => {
 
       <div class="flat-input-row">
         <span>自定义</span>
-        <input
-          v-model="comstomBonus"
-          placeholder="0"
-          type="text"
-          @keyup.enter="handleRoll"
-          @input="handleFormulaInput"
-        />
+        <input v-model="comstomBonus" placeholder="0" type="text" @keyup.enter="handleRoll" />
       </div>
     </div>
 

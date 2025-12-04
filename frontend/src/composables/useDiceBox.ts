@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import type DiceBox from '@3d-dice/dice-box'
 import DiceParser from '@3d-dice/dice-parser-interface'
@@ -7,6 +7,80 @@ import type { RollBase } from 'dice-roller-parser'
 
 import { showToast } from '@/stores/toast'
 import type { RollObject } from '@3d-dice/dice-box'
+
+import { useActiveCharacterStore } from '@/stores/active-character'
+import type { Dnd5Data } from '@/stores/rules/dnd5'
+import { useDnd5rLogic } from './rules/useDnd5rLogic'
+
+function getPreprocessFuction() {
+  const store = useActiveCharacterStore()
+
+  if (store.rule === 'dnd5e' || store.rule === 'dnd5r') {
+    const sheet = computed({
+      get: () => store.data as Dnd5Data,
+      set: (val) => (store.data = val),
+    })
+    const { evalStringWithVariables } = useDnd5rLogic(sheet)
+    return (input: string): string => String(evalStringWithVariables(input))
+  } else {
+    // 如果均不匹配，返回恒等变换
+    return (input: string): string => input
+  }
+}
+
+function parseExpression(expression: string): string[] {
+  const parts = []
+  let buffer = ''
+  let parenDepth = 0
+
+  for (let i = 0; i < expression.length; i++) {
+    const char = expression[i]
+
+    if (char === '(') {
+      parenDepth++
+    } else if (char === ')') {
+      parenDepth--
+    }
+
+    // 如果在顶层（不在括号内）遇到了 + 或 -
+    if (parenDepth === 0 && (char === '+' || char === '-')) {
+      // 把之前积攒的 buffer (比如 "1d4") 存入结果
+      if (buffer.trim().length > 0) {
+        parts.push(buffer.trim())
+      }
+      // 把运算符也存入结果
+      parts.push(char)
+      // 清空 buffer，准备读取下一段
+      buffer = ''
+    } else {
+      // 否则，把字符加入 buffer
+      buffer += char
+    }
+  }
+
+  // 循环结束后，把最后剩下的 buffer 存入结果
+  if (buffer.trim().length > 0) {
+    parts.push(buffer.trim())
+  }
+
+  return parts
+}
+
+function Preprocess(expression: string): string {
+  const parts = parseExpression(expression)
+  const preprocessItem = getPreprocessFuction()
+  const processedParts = parts.map((input) => {
+    if (/^(d\d|\d+d\d+)/.test(input)) {
+      return input
+    }
+    if (input === '+' || input === '-') {
+      return input
+    }
+    // 加上括号
+    return '(' + preprocessItem(input) + ')'
+  })
+  return processedParts.join('')
+}
 
 type RealRollBase = RollBase & {
   rolls?: Array<{
@@ -262,11 +336,13 @@ export function useDiceBox() {
   }
 
   const parseAndRoll = async (notation: string): Promise<RollOutput | null> => {
+    const preprocessedNotion = Preprocess(notation)
+    console.log(preprocessedNotion)
     if (showAnimation.value) {
-      const output = await parseAndRollWithAnimation(notation)
+      const output = await parseAndRollWithAnimation(preprocessedNotion)
       return parseOuptput(output)
     } else {
-      const output = parseAndRollWithoutAnimation(notation)
+      const output = parseAndRollWithoutAnimation(preprocessedNotion)
       return parseOuptput(output)
     }
   }

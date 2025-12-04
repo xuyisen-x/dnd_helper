@@ -46,18 +46,6 @@ const totalSelected = computed(() => {
   return Object.values(selection.value).reduce((sum, count) => sum + count, 0)
 })
 
-const handleFormulaInput = (e: Event) => {
-  const target = e.target as HTMLInputElement
-
-  const cleanValue = target.value.replace(/[^a-zA-Z0-9+\-\s<>]/g, '')
-
-  if (target.value !== cleanValue) {
-    target.value = cleanValue
-  }
-
-  customFormula.value = cleanValue
-}
-
 const togglePanel = () => {
   isPanelOpen.value = !isPanelOpen.value
   if (!isPanelOpen.value) clearState() // 关闭时清空选择
@@ -214,12 +202,7 @@ onClickOutside(containnerRef, () => {
       </div>
 
       <div v-if="isPanelOpen" class="input-wrapper">
-        <input
-          v-model="customFormula"
-          placeholder="自定义 (如 2d6+5)"
-          @keyup.enter="rollDice"
-          @input="handleFormulaInput"
-        />
+        <input v-model="customFormula" placeholder="自定义 (如 2d6+5)" @keyup.enter="rollDice" />
       </div>
 
       <!-- 控制动画开关的按钮 -->

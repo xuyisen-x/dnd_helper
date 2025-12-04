@@ -3,8 +3,11 @@ import { computed } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
+import DiceIcon from '@/components/Icons/DiceIcon.vue'
+import { useDiceBox } from '@/composables/useDiceBox'
+import { addDiceResult } from '@/stores/dice-result'
 
-import InlineEditButton from '../Common/InlineEditButton.vue'
+const { parseAndRoll } = useDiceBox()
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -13,12 +16,25 @@ const sheet = computed({
 })
 
 const { addAttack, removeAttack } = useDnd5Logic(sheet)
+
+// const rollAttack = (id: number) => async () => {
+//   // TODO
+// }
+
+const rollDamage = async (index: number) => {
+  const attack = sheet.value.attacks[index]
+  console.log(attack)
+  if (!attack || !attack.damage) return
+  const result = await parseAndRoll(attack.damage)
+  if (result !== null) {
+    addDiceResult(result, attack.damage, `伤害: ${attack.name}`)
+  }
+}
 </script>
 
 <template>
-  <div class="attacks-panel dnd-card-border">
+  <div class="attacks-panel">
     <div class="panel-title-bar">
-      <span class="deco-dot"></span>
       <span class="label">武器 & 伤害戏法</span>
     </div>
 
@@ -27,9 +43,10 @@ const { addAttack, removeAttack } = useDnd5Logic(sheet)
     <div class="table-container">
       <div class="grid-row header-row">
         <div class="col-header col-name">名称</div>
-        <div class="col-header col-bonus">攻击加值 / DC</div>
+        <div class="col-header col-bonus">攻击加值</div>
         <div class="col-header col-damage">伤害</div>
-        <div class="col-header col-notes">类型</div>
+        <div class="col-header col-damage-type">类型</div>
+        <div class="col-header col-notes">备注</div>
         <div class="col-header col-action"></div>
       </div>
 
@@ -44,35 +61,43 @@ const { addAttack, removeAttack } = useDnd5Logic(sheet)
               type="text"
               v-model="attack.bonus"
               class="bare-input text-center"
-              placeholder="+5"
+              placeholder="@str + @pb"
             />
+            <div><DiceIcon class="clickable" /></div>
           </div>
 
           <div class="input-wrap col-damage">
-            <input type="text" v-model="attack.damage" class="bare-input" placeholder="1d8" />
+            <input
+              type="text"
+              v-model="attack.damage"
+              class="bare-input text-center"
+              placeholder="1d8 + @str"
+            />
+            <div @click="rollDamage(index)"><DiceIcon class="clickable" /></div>
           </div>
 
           <div class="input-wrap col-damage-type">
-            <input type="text" v-model="attack.damageType" class="bare-input" placeholder="钝击" />
+            <input
+              type="text"
+              v-model="attack.damageType"
+              class="bare-input text-center"
+              placeholder="挥砍"
+            />
           </div>
 
-          <InlineEditButton
-            title="备注"
-            v-model="attack.notes"
-            placeholder="请输入备注"
-          ></InlineEditButton>
+          <div class="input-wrap col-notes">
+            <input type="text" v-model="attack.notes" class="bare-input" placeholder="请输入备注" />
+          </div>
 
           <div class="col-action">
             <button class="btn-delete" @click="removeAttack(index)" title="删除此条目">×</button>
           </div>
         </div>
-
         <div v-if="sheet.attacks.length === 0" class="empty-tip">点击下方按钮添加攻击方式</div>
       </div>
-    </div>
-
-    <div class="panel-footer">
-      <button class="btn-add" @click="addAttack">+ 添加攻击</button>
+      <div class="panel-footer">
+        <button class="btn-add" @click="addAttack">+ 添加攻击</button>
+      </div>
     </div>
   </div>
 </template>
@@ -84,12 +109,11 @@ const { addAttack, removeAttack } = useDnd5Logic(sheet)
   flex-direction: column;
   background-color: var(--dnd-parchment-bg);
   border: 2px solid var(--dnd-ink-secondary);
-  /* 复用之前的特色圆角 */
-  border-top-left-radius: 16px;
-  border-bottom-right-radius: 4px;
+  border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  border: 2px solid var(--dnd-ink-secondary);
   overflow: hidden;
-  margin-top: 20px; /* 与上方组件拉开距离 */
+  margin-top: 10px; /* 与上方组件拉开距离 */
 }
 
 /* --- 标题栏 --- */
@@ -102,19 +126,10 @@ const { addAttack, removeAttack } = useDnd5Logic(sheet)
   position: relative;
 }
 .label {
-  font-weight: 900;
+  font-weight: bold;
   color: var(--dnd-ink-primary);
   font-size: 1rem;
   letter-spacing: 1px;
-}
-.deco-dot {
-  position: absolute;
-  top: 8px;
-  left: 8px;
-  width: 6px;
-  height: 6px;
-  background-color: var(--dnd-ink-primary);
-  border-radius: 50%;
 }
 .panel-divider {
   height: 2px;
@@ -129,13 +144,15 @@ const { addAttack, removeAttack } = useDnd5Logic(sheet)
   display: flex;
   flex-direction: column;
   gap: 8px;
+  height: 270px;
+  overflow-y: auto;
 }
 
 /* Grid 定义：根据内容重要性分配宽度比例 */
 .grid-row {
   display: grid;
   /* 名称(3) 加值(1.5) 伤害(2) 备注(2.5) 删除按钮(auto) */
-  grid-template-columns: 3fr 1.5fr 2fr 2.5fr 30px;
+  grid-template-columns: 1fr 2fr 2fr 0.75fr 2.5fr 30px;
   gap: 10px;
   align-items: center;
 }
@@ -150,6 +167,8 @@ const { addAttack, removeAttack } = useDnd5Logic(sheet)
   font-weight: bold;
   color: var(--dnd-ink-secondary);
 }
+.col-damage,
+.col-damage-type,
 .col-bonus {
   text-align: center;
 }
@@ -164,6 +183,7 @@ const { addAttack, removeAttack } = useDnd5Logic(sheet)
 .input-wrap {
   display: flex;
   align-items: center;
+  justify-content: center;
 }
 
 /* --- 输入框基础样式 --- */
@@ -180,9 +200,7 @@ const { addAttack, removeAttack } = useDnd5Logic(sheet)
   border-radius: 4px;
   transition: background-color 0.2s;
 }
-.bare-input:focus {
-  background-color: rgba(0, 0, 0, 0.05); /* 聚焦时微亮 */
-}
+
 .bare-input::placeholder {
   color: rgba(0, 0, 0, 0.3);
   font-weight: normal;
@@ -210,10 +228,8 @@ const { addAttack, removeAttack } = useDnd5Logic(sheet)
 }
 
 .panel-footer {
-  padding: 10px;
   display: flex;
   justify-content: center;
-  border-top: 1px solid rgba(0, 0, 0, 0.05);
 }
 .btn-add {
   background: transparent;
@@ -222,7 +238,7 @@ const { addAttack, removeAttack } = useDnd5Logic(sheet)
   padding: 6px 15px;
   border-radius: 15px;
   cursor: pointer;
-  font-size: 0.9rem;
+  font-size: 0.6rem;
   transition: all 0.2s;
 }
 .btn-add:hover {

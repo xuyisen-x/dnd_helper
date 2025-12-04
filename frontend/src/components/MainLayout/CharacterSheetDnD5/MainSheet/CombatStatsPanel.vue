@@ -478,6 +478,7 @@ body.has-mouse .action-btn:hover {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  gap: 6px;
 }
 .hd-field {
   display: flex;

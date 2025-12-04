@@ -15,15 +15,18 @@ export function useDnd5rLogic(sheet: Ref<Dnd5Data>) {
   >
 
   const replaceVariablesInString = (input: string) => {
-    const regex = /@(str|dex|con|int|wis|cha|pb)\b/gi
+    const regex = /@(str|dex|con|int|wis|cha|pb|lv\d+)\b/gi
     return input.replace(regex, (match, key) => {
       const lowerKey = key.toLowerCase()
 
-      let value: number | undefined
+      let value: number | undefined = undefined
       if (lowerKey === 'pb') {
         value = proficiencyBonus.value
-      } else {
+      } else if (['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(lowerKey)) {
         value = abilityModifies[lowerKey as SixAbilityKeysDnd5]
+      } else if (/^lv\d+$/.test(lowerKey)) {
+        const classIndex = parseInt(lowerKey.slice(2)) - 1 // lv1 对应索引 0
+        value = sheet.value.basic.classes[classIndex]?.level || 0
       }
       return value !== undefined ? String(value) : '0'
     })

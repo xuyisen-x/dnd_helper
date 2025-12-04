@@ -337,7 +337,6 @@ export function useDiceBox() {
 
   const parseAndRoll = async (notation: string): Promise<RollOutput | null> => {
     const preprocessedNotion = Preprocess(notation)
-    console.log(preprocessedNotion)
     if (showAnimation.value) {
       const output = await parseAndRollWithAnimation(preprocessedNotion)
       return parseOuptput(output)

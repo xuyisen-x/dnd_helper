@@ -4,10 +4,19 @@ import { useEventListener } from '@vueuse/core'
 import { useDiceBox } from '@/composables/useDiceBox'
 import { addDiceResult } from '@/stores/dice-result'
 
-const props = defineProps<{
-  title: string
-  baseModifier: number
-}>()
+const props = withDefaults(
+  defineProps<{
+    title: string
+    baseModifier: number
+    disableDiceGrid?: boolean
+    disableCustomBonus?: boolean
+    callbackAfterRoll?: (result: number) => void
+  }>(),
+  {
+    disableDiceGrid: false,
+    disableCustomBonus: false,
+  },
+)
 
 const emit = defineEmits<{
   (e: 'close'): void
@@ -84,6 +93,9 @@ const handleRoll = async () => {
   const result = await parseAndRoll(formula)
   if (result !== null) {
     addDiceResult(result, formula, title)
+    if (props.callbackAfterRoll) {
+      props.callbackAfterRoll(result.result)
+    }
   }
 }
 
@@ -95,6 +107,7 @@ const toggleBonusDice = (die: keyof BonusDiceState) => {
 
 <template>
   <div class="roll-config-popover" ref="targetRef" @click.stop>
+    <div class="arrow"></div>
     <div class="popover-header">{{ title }}</div>
 
     <div class="mode-selector">
@@ -123,22 +136,24 @@ const toggleBonusDice = (die: keyof BonusDiceState) => {
 
     <div class="divider"></div>
 
-    <div class="bonus-section">
+    <div class="bonus-section" v-if="!(disableCustomBonus && disableDiceGrid)">
       <div class="section-label">额外加值</div>
 
-      <div class="dice-grid">
+      <div class="dice-grid" v-if="!disableDiceGrid">
         <button
           v-for="d in ['1d4', '1d6', '1d8', '1d10', '1d12']"
           :key="d"
           class="bonus-die-btn"
-          :class="{ active: bonusDice[d as keyof BonusDiceState] }"
+          :class="{
+            active: bonusDice[d as keyof BonusDiceState],
+          }"
           @click="toggleBonusDice(d as keyof BonusDiceState)"
         >
           {{ d.replace('1', '') }}
         </button>
       </div>
 
-      <div class="flat-input-row">
+      <div class="flat-input-row" v-if="!disableCustomBonus">
         <span>自定义</span>
         <input v-model="comstomBonus" placeholder="0" type="text" @keyup.enter="handleRoll" />
       </div>
@@ -149,6 +164,16 @@ const toggleBonusDice = (die: keyof BonusDiceState) => {
 </template>
 
 <style scoped>
+.arrow {
+  position: absolute;
+  top: 50%;
+  right: 100%;
+  transform: rotate(90deg) translateX(-75%);
+  border-width: 6px;
+  border-style: solid;
+  border-color: var(--dnd-ink-primary) transparent transparent transparent;
+}
+
 .roll-config-popover {
   position: absolute;
   /* 默认显示在左侧或上方，视具体布局而定 */
@@ -159,7 +184,7 @@ const toggleBonusDice = (die: keyof BonusDiceState) => {
 
   width: 200px;
   background-color: var(--color-background); /* 羊皮纸底色 */
-  border: 1px solid var(--dnd-gold);
+  border: 1px solid var(--dnd-ink-primary);
   border-radius: 8px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   padding: 10px;

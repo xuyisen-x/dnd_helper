@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import { DND5R_ABILITY_FULL_NAMES, DND5R_SKILL_FULL_NAMES } from '@/stores/rules/dnd5'
 import type { Dnd5Data, SixAbilityKeysDnd5, SkillsListDnd5 } from '@/stores/rules/dnd5'
-import { useDnd5rLogic, formatWithSign } from '@/composables/rules/useDnd5rLogic'
+import { useDnd5Logic, formatWithSign } from '@/composables/rules/useDnd5Logic'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import EditPopover from './EditPopover.vue'
 import SkillDetailsPopover from './SkillDetailsPopover.vue'
@@ -26,7 +26,7 @@ const sheet = computed({
 })
 
 // 获取 DnD5R 规则逻辑相关的计算属性和方法
-const { abilityModifies, saveModifies, skillModifies } = useDnd5rLogic(sheet)
+const { abilityModifies, saveModifies, skillModifies } = useDnd5Logic(sheet)
 
 // 筛选当前属性下的技能
 const currentSkills = (Object.keys(sheet.value.skills) as Array<keyof SkillsListDnd5>).filter(

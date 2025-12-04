@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
-import { useDnd5rLogic } from '@/composables/rules/useDnd5rLogic'
+import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -11,7 +11,7 @@ const sheet = computed({
 })
 
 // 复用逻辑钩子中的 addClass 和 removeClass
-const { addClass, removeClass } = useDnd5rLogic(sheet)
+const { addClass, removeClass } = useDnd5Logic(sheet)
 
 // 处理等级输入（防止非法字符）
 const handleLevelInput = (e: Event, index: number) => {

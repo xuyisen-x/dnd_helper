@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
-import { useDnd5rLogic, formatWithSign } from '@/composables/rules/useDnd5rLogic'
+import { useDnd5Logic, formatWithSign } from '@/composables/rules/useDnd5Logic'
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -10,7 +10,7 @@ const sheet = computed({
   set: (val) => (store.data = val),
 })
 
-const { proficiencyBonus } = useDnd5rLogic(sheet)
+const { proficiencyBonus } = useDnd5Logic(sheet)
 </script>
 
 <template>

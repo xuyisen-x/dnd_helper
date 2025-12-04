@@ -60,10 +60,9 @@ export interface CoinsDnd5 {
 export interface AttackDnd5 {
   id: number // 唯一编号
   name: string // 武器/攻击名称
-  key: SixAbilityKeysDnd5 // 关联的属性，比如力量或敏捷
   bonus: string // 攻击加值
   damage: string // 伤害
-  offhand: boolean // 是否为副手攻击
+  damageType: string // 伤害类型
   notes: string // 备注
 }
 
@@ -289,10 +288,9 @@ export function createEmptyDnd5Data(): Dnd5Data {
       {
         id: 1,
         name: '徒手攻击',
-        key: 'str',
-        bonus: '',
-        damage: '1',
-        offhand: false,
+        bonus: '@str + @pb',
+        damage: '1 + @str',
+        damageType: '钝击',
         notes: '',
       },
     ],

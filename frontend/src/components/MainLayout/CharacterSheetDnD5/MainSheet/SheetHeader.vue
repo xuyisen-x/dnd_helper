@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
-import { useDnd5rLogic } from '@/composables/rules/useDnd5rLogic'
+import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import ClassManager from './ClassManager.vue'
 
 const store = useActiveCharacterStore()
@@ -12,7 +12,7 @@ const sheet = computed({
   set: (val) => (store.data = val),
 })
 
-const { totalLevel } = useDnd5rLogic(sheet)
+const { totalLevel } = useDnd5Logic(sheet)
 
 // 处理只允许输入正整数的函数
 const handleNumberInput = (e: Event) => {

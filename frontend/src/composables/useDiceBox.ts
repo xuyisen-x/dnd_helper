@@ -10,7 +10,7 @@ import type { RollObject } from '@3d-dice/dice-box'
 
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
-import { useDnd5rLogic } from './rules/useDnd5rLogic'
+import { useDnd5Logic } from './rules/useDnd5Logic'
 
 function getPreprocessFuction() {
   const store = useActiveCharacterStore()
@@ -20,7 +20,7 @@ function getPreprocessFuction() {
       get: () => store.data as Dnd5Data,
       set: (val) => (store.data = val),
     })
-    const { evalStringWithVariables } = useDnd5rLogic(sheet)
+    const { evalStringWithVariables } = useDnd5Logic(sheet)
     return (input: string): string => String(evalStringWithVariables(input))
   } else {
     // 如果均不匹配，返回恒等变换
@@ -298,6 +298,11 @@ export function useDiceBox() {
     } catch (e) {
       showToast('DiceParser parseNotation error: ' + (e as Error).message, 'error')
       return null
+    }
+    if (firstRoll.length === 0) {
+      const rollResult = box.getRollResults()
+      const finalResult = DP.parseFinalResults(rollResult)
+      return finalResult
     }
     if (!(await diceBoxRoll(firstRoll))) return null
 

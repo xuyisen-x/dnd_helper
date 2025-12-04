@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import { DND5R_ABILITY_FULL_NAMES } from '@/stores/rules/dnd5'
 import type { Dnd5Data, SixAbilityKeysDnd5 } from '@/stores/rules/dnd5'
-import { formatWithSign, useDnd5rLogic } from '@/composables/rules/useDnd5rLogic'
+import { formatWithSign, useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 
 const props = defineProps<{
   ability: SixAbilityKeysDnd5
@@ -16,7 +16,7 @@ const sheet = computed({
 })
 
 const { abilityModifies, proficiencyBonus, saveModifies, evalStringWithVariables } =
-  useDnd5rLogic(sheet)
+  useDnd5Logic(sheet)
 
 const totalModify = computed(() => saveModifies[props.ability])
 const abilityModify = computed(() => abilityModifies[props.ability])

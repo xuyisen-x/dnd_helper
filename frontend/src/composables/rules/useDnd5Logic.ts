@@ -9,7 +9,7 @@ export function formatWithSign(num: number): string {
 const MATH_CONTEXT =
   'const min = Math.min; const max = Math.max; const floor = Math.floor; const ceil = Math.ceil; const abs = Math.abs;'
 
-export function useDnd5rLogic(sheet: Ref<Dnd5Data>) {
+export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
   const SKILL_KEYS: Array<keyof Dnd5Data['skills']> = Object.keys(sheet.value.skills) as Array<
     keyof Dnd5Data['skills']
   >
@@ -181,6 +181,24 @@ export function useDnd5rLogic(sheet: Ref<Dnd5Data>) {
     sheet.value.basic.classes.splice(index, 1)
   }
 
+  const addAttack = (): void => {
+    sheet.value.attacks.push({
+      id:
+        sheet.value.attacks.length === 0
+          ? 1
+          : Math.max(...sheet.value.attacks.map((a) => a.id)) + 1,
+      name: '',
+      bonus: '',
+      damage: '',
+      damageType: '',
+      notes: '',
+    })
+  }
+
+  const removeAttack = (index: number): void => {
+    sheet.value.attacks.splice(index, 1)
+  }
+
   const passivePerception = computed(() => {
     return 10 + skillModifies.perception
   })
@@ -204,6 +222,8 @@ export function useDnd5rLogic(sheet: Ref<Dnd5Data>) {
     skillModifies,
     addClass,
     removeClass,
+    addAttack,
+    removeAttack,
     passivePerception,
     initiativeTotal,
   }

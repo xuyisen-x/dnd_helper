@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useDnd5rLogic } from '@/composables/rules/useDnd5rLogic'
+import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 
@@ -17,7 +17,7 @@ const sheet = computed({
   set: (val) => (store.data = val),
 })
 
-const { isValidStringWithVariables } = useDnd5rLogic(sheet)
+const { isValidStringWithVariables } = useDnd5Logic(sheet)
 
 const inputRef = ref<HTMLInputElement | null>(null)
 

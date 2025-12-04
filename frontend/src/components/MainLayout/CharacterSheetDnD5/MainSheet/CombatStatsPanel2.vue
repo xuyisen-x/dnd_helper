@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
-import { useDnd5rLogic, formatWithSign } from '@/composables/rules/useDnd5rLogic'
+import { useDnd5Logic, formatWithSign } from '@/composables/rules/useDnd5Logic'
 import EditPopover from './EditPopover.vue'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import RollConfigPopover from './RollConfigPopover.vue'
@@ -16,7 +16,7 @@ const sheet = computed({
   set: (val) => (store.data = val),
 })
 
-const { initiativeTotal, passivePerception } = useDnd5rLogic(sheet)
+const { initiativeTotal, passivePerception } = useDnd5Logic(sheet)
 
 // 先攻编辑状态
 const isEditingInit = ref(false)
@@ -159,14 +159,13 @@ const openConfig = () => {
 .combat-top-container {
   display: flex;
   flex-direction: column;
-  gap: 12px; /* 两行之间的间距 */
-  margin-bottom: 20px;
+  gap: 10px; /* 两行之间的间距 */
 }
 
 /* --- 行布局 --- */
 .stats-row {
   display: grid;
-  gap: 12px; /* 卡片之间的水平间距 */
+  gap: 10px; /* 卡片之间的水平间距 */
 }
 
 /* 上排：3等分 */

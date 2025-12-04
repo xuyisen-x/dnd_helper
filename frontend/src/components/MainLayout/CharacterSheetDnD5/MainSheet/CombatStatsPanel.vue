@@ -2,6 +2,11 @@
 import { ref, computed } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
+import DiceIcon from '@/components/Icons/DiceIcon.vue'
+import { useDiceBox } from '@/composables/useDiceBox'
+import { addDiceResult } from '@/stores/dice-result'
+import RollConfigPopover from './RollConfigPopover.vue'
+import { isUsingMouse } from '@/composables/useGlobalState'
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -9,9 +14,13 @@ const sheet = computed({
   set: (val) => (store.data = val),
 })
 
+const { parseAndRoll } = useDiceBox()
+
 type hitDiceType = 'd6' | 'd8' | 'd10' | 'd12'
 
 const hpChangeInput = ref('')
+
+const showConfig = ref(false)
 
 // 处理伤害、治疗处理逻辑
 const applyHpChange = (type: 'heal' | 'damage') => {
@@ -98,6 +107,32 @@ const handleNumInputHd = (e: Event, type: hitDiceType, field: 'total' | 'current
 const toggleDeathSave = (type: 'success' | 'fail', index: number) => {
   const currentVal = sheet.value.combat.deathSaves[type]
   sheet.value.combat.deathSaves[type] = currentVal === index ? index - 1 : index
+}
+
+const rollResultCallback = (result: number) => {
+  if (result == 1) {
+    // 自然1，自动失败两次
+    sheet.value.combat.deathSaves.fail = Math.min(sheet.value.combat.deathSaves.fail + 2, 3)
+  } else if (result == 20) {
+    // 自然20，生命值恢复为1，重置死亡豁免
+    sheet.value.combat.hp.current = Math.min(1, sheet.value.combat.hp.max)
+    sheet.value.combat.deathSaves.success = 0
+    sheet.value.combat.deathSaves.fail = 0
+  } else if (result >= 10) {
+    // 普通成功
+    sheet.value.combat.deathSaves.success = Math.min(sheet.value.combat.deathSaves.success + 1, 3)
+  } else {
+    // 普通失败
+    sheet.value.combat.deathSaves.fail = Math.min(sheet.value.combat.deathSaves.fail + 1, 3)
+  }
+}
+
+const rollDeathSave = async () => {
+  const result = await parseAndRoll('1d20')
+  if (result !== null) {
+    addDiceResult(result, '1d20', '死亡豁免检定')
+    rollResultCallback(result.result)
+  }
 }
 </script>
 
@@ -204,6 +239,36 @@ const toggleDeathSave = (type: 'success' | 'fail', index: number) => {
     <div class="col ds-section">
       <div class="section-header">死亡豁免</div>
       <div class="center-content">
+        <div
+          style="position: relative"
+          @click.stop="rollDeathSave"
+          @contextmenu.prevent.stop="
+            () => {
+              console.log(isUsingMouse)
+              if (isUsingMouse) showConfig = true
+            }
+          "
+          v-longpress="
+            () => {
+              console.log(isUsingMouse)
+              if (!isUsingMouse) showConfig = true
+            }
+          "
+        >
+          <DiceIcon
+            :class="[sheet.combat.hp.current === 0 ? 'clickable' : 'disable-bottom']"
+            title="投掷死亡豁免"
+          ></DiceIcon>
+          <RollConfigPopover
+            v-if="showConfig"
+            title="死亡豁免检定"
+            :baseModifier="0"
+            :disable-custom-bonus="true"
+            :disable-dice-grid="true"
+            :callback-after-roll="rollResultCallback"
+            @close="showConfig = false"
+          />
+        </div>
         <div class="ds-row">
           <span class="ds-label">成功</span>
           <div class="check-group">
@@ -235,6 +300,11 @@ const toggleDeathSave = (type: 'success' | 'fail', index: number) => {
 </template>
 
 <style scoped>
+.disable-bottom {
+  opacity: 0.3;
+  pointer-events: none;
+}
+
 /* --- 整体容器风格 --- */
 .combat-panel {
   display: flex;
@@ -242,6 +312,7 @@ const toggleDeathSave = (type: 'success' | 'fail', index: number) => {
   border-radius: 10px;
   padding: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  height: 100%;
 }
 
 /* 通用列样式 */
@@ -429,7 +500,7 @@ body.has-mouse .action-btn:hover {
   gap: 8px;
 }
 .ds-label {
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   font-weight: bold;
   color: var(--dnd-ink-primary);
 }

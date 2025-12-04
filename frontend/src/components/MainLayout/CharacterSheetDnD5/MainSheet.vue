@@ -5,6 +5,7 @@ import InspirationShield from './MainSheet/InspirationShield.vue'
 import CombatStatsPanel from './MainSheet/CombatStatsPanel.vue'
 import CombatStatsPanel2 from './MainSheet/CombatStatsPanel2.vue'
 import PortraitContainer from './MainSheet/PortraitContainer.vue'
+import AttacksPanel from './MainSheet/AttacksPanel.vue'
 </script>
 
 <template>
@@ -24,14 +25,17 @@ import PortraitContainer from './MainSheet/PortraitContainer.vue'
       </div>
     </aside>
 
-    <main class="right-panel">
-      <div class="one-panel">
-        <PortraitContainer />
+    <main>
+      <div class="two-panel">
+        <div class="one-panel-left">
+          <PortraitContainer />
+        </div>
+        <div class="one-panel-right">
+          <CombatStatsPanel />
+          <CombatStatsPanel2 />
+        </div>
       </div>
-      <div class="one-panel">
-        <CombatStatsPanel />
-        <CombatStatsPanel2 />
-      </div>
+      <AttacksPanel />
     </main>
   </div>
 </template>
@@ -61,7 +65,7 @@ import PortraitContainer from './MainSheet/PortraitContainer.vue'
 }
 
 /* 右侧区域样式 (示例) */
-.right-panel {
+.two-panel {
   height: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -73,9 +77,14 @@ import PortraitContainer from './MainSheet/PortraitContainer.vue'
   font-weight: bold;
 }
 
-.one-panel {
+.one-panel-left {
   display: flex;
   flex-direction: column;
+}
+
+.one-panel-right {
+  display: grid;
   gap: 10px;
+  grid-template-rows: 1fr auto;
 }
 </style>

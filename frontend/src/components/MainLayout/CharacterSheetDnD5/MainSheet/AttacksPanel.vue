@@ -85,8 +85,9 @@ const updatePopoverPosition = () => {
     left: rect.left + rect.width + 10,
   }
 }
-const openAttackConfig = (e: MouseEvent, index: number) => {
-  anchorEl.value = e.currentTarget as HTMLElement | null
+const openAttackConfig = (e: MouseEvent | HTMLElement, index: number) => {
+  if ('currentTarget' in e) anchorEl.value = e.currentTarget as HTMLElement | null
+  else anchorEl.value = e as HTMLElement | null
   showAttackRollConfig.value = index
   updatePopoverPosition()
 }
@@ -162,8 +163,8 @@ onBeforeUnmount(() => {
                 }
               "
               v-longpress="
-                (e: MouseEvent) => {
-                  if (!isUsingMouse) openAttackConfig(e, index)
+                (e: PointerEvent, el: HTMLElement) => {
+                  if (!isUsingMouse) openAttackConfig(el, index)
                 }
               "
             >

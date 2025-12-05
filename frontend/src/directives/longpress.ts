@@ -2,7 +2,7 @@ import type { Directive, DirectiveBinding } from 'vue'
 
 interface LongPressOptions {
   delay?: number
-  handler: (e: PointerEvent) => void
+  handler: (e: PointerEvent, el: LongPressEl) => void
 }
 
 type LongPressBinding = LongPressOptions | ((e: PointerEvent) => void)
@@ -52,7 +52,7 @@ const longpress: Directive<LongPressEl, LongPressBinding> = {
 
       state.timer = window.setTimeout(() => {
         // 定时到期仍未取消 → 触发长按
-        handler(e)
+        handler(e, el)
         state.timer = null
       }, delay)
     }

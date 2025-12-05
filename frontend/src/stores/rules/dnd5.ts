@@ -166,7 +166,7 @@ export interface Dnd5Data {
       d10: { total: number; current: number }
       d12: { total: number; current: number }
     }
-    ac: number
+    ac: string
     speed: number
     size: string
     inspiration: boolean
@@ -257,7 +257,7 @@ export function createEmptyDnd5Data(): Dnd5Data {
         d10: { total: 0, current: 0 },
         d12: { total: 0, current: 0 },
       },
-      ac: 10,
+      ac: '10+@dex',
       speed: 30,
       size: '中型',
       inspiration: false,
@@ -288,8 +288,8 @@ export function createEmptyDnd5Data(): Dnd5Data {
       {
         id: 1,
         name: '徒手攻击',
-        bonus: '@str + @pb',
-        damage: '1 + @str',
+        bonus: '(@str+@pb)',
+        damage: '1+@str',
         damageType: '钝击',
         notes: '',
       },

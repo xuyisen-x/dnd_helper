@@ -111,7 +111,7 @@ const handleLoad = () => {
   text-decoration: none;
 }
 
-.footnote a:hover {
+body.has-mouse .footnote a:hover {
   color: var(--dnd-dragon-red);
   text-decoration: underline;
 }

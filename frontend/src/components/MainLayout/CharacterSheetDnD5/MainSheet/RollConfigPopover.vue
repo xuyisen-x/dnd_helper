@@ -7,9 +7,10 @@ import { addDiceResult } from '@/stores/dice-result'
 const props = withDefaults(
   defineProps<{
     title: string
-    baseModifier: number
+    baseModifier: number | string
     disableDiceGrid?: boolean
     disableCustomBonus?: boolean
+    enableElvenAccuracy?: boolean
     callbackAfterRoll?: (result: number) => void
   }>(),
   {
@@ -43,6 +44,7 @@ const bonusDice = ref<BonusDiceState>({
 })
 
 const comstomBonus = ref<string>('')
+const elvenAccuracyActive = ref<boolean>(false)
 
 // 点击外部关闭
 const targetRef: Ref<null | HTMLElement> = ref(null)
@@ -60,13 +62,21 @@ const constructFormula = () => {
   let formula = ''
 
   // 处理优劣势
-  if (rollMode.value === 'adv') formula = '2d20kh1'
-  else if (rollMode.value === 'dis') formula = '2d20kl1'
+  if (rollMode.value === 'adv') {
+    if (props.enableElvenAccuracy && elvenAccuracyActive.value) {
+      formula = '3d20kh1'
+    } else {
+      formula = '2d20kh1'
+    }
+  } else if (rollMode.value === 'dis') formula = '2d20kl1'
   else formula = '1d20'
 
   // 加上基础调整值
-  if (props.baseModifier >= 0) formula += `+${props.baseModifier}`
-  else formula += `${props.baseModifier}` // 负数自带符号
+  const modifyString = String(props.baseModifier)
+  formula +=
+    modifyString.startsWith('+') || modifyString.startsWith('-')
+      ? ` ${modifyString}`
+      : ` + ${modifyString}`
 
   // 加上额外骰子 (神导术/诗人激励)
   for (const [die, isActive] of Object.entries(bonusDice.value)) {
@@ -132,6 +142,17 @@ const toggleBonusDice = (die: keyof BonusDiceState) => {
       >
         优势
       </button>
+    </div>
+
+    <!-- 攻击鉴定可能涉及精灵之准的问题 -->
+    <div v-if="props.enableElvenAccuracy && rollMode === 'adv'" class="elven-accuracy-container">
+      <div
+        title="专精"
+        class="circle-check clickable"
+        :class="{ checked: elvenAccuracyActive }"
+        @click="elvenAccuracyActive = !elvenAccuracyActive"
+      ></div>
+      <div>精灵之准</div>
     </div>
 
     <div class="divider"></div>
@@ -296,6 +317,7 @@ body.has-mouse .bonus-die-btn.active:hover {
   background: transparent;
   padding: 2px;
   font-size: 0.9rem;
+  outline: none;
 }
 
 /* 投掷按钮 */
@@ -313,5 +335,29 @@ body.has-mouse .bonus-die-btn.active:hover {
 }
 body.has-mouse .do-roll-btn:hover {
   background-color: var(--dnd-dragon-red-hover);
+}
+
+.circle-check {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--dnd-ink-primary);
+  border-radius: 50%;
+  margin-right: 6px;
+}
+.circle-check.checked {
+  background-color: var(--dnd-ink-primary);
+}
+body.has-mouse .circle-check:hover {
+  border-color: var(--dnd-dragon-red);
+}
+body.has-mouse .circle-check.checked:hover {
+  background-color: var(--dnd-dragon-red);
+}
+
+.elven-accuracy-container {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: var(--dnd-ink-primary);
 }
 </style>

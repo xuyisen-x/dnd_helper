@@ -4,7 +4,9 @@ import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 
-const props = defineProps<{ modelValue: string }>()
+const props = withDefaults(defineProps<{ modelValue: string; title?: string }>(), {
+  title: '额外调整',
+})
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
@@ -49,7 +51,7 @@ const commitAndClose = () => {
 
     <div class="input-wrapper">
       <div>
-        <span class="label">额外调整</span>
+        <span class="label">{{ title }}</span>
         <span class="red_label" v-show="!isCurrentInputValid">(无效)</span>
       </div>
       <input

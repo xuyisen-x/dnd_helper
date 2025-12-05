@@ -40,6 +40,13 @@
           <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>
           协议。
         </p>
+        <p>
+          "Spiky eclipse icon" 图标由
+          <a href="https://lorcblog.blogspot.com/">Lorc</a>
+          创作，基于
+          <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>
+          协议。
+        </p>
       </div>
     </footer>
   </div>

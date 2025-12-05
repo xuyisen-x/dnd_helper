@@ -1,13 +1,19 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
+import HitIcon from '@/components/Icons/HitIcon.vue'
 import { useDiceBox } from '@/composables/useDiceBox'
 import { addDiceResult } from '@/stores/dice-result'
+import RollConfigPopover from './RollConfigPopover.vue'
+import { isUsingMouse } from '@/composables/useGlobalState'
 
-const { parseAndRoll } = useDiceBox()
+const showAttackRollConfig = ref<number | null>(null)
+const criticalList = ref<number[]>([])
+
+const { parseAndRoll, Preprocess, parseExpression } = useDiceBox()
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -17,19 +23,100 @@ const sheet = computed({
 
 const { addAttack, removeAttack } = useDnd5Logic(sheet)
 
-// const rollAttack = (id: number) => async () => {
-//   // TODO
-// }
+const DealWithCitical = (damage: string, isCritical: boolean) => {
+  if (!isCritical) return damage
+  const parsed = parseExpression(damage)
+  // 找到所有以d开头的骰子表达式，开头替换为2d
+  // 找到所有以n d开头的骰子表达式，n替换为2n
+  // d8 -> 2d8, 3d6 -> 6d6
+  const processedParts = parsed.map((input) => {
+    if (/^(d\d)/.test(input)) {
+      return input.replace(/^d/, '2d')
+    } else if (/^(\d+)d\d/.test(input)) {
+      return input.replace(/^(\d+)\s*d/, (match, p1) => {
+        const n = parseInt(p1, 10)
+        return `${n * 2}d`
+      })
+    } else {
+      return input
+    }
+  })
+  return processedParts.join('')
+}
+
+const PreprocessDamage = (damage: string, isCritical: boolean) => {
+  return Preprocess(DealWithCitical(damage, isCritical))
+}
+
+const rollAttack = async (index: number) => {
+  const attack = sheet.value.attacks[index]
+  if (!attack) return
+  const bonus = attack.bonus || '0'
+  const formula =
+    bonus.startsWith('+') || bonus.startsWith('-') ? `1d20 ${bonus}` : `1d20 + ${bonus}`
+  const result = await parseAndRoll(formula)
+  if (result !== null) {
+    addDiceResult(result, formula, `攻击检定: ${attack.name}`)
+  }
+}
 
 const rollDamage = async (index: number) => {
   const attack = sheet.value.attacks[index]
-  console.log(attack)
   if (!attack || !attack.damage) return
-  const result = await parseAndRoll(attack.damage)
+  const damage = DealWithCitical(attack.damage, criticalList.value.includes(index))
+  const result = await parseAndRoll(damage)
   if (result !== null) {
-    addDiceResult(result, attack.damage, `伤害: ${attack.name}`)
+    addDiceResult(result, damage, `伤害: ${attack.name}`)
   }
 }
+
+const popoverPos = ref({ top: 0, left: 0 })
+const anchorEl = ref<HTMLElement | null>(null)
+const updatePopoverPosition = () => {
+  const el = anchorEl.value
+  if (!el) return
+
+  const rect = el.getBoundingClientRect()
+
+  popoverPos.value = {
+    // 对应原来的 top: 50% + transform: translateY(-50%)
+    top: rect.top + rect.height / 2,
+    // 对应原来的 left: calc(100% + 10px)
+    left: rect.left + rect.width + 10,
+  }
+}
+const openAttackConfig = (e: MouseEvent, index: number) => {
+  anchorEl.value = e.currentTarget as HTMLElement | null
+  showAttackRollConfig.value = index
+  updatePopoverPosition()
+}
+
+const attackPopoverStyle = computed(() => ({
+  position: 'fixed',
+  top: `${popoverPos.value.top}px`,
+  left: `${popoverPos.value.left}px`,
+  transform: 'translateY(-50%)',
+}))
+
+const toggleCritical = (index: number) => {
+  const idx = criticalList.value.indexOf(index)
+  if (idx === -1) {
+    criticalList.value.push(index)
+  } else {
+    criticalList.value.splice(idx, 1)
+  }
+}
+
+onMounted(() => {
+  // capture = true，可以捕获到任意滚动容器的 scroll 事件
+  window.addEventListener('scroll', updatePopoverPosition, true)
+  window.addEventListener('resize', updatePopoverPosition)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', updatePopoverPosition, true)
+  window.removeEventListener('resize', updatePopoverPosition)
+})
 </script>
 
 <template>
@@ -57,23 +144,62 @@ const rollDamage = async (index: number) => {
           </div>
 
           <div class="input-wrap col-bonus">
-            <input
-              type="text"
-              v-model="attack.bonus"
-              class="bare-input text-center"
-              placeholder="@str + @pb"
-            />
-            <div><DiceIcon class="clickable" /></div>
+            <div class="two-row-container">
+              <input
+                type="text"
+                v-model="attack.bonus"
+                class="bare-input text-center"
+                placeholder="@str + @pb"
+              />
+              <div class="eval-label">{{ Preprocess(attack.bonus) }}</div>
+            </div>
+            <div
+              @click="rollAttack(index)"
+              style="position: relative"
+              @contextmenu.prevent.stop="
+                (e) => {
+                  if (isUsingMouse) openAttackConfig(e, index)
+                }
+              "
+              v-longpress="
+                (e: MouseEvent) => {
+                  if (!isUsingMouse) openAttackConfig(e, index)
+                }
+              "
+            >
+              <DiceIcon class="clickable" />
+              <teleport to="body">
+                <RollConfigPopover
+                  v-if="showAttackRollConfig === index"
+                  :title="'攻击检定:' + attack.name"
+                  :baseModifier="attack.bonus"
+                  :style="attackPopoverStyle"
+                  :enable-elven-accuracy="true"
+                  @close="((showAttackRollConfig = null), (anchorEl = null))"
+              /></teleport>
+            </div>
           </div>
 
           <div class="input-wrap col-damage">
-            <input
-              type="text"
-              v-model="attack.damage"
-              class="bare-input text-center"
-              placeholder="1d8 + @str"
-            />
-            <div @click="rollDamage(index)"><DiceIcon class="clickable" /></div>
+            <div class="two-row-container">
+              <input
+                type="text"
+                v-model="attack.damage"
+                class="bare-input text-center"
+                placeholder="1d8 + @str"
+              />
+              <div class="eval-label" :class="{ 'critical-label': criticalList.includes(index) }">
+                {{ PreprocessDamage(attack.damage, criticalList.includes(index)) }}
+              </div>
+            </div>
+            <div @click="toggleCritical(index)">
+              <HitIcon
+                title="重击！！"
+                class="icon-check icon"
+                :class="{ checked: criticalList.includes(index) }"
+              />
+            </div>
+            <div @click="rollDamage(index)" class="icon"><DiceIcon class="clickable" /></div>
           </div>
 
           <div class="input-wrap col-damage-type">
@@ -144,7 +270,7 @@ const rollDamage = async (index: number) => {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  height: 270px;
+  height: 290px;
   overflow-y: auto;
 }
 
@@ -152,7 +278,7 @@ const rollDamage = async (index: number) => {
 .grid-row {
   display: grid;
   /* 名称(3) 加值(1.5) 伤害(2) 备注(2.5) 删除按钮(auto) */
-  grid-template-columns: 1fr 2fr 2fr 0.75fr 2.5fr 30px;
+  grid-template-columns: 1fr 2fr 2fr 0.75fr 1.5fr 30px;
   gap: 10px;
   align-items: center;
 }
@@ -222,7 +348,7 @@ const rollDamage = async (index: number) => {
   opacity: 0.5;
   transition: all 0.2s;
 }
-.btn-delete:hover {
+body.has-mouse .btn-delete:hover {
   color: var(--dnd-dragon-red);
   opacity: 1;
 }
@@ -241,7 +367,7 @@ const rollDamage = async (index: number) => {
   font-size: 0.6rem;
   transition: all 0.2s;
 }
-.btn-add:hover {
+body.has-mouse .btn-add:hover {
   border-style: solid;
   color: var(--dnd-ink-primary);
   background-color: rgba(0, 0, 0, 0.05);
@@ -253,5 +379,48 @@ const rollDamage = async (index: number) => {
   font-style: italic;
   padding: 15px 0;
   opacity: 0.7;
+}
+
+.two-row-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.eval-label {
+  font-size: 0.7rem;
+  color: var(--dnd-ink-secondary);
+}
+
+.icon {
+  font-size: 1.5rem;
+  margin-left: 0.2rem;
+}
+
+.icon-check {
+  user-select: none;
+  -webkit-user-select: none; /* Safari/Chrome */
+  -webkit-touch-callout: none;
+  cursor: pointer;
+  opacity: 0.8;
+  transition:
+    opacity 0.2s,
+    color 0.2s;
+}
+
+body.has-mouse .icon-check:hover {
+  color: var(--dnd-dragon-red);
+}
+body.has-mouse .icon-check:active {
+  transform: scale(0.95);
+}
+
+.icon-check.checked {
+  color: var(--dnd-dragon-red);
+  opacity: 1;
+}
+
+.critical-label {
+  font-weight: bold;
+  color: var(--dnd-dragon-red);
 }
 </style>

@@ -21,7 +21,14 @@ function getPreprocessFuction() {
       set: (val) => (store.data = val),
     })
     const { evalStringWithVariables } = useDnd5Logic(sheet)
-    return (input: string): string => String(evalStringWithVariables(input))
+    return (input: string): string => {
+      const evaluated = String(evalStringWithVariables(input))
+      if (evaluated.startsWith('-')) {
+        return `(${evaluated})`
+      } else {
+        return evaluated
+      }
+    }
   } else {
     // 如果均不匹配，返回恒等变换
     return (input: string): string => input
@@ -77,7 +84,7 @@ function Preprocess(expression: string): string {
       return input
     }
     // 加上括号
-    return '(' + preprocessItem(input) + ')'
+    return preprocessItem(input)
   })
   return processedParts.join('')
 }
@@ -352,5 +359,13 @@ export function useDiceBox() {
   }
 
   // 暴露给组件使用的属性和方法
-  return { initDiceBox, getDiceBox, showAnimation, canvasOpacity, parseAndRoll }
+  return {
+    initDiceBox,
+    getDiceBox,
+    showAnimation,
+    canvasOpacity,
+    parseAndRoll,
+    Preprocess,
+    parseExpression,
+  }
 }

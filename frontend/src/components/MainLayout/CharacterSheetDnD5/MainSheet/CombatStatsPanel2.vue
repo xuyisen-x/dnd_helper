@@ -16,11 +16,12 @@ const sheet = computed({
   set: (val) => (store.data = val),
 })
 
-const { initiativeTotal, passivePerception } = useDnd5Logic(sheet)
+const { initiativeTotal, passivePerception, evalStringWithVariables } = useDnd5Logic(sheet)
 
 // 先攻编辑状态
 const isEditingInit = ref(false)
 const isConfigOpen = ref(false)
+const isEditingAc = ref(false)
 
 const { parseAndRoll } = useDiceBox()
 
@@ -142,11 +143,18 @@ const openConfig = () => {
         </div>
         <div class="panel-divider"></div>
         <div class="panel-content">
-          <input
-            type="text"
-            inputmode="numeric"
-            v-model.number="sheet.combat.ac"
-            class="bare-input big-value"
+          <span
+            class="big-value clickable"
+            @click="isEditingAc = true"
+            title="点击修改先攻表达式"
+            >{{ evalStringWithVariables(sheet.combat.ac) }}</span
+          >
+          <EditPopover
+            v-if="isEditingAc"
+            v-model="sheet.combat.ac"
+            @close="isEditingAc = false"
+            title="护驾等级表达式"
+            @click.stop
           />
         </div>
         <div class="deco-lines"></div>

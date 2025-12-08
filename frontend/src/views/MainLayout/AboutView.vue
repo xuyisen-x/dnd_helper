@@ -34,15 +34,25 @@
       <div class="credit-item">
         <strong>Icons / 图标素材</strong>
         <p>
-          "Dice 20 faces 20" 图标由
+          "Dice 20 faces 20"、"Armor upgrade icon"、"Armor downgrade icon"、"Character icon"等图标由
           <a href="https://delapouite.com/">Delapouite</a>
           创作，基于
           <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>
           协议。
         </p>
         <p>
-          "Spiky eclipse icon" 图标由
+          "Spiky eclipse icon"、"Claw hammer icon"、"Energy arrow icon"、"Crossed air flows
+          icon"、"Frozen orb icon"、"Lightning helix icon"、"Sonic boom icon"、"Poison bottle
+          icon"、"Foam icon"、"Bleeding Eye icon"、"Ringed beam icon"、"Sun radiations
+          icon"、"Flaming sheet icon"、"Interdiction icon"等图标由
           <a href="https://lorcblog.blogspot.com/">Lorc</a>
+          创作，基于
+          <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>
+          协议。
+        </p>
+        <p>
+          "Flamer icon"图标由
+          <a href="http://opengameart.org/content/95-game-icons">sbed</a>
           创作，基于
           <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>
           协议。

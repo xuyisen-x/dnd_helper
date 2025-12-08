@@ -193,12 +193,8 @@ onBeforeUnmount(() => {
                 {{ PreprocessDamage(attack.damage, criticalList.includes(index)) }}
               </div>
             </div>
-            <div @click="toggleCritical(index)">
-              <HitIcon
-                title="重击！！"
-                class="icon-check icon"
-                :class="{ checked: criticalList.includes(index) }"
-              />
+            <div @click="toggleCritical(index)" class="icon-check icon">
+              <HitIcon title="重击！！" :class="{ checked: criticalList.includes(index) }" />
             </div>
             <div @click="rollDamage(index)" class="icon"><DiceIcon class="clickable" /></div>
           </div>
@@ -238,9 +234,7 @@ onBeforeUnmount(() => {
   border: 2px solid var(--dnd-ink-secondary);
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  border: 2px solid var(--dnd-ink-secondary);
   overflow: hidden;
-  margin-top: 10px; /* 与上方组件拉开距离 */
 }
 
 /* --- 标题栏 --- */

@@ -94,6 +94,23 @@ export interface ClassItemDnd5 {
   isPrimary: boolean // 是否为主职业
 }
 
+// 伤害易感性
+export interface DamageSusceptibilitiesDnd5 {
+  bludgeoning: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
+  slashing: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
+  piercing: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
+  fire: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
+  cold: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
+  lightning: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
+  thunder: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
+  poison: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
+  acid: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
+  psychic: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
+  force: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
+  radiant: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
+  necrotic: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
+}
+
 // ==========================================
 // 2. 辅助映射表
 // ==========================================
@@ -126,6 +143,22 @@ export const DND5R_SKILL_FULL_NAMES: Record<keyof SkillsListDnd5, string> = {
   intimidation: '威吓',
   performance: '表演',
   persuasion: '说服',
+}
+
+export const DAMAGE_TYEP_NAMES: Record<keyof DamageSusceptibilitiesDnd5, string> = {
+  bludgeoning: '钝击',
+  slashing: '挥砍',
+  piercing: '穿刺',
+  fire: '火焰',
+  cold: '寒冷',
+  lightning: '闪电',
+  thunder: '雷鸣',
+  poison: '毒素',
+  acid: '强酸',
+  psychic: '心灵',
+  force: '力场',
+  radiant: '光耀',
+  necrotic: '暗蚀',
 }
 
 // ==========================================
@@ -182,6 +215,11 @@ export interface Dnd5Data {
 
   // --- 武器/攻击 ---
   attacks: AttackDnd5[] // 使用 AttackDnd5r
+
+  // 特性与能力
+  features: {
+    damage_susceptibilities: DamageSusceptibilitiesDnd5
+  }
 
   // --- 法术 ---
   spells: {
@@ -294,6 +332,23 @@ export function createEmptyDnd5Data(): Dnd5Data {
         notes: '',
       },
     ],
+    features: {
+      damage_susceptibilities: {
+        bludgeoning: 'normal',
+        slashing: 'normal',
+        piercing: 'normal',
+        fire: 'normal',
+        cold: 'normal',
+        lightning: 'normal',
+        thunder: 'normal',
+        poison: 'normal',
+        acid: 'normal',
+        psychic: 'normal',
+        force: 'normal',
+        radiant: 'normal',
+        necrotic: 'normal',
+      },
+    },
     spells: {
       slots: {
         1: { total: 0, used: 0 },

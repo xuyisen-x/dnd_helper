@@ -6,6 +6,7 @@ import CombatStatsPanel from './MainSheet/CombatStatsPanel.vue'
 import CombatStatsPanel2 from './MainSheet/CombatStatsPanel2.vue'
 import PortraitContainer from './MainSheet/PortraitContainer.vue'
 import AttacksPanel from './MainSheet/AttacksPanel.vue'
+import DamageSusceptibility from './MainSheet/DamageSusceptibility.vue'
 </script>
 
 <template>
@@ -25,7 +26,7 @@ import AttacksPanel from './MainSheet/AttacksPanel.vue'
       </div>
     </aside>
 
-    <main>
+    <main class="right-panel">
       <div class="two-panel">
         <div class="one-panel-left">
           <PortraitContainer />
@@ -36,6 +37,14 @@ import AttacksPanel from './MainSheet/AttacksPanel.vue'
         </div>
       </div>
       <AttacksPanel />
+      <div class="feature-panel">
+        <DamageSusceptibility />
+        <div class="two-row">
+          <div>TODO</div>
+          <div>TODO</div>
+        </div>
+        <div>TODO</div>
+      </div>
     </main>
   </div>
 </template>
@@ -57,6 +66,13 @@ import AttacksPanel from './MainSheet/AttacksPanel.vue'
   gap: 10px;
 }
 
+.right-panel {
+  height: 100%;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  gap: 10px;
+}
+
 /* 每一列属性的垂直排布 */
 .ability-column {
   display: flex;
@@ -66,7 +82,6 @@ import AttacksPanel from './MainSheet/AttacksPanel.vue'
 
 /* 右侧区域样式 (示例) */
 .two-panel {
-  height: 100%;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
@@ -86,5 +101,17 @@ import AttacksPanel from './MainSheet/AttacksPanel.vue'
   display: grid;
   gap: 10px;
   grid-template-rows: 1fr auto;
+}
+
+.feature-panel {
+  display: grid;
+  grid-template-columns: auto 1fr 1fr;
+  gap: 10px;
+}
+
+.two-row {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
 }
 </style>

@@ -213,6 +213,18 @@ export interface Dnd5Data {
   // --- 熟练项与列表 ---
   skills: SkillsListDnd5
 
+  // --- 装备熟练与工具熟练 ---
+  proficiencies: {
+    armor: {
+      light: boolean
+      medium: boolean
+      heavy: boolean
+      shield: boolean
+    }
+    weapons: string
+    tools: string
+  }
+
   // --- 武器/攻击 ---
   attacks: AttackDnd5[] // 使用 AttackDnd5r
 
@@ -263,6 +275,9 @@ export interface Dnd5Data {
 
   // 立绘图片的Base64字符串
   portraitBase64: string
+
+  // 背景故事
+  background: string
 }
 
 // ==========================================
@@ -321,6 +336,16 @@ export function createEmptyDnd5Data(): Dnd5Data {
       intimidation: { key: 'cha', prof: false, expert: false },
       performance: { key: 'cha', prof: false, expert: false },
       persuasion: { key: 'cha', prof: false, expert: false },
+    },
+    proficiencies: {
+      armor: {
+        light: false,
+        medium: false,
+        heavy: false,
+        shield: false,
+      },
+      weapons: '',
+      tools: '',
     },
     attacks: [
       {
@@ -400,5 +425,6 @@ export function createEmptyDnd5Data(): Dnd5Data {
       initiative: '',
     },
     portraitBase64: '',
+    background: '',
   }
 }

@@ -7,51 +7,57 @@ import CombatStatsPanel2 from './MainSheet/CombatStatsPanel2.vue'
 import PortraitContainer from './MainSheet/PortraitContainer.vue'
 import AttacksPanel from './MainSheet/AttacksPanel.vue'
 import DamageSusceptibility from './MainSheet/DamageSusceptibility.vue'
+import ProficiencyPanel from './MainSheet/ProficiencyPanel.vue'
+import BackgroundPanel from './MainSheet/BackgroundPanel.vue'
 </script>
 
 <template>
   <div class="page-layout">
-    <aside class="left-panel">
-      <div class="ability-column">
-        <ProficiencyShield />
-        <AbilityShield ability-key="str" />
-        <AbilityShield ability-key="dex" />
-        <AbilityShield ability-key="con" />
-        <InspirationShield />
+    <div class="block-one">
+      <div class="left-panel">
+        <div class="ability-column">
+          <ProficiencyShield />
+          <AbilityShield ability-key="str" />
+          <AbilityShield ability-key="dex" />
+          <AbilityShield ability-key="con" />
+          <InspirationShield />
+        </div>
+        <div class="ability-column">
+          <AbilityShield ability-key="int" />
+          <AbilityShield ability-key="wis" />
+          <AbilityShield ability-key="cha" />
+        </div>
       </div>
-      <div class="ability-column">
-        <AbilityShield ability-key="int" />
-        <AbilityShield ability-key="wis" />
-        <AbilityShield ability-key="cha" />
-      </div>
-    </aside>
 
-    <main class="right-panel">
-      <div class="two-panel">
-        <div class="one-panel-left">
+      <div class="right-panel">
+        <div class="two-panel">
           <PortraitContainer />
+          <BackgroundPanel />
         </div>
-        <div class="one-panel-right">
-          <CombatStatsPanel />
-          <CombatStatsPanel2 />
+        <div class="combat-info-panel">
+          <ProficiencyPanel />
+          <div class="hp-and-more">
+            <CombatStatsPanel />
+            <CombatStatsPanel2 />
+          </div>
+          <DamageSusceptibility />
         </div>
+        <AttacksPanel />
       </div>
-      <AttacksPanel />
-      <div class="feature-panel">
-        <DamageSusceptibility />
-        <div class="two-row">
-          <div>TODO</div>
-          <div>TODO</div>
-        </div>
-        <div>TODO</div>
-      </div>
-    </main>
+    </div>
+    <div class="block-two">TODO</div>
   </div>
 </template>
 
 <style scoped>
-/* 整体布局：两栏 */
 .page-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* 整体布局：两栏 */
+.block-one {
   display: grid;
   grid-template-columns: auto 1fr; /* 左侧宽度由内容决定，右侧自动占据剩余宽度 */
   gap: 10px; /* 左右大栏之间的间距 */
@@ -92,26 +98,20 @@ import DamageSusceptibility from './MainSheet/DamageSusceptibility.vue'
   font-weight: bold;
 }
 
+.combat-info-panel {
+  display: grid;
+  grid-template-columns: 1fr 445px auto;
+  gap: 10px;
+}
+
 .one-panel-left {
   display: flex;
   flex-direction: column;
 }
 
-.one-panel-right {
+.hp-and-more {
   display: grid;
-  gap: 10px;
   grid-template-rows: 1fr auto;
-}
-
-.feature-panel {
-  display: grid;
-  grid-template-columns: auto 1fr 1fr;
-  gap: 10px;
-}
-
-.two-row {
-  display: grid;
-  grid-template-rows: 1fr 1fr;
   gap: 10px;
 }
 </style>

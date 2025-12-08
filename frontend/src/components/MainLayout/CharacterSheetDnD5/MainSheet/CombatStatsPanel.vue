@@ -308,11 +308,11 @@ const rollDeathSave = async () => {
 /* --- 整体容器风格 --- */
 .combat-panel {
   display: flex;
+  flex-direction: row;
   border: 2px solid var(--dnd-ink-secondary);
   border-radius: 10px;
   padding: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-  height: 100%;
 }
 
 /* 通用列样式 */
@@ -324,7 +324,8 @@ const rollDeathSave = async () => {
 
 .hp-section {
   flex: 2;
-} /* HP 区域宽一点 */
+}
+/* HP 区域宽一点 */
 .hd-section {
   flex: 1;
   align-items: center;

@@ -277,7 +277,10 @@ export interface Dnd5Data {
   portraitBase64: string
 
   // 背景故事
-  background: string
+  background: {
+    story: string
+    languages: string
+  }
 }
 
 // ==========================================
@@ -425,6 +428,9 @@ export function createEmptyDnd5Data(): Dnd5Data {
       initiative: '',
     },
     portraitBase64: '',
-    background: '',
+    background: {
+      story: '',
+      languages: '',
+    },
   }
 }

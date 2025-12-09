@@ -9,6 +9,11 @@ import AttacksPanel from './MainSheet/AttacksPanel.vue'
 import DamageSusceptibility from './MainSheet/DamageSusceptibility.vue'
 import ProficiencyPanel from './MainSheet/ProficiencyPanel.vue'
 import BackgroundPanel from './MainSheet/BackgroundPanel.vue'
+import ClassFeaturesPanel from './MainSheet/ClassFeaturesPanel.vue'
+import RaceFeaturesPanel from './MainSheet/RaceFeaturesPanel.vue'
+import FeatPanel from './MainSheet/FeatPanel.vue'
+import EquipmentPanel from './MainSheet/EquipmentPanel.vue'
+import CoinPanel from './MainSheet/CoinPanel.vue'
 </script>
 
 <template>
@@ -45,7 +50,17 @@ import BackgroundPanel from './MainSheet/BackgroundPanel.vue'
         <AttacksPanel />
       </div>
     </div>
-    <div class="block-two">TODO</div>
+    <div class="block-two">
+      <div class="two-row1">
+        <RaceFeaturesPanel />
+        <FeatPanel />
+      </div>
+      <ClassFeaturesPanel />
+      <div class="two-row2">
+        <EquipmentPanel />
+        <CoinPanel />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -63,6 +78,16 @@ import BackgroundPanel from './MainSheet/BackgroundPanel.vue'
   gap: 10px; /* 左右大栏之间的间距 */
   width: 100%;
   align-items: start; /* 顶部对齐 */
+}
+
+/* 整体布局：三栏 */
+.block-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px; /* 三栏之间的间距 */
+  width: 100%;
+  align-items: start; /* 顶部对齐 */
+  height: 600px;
 }
 
 /* 左大栏内部布局：两列 */
@@ -113,5 +138,19 @@ import BackgroundPanel from './MainSheet/BackgroundPanel.vue'
   display: grid;
   grid-template-rows: 1fr auto;
   gap: 10px;
+}
+
+.two-row1 {
+  display: grid;
+  grid-template-rows: 1fr 1fr;
+  gap: 10px;
+  height: 100%;
+}
+
+.two-row2 {
+  display: grid;
+  grid-template-rows: 3fr 1fr;
+  gap: 10px;
+  height: 100%;
 }
 </style>

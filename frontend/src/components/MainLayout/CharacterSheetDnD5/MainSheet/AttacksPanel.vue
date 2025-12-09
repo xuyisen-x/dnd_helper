@@ -235,6 +235,7 @@ onBeforeUnmount(() => {
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   overflow: hidden;
+  height: 100%;
 }
 
 /* --- 标题栏 --- */
@@ -265,8 +266,8 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  /* height: 290px; */
   overflow-y: auto;
+  max-height: 281px;
 }
 
 /* Grid 定义：根据内容重要性分配宽度比例 */

@@ -13,7 +13,7 @@
 <template>
   <div class="race-features-panel">
     <div class="panel-header">
-      <span class="label">种族特性</span>
+      <span class="label">种族特性 & 背景特性</span>
     </div>
 
     <div class="panel-divider"></div>

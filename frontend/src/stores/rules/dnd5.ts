@@ -111,6 +111,15 @@ export interface DamageSusceptibilitiesDnd5 {
   necrotic: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
 }
 
+// 特性与能力
+export interface FeatureDnd5 {
+  name: string // 特性名称
+  description: string // 特性描述
+  usageLimit: string // 使用限制，为空表示无限制
+  usageCount: number // 剩余使用次数
+  afterShortRest: string // 短休后恢复次数
+  afterLongRest: string // 长休后恢复次数
+}
 // ==========================================
 // 2. 辅助映射表
 // ==========================================
@@ -231,6 +240,9 @@ export interface Dnd5Data {
   // 特性与能力
   features: {
     damage_susceptibilities: DamageSusceptibilitiesDnd5
+    class_features: FeatureDnd5[] // 职业特性列表
+    race_features: FeatureDnd5[] // 种族特性列表
+    feat: FeatureDnd5[] // 专长列表
   }
 
   // --- 法术 ---
@@ -376,6 +388,9 @@ export function createEmptyDnd5Data(): Dnd5Data {
         radiant: 'normal',
         necrotic: 'normal',
       },
+      class_features: [],
+      race_features: [],
+      feat: [],
     },
     spells: {
       slots: {

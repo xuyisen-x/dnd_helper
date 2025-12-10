@@ -13,9 +13,9 @@ const CUSTOM_EXT = '.crst' // 自定义扩展名，方便用户识别
 
 const handleSave = () => {
   try {
-    const dataStr = activeCharacterStore.exportData() // 获取导出的 JSON 字符串
+    const dataStr = activeCharacterStore.exportData() // 获取导出的 Base64 字符串
 
-    const blob = new Blob([dataStr], { type: 'application/json' }) // 创建 Blob 对象
+    const blob = new Blob([dataStr], { type: 'text/plain' }) // 创建 Blob 对象
 
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
@@ -88,7 +88,7 @@ const handleLoad = () => {
       />
     </div>
     <div class="footnote">
-      <a href="https://beian.miit.gov.cn/" target="_blank">IPC备案号（占位）</a>
+      <a href="https://beian.miit.gov.cn/" target="_blank">浙ICP备2025215728号-1</a>
     </div>
   </div>
 </template>

@@ -9,11 +9,14 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
+    "build:wasm": "wasm-pack build src/utils/dice --target web",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "lint": "eslint . --fix --cache",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "predev": "npm run build:wasm",
+    "prebuild": "npm run build:wasm"
   },
   "dependencies": {
     "@3d-dice/dice-box": "^1.1.4",

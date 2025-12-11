@@ -1,41 +1,95 @@
+use crate::grammar::CompareExpr;
+
 use super::grammar::{BinOp, Expr, ModifierOp, ModifierParam};
 
-pub fn is_integer(num: f64) -> bool {
-    num.fract() == 0.0
+// ==========================================
+// 类型定义
+// ==========================================
+
+#[derive(Clone)]
+pub struct DiceItem {
+    pub min_count: i64, // 最小值，因为explode可能会导致这个值的增长
+    pub side: i64,      // 骰子面数，一般是不会改变的
 }
 
-pub enum DicePool {
-    // xDy
-    RawDicePool(i64, i64),
-    KeepOrDropPool(i64, i64),
-    RerollPool(i64, i64),
-    RerollOncePool(i64, i64),
-    ExplodePool(i64, i64),
-    ExplodeCompoundPool(i64, i64),
-    LimitedExplodePool(i64, i64),
+#[derive(Clone)]
+pub enum DicePoolType {
+    RawDicePool(DiceItem), // 原始的骰池，除了ExplodeCompound外，生成的骰池子均为此类型
+    LimitableDicePool(DiceItem), // 可限制爆骰的骰池，只有通过ExplodeCompound生成
 }
 
+#[derive(Clone)]
+pub enum VariableNumber {
+    Unknown,                // 未知的变量数值
+    DicePool(DicePoolType), // 来自骰池的变量数值
+}
+
+#[derive(Clone)]
+pub enum NumberType {
+    Constant(f64),            // 常数数值
+    Variable(VariableNumber), // 变量数值
+}
+
+#[derive(Clone)]
+pub enum ListType {
+    ConstantList(Vec<f64>), // 常数列表
+    VariableList(i64),      // 变量列表，记录长度
+}
+
+#[derive(Clone)]
 pub enum Type {
-    ConstantNumber(f64),
-    VariableNumber,
-    DicePool(DicePool),
-    ConstantList(Vec<f64>),
-    VariableList(i64),
-    Invalid(String),
+    Invalid(String),    // 无效类型，携带错误信息
+    Number(NumberType), // 数值类型
+    List(ListType),     // 列表类型
 }
+
+// ==========================================
+// Type 构造辅助函数
+// ==========================================
+
+impl Type {
+    pub fn constant(val: f64) -> Self {
+        Type::Number(NumberType::Constant(val))
+    }
+
+    pub fn unknown_var() -> Self {
+        Type::Number(NumberType::Variable(VariableNumber::Unknown))
+    }
+
+    pub fn raw_dice_pool(item: DiceItem) -> Self {
+        Type::Number(NumberType::Variable(VariableNumber::DicePool(
+            DicePoolType::RawDicePool(item),
+        )))
+    }
+
+    pub fn limitable_dice_pool(item: DiceItem) -> Self {
+        Type::Number(NumberType::Variable(VariableNumber::DicePool(
+            DicePoolType::LimitableDicePool(item),
+        )))
+    }
+
+    pub fn const_list(list: Vec<f64>) -> Self {
+        Type::List(ListType::ConstantList(list))
+    }
+
+    pub fn var_list(len: i64) -> Self {
+        Type::List(ListType::VariableList(len))
+    }
+}
+
+// ==========================================
+// 主类型检查函数
+// ==========================================
 
 pub fn typecheck_expr(expr: &Expr) -> Type {
     match expr {
-        Expr::Number(x) => Type::ConstantNumber(*x),
+        Expr::Number(x) => Type::constant(*x),
         Expr::Dice { count, side } => type_of_dice(count, side),
         Expr::Binary { lhs, op, rhs } => type_of_binary_op(lhs, op, rhs),
         Expr::Call { func_name, args } => type_of_call(func_name, args),
         Expr::List(args) => type_of_list(args),
         Expr::Modifier { lhs, op, param } => type_of_modifier(lhs, op, param),
-        Expr::SuccessCheck {
-            lhs,
-            compare_expr: _,
-        } => type_of_success_check(lhs),
+        Expr::SuccessCheck { lhs, compare_expr } => type_of_success_check(lhs, compare_expr),
     }
 }
 
@@ -43,7 +97,12 @@ pub fn typecheck_expr(expr: &Expr) -> Type {
 // 辅助处理函数
 // ==========================================
 
-/// 从切片中选出前 n 个最大值或最小值，并按原顺序返回
+// 判断一个浮点数是否为整数
+pub fn is_integer(num: f64) -> bool {
+    num.fract() == 0.0
+}
+
+// 从切片中选出前 n 个最大值或最小值，并按原顺序返回
 pub fn top_n_preserve_order<T: Clone + PartialOrd>(
     data: &[T],
     n: usize,
@@ -84,468 +143,474 @@ pub fn top_n_preserve_order<T: Clone + PartialOrd>(
 }
 
 fn type_of_dice(count: &Expr, side: &Expr) -> Type {
+    use NumberType::*;
+    use Type::*;
+
     let count_type = typecheck_expr(count);
     let side_type = typecheck_expr(side);
     match (count_type, side_type) {
-        (Type::Invalid(err), _) => Type::Invalid(err),
-        (_, Type::Invalid(err)) => Type::Invalid(err),
-        (Type::ConstantNumber(c), Type::ConstantNumber(s))
-            if is_integer(c) && is_integer(s) && c > 1.0 && s > 2.0 =>
-        {
-            Type::DicePool(DicePool::RawDicePool(c as i64, s as i64))
+        (Invalid(s), _) => Invalid(s),
+        (_, Invalid(s)) => Invalid(s),
+        // 两边必须都是常数
+        (Number(Constant(c)), Number(Constant(s))) => {
+            if is_integer(c) && is_integer(s) && c > 0.0 && s >= 2.0 {
+                let dice_item = DiceItem {
+                    min_count: c as i64,
+                    side: s as i64,
+                };
+                Type::raw_dice_pool(dice_item)
+            } else {
+                Invalid(format!(
+                    "Invalid dice parameters: count = {}, side = {}",
+                    c, s
+                ))
+            }
         }
-        (Type::ConstantNumber(_), Type::ConstantNumber(_)) => Type::Invalid(
-            "Dice count must be an integer > 1 and side must be an integer > 2".to_string(),
-        ),
-        _ => Type::Invalid("Dice count and side must be constant numbers".to_string()),
+        // 针对变量的特殊警告
+        (Number(Variable(_)), _) | (_, Number(Variable(_))) => {
+            Invalid("Dice count and side must be constant numbers.".to_string())
+        }
+        _ => Invalid("Dice count and side must be numbers.".to_string()),
     }
 }
 
 fn type_of_binary_op(lhs: &Expr, op: &BinOp, rhs: &Expr) -> Type {
+    use ListType::*;
+    use NumberType::*;
+    use Type::*;
+
     let lhs_type = typecheck_expr(lhs);
     let rhs_type = typecheck_expr(rhs);
     match (lhs_type, rhs_type) {
-        (Type::Invalid(err), _) => Type::Invalid(err),
-        (_, Type::Invalid(err)) => Type::Invalid(err),
-        // 两侧都是常量数值时，进行计算
-        (Type::ConstantNumber(a), Type::ConstantNumber(b)) => match op {
-            BinOp::Add => Type::ConstantNumber(a + b),
-            BinOp::Sub => Type::ConstantNumber(a - b),
-            BinOp::Mul => Type::ConstantNumber(a * b),
-            BinOp::Div => {
-                if b == 0.0 {
-                    Type::Invalid("Division by zero".to_string())
-                } else {
-                    Type::ConstantNumber(a / b)
-                }
-            }
-            BinOp::Mod => {
-                if b == 0.0 {
-                    Type::Invalid("Modulo by zero".to_string())
-                } else if is_integer(a) && is_integer(b) {
-                    Type::ConstantNumber((a as i64 % b as i64) as f64)
-                } else {
-                    Type::Invalid("Modulo operands must be integers".to_string())
-                }
-            }
-        },
-        // 两侧都是数值，但是一侧是变量数值，结果为变量数值
-        (Type::ConstantNumber(_), Type::VariableNumber | Type::DicePool(_))
-        | (Type::VariableNumber | Type::DicePool(_), Type::ConstantNumber(_))
-        | (Type::VariableNumber | Type::DicePool(_), Type::VariableNumber | Type::DicePool(_)) => {
-            Type::VariableNumber
-        }
-        // 允许两个列表作加法
-        (Type::ConstantList(a), Type::ConstantList(b)) => {
-            if let BinOp::Add = op {
-                let mut result = a.clone();
-                result.extend(b.iter());
-                Type::ConstantList(result)
-            } else {
-                Type::Invalid("Only addition is supported for lists".to_string())
-            }
-        }
-        (Type::VariableList(l1), Type::VariableList(l2)) => {
-            if let BinOp::Add = op {
-                Type::VariableList(l1 + l2)
-            } else {
-                Type::Invalid("Only addition is supported for lists".to_string())
-            }
-        }
-        (Type::VariableList(lv), Type::ConstantList(lc))
-        | (Type::ConstantList(lc), Type::VariableList(lv)) => {
-            if let BinOp::Add = op {
-                Type::VariableList(lv + lc.len() as i64)
-            } else {
-                Type::Invalid("Only addition is supported for lists".to_string())
-            }
-        }
-        // 允许整数和列表作乘法
-        (Type::ConstantNumber(num), Type::ConstantList(list))
-        | (Type::ConstantList(list), Type::ConstantNumber(num)) => {
-            if let BinOp::Mul = op {
-                if is_integer(num) {
-                    let times = num as usize;
-                    let mut result = Vec::new();
-                    for _ in 0..times {
-                        result.extend(list.iter());
+        (Invalid(s), _) => Invalid(s),
+        (_, Invalid(s)) => Invalid(s),
+        // 两个标量数值之间的操作
+        (Number(lt), Number(rt)) => {
+            match (lt, rt) {
+                (Constant(lc), Constant(rc)) => {
+                    // 常数与常数之间的操作，结果仍为常数
+                    match op {
+                        BinOp::Add => Type::constant(lc + rc),
+                        BinOp::Sub => Type::constant(lc - rc),
+                        BinOp::Mul => Type::constant(lc * rc),
+                        BinOp::Div => {
+                            if rc != 0.0 {
+                                Type::constant(lc / rc)
+                            } else {
+                                Invalid("Division by zero.".to_string())
+                            }
+                        }
+                        BinOp::Mod => {
+                            if rc == 0.0 {
+                                Invalid("Modulo by zero.".to_string())
+                            } else if is_integer(lc) && is_integer(rc) {
+                                Type::constant((lc as i64 % rc as i64) as f64)
+                            } else {
+                                Invalid("Modulo operator requires integer operands.".to_string())
+                            }
+                        }
                     }
-                    Type::ConstantList(result)
-                } else {
-                    Type::Invalid("Can only multiply list by an integer".to_string())
                 }
-            } else {
-                Type::Invalid(
-                    "Only multiplication is supported between number and list".to_string(),
-                )
+                (_, Constant(rc)) => {
+                    // 检查除零和整数要求
+                    if (op == &BinOp::Div || op == &BinOp::Mod) && rc == 0.0 {
+                        Invalid("Division or modulo by zero.".to_string())
+                    } else if op == &BinOp::Mod && !is_integer(rc) {
+                        Invalid("Modulo operator requires integer operands.".to_string())
+                    } else {
+                        // 变量与常数之间的操作，结果为变量数值
+                        Type::unknown_var()
+                    }
+                }
+                _ => Type::unknown_var(), // 其他情况，结果为未知变量数值
             }
         }
-        (Type::ConstantNumber(num), Type::VariableList(lv))
-        | (Type::VariableList(lv), Type::ConstantNumber(num)) => {
-            if let BinOp::Mul = op {
-                if is_integer(num) {
-                    Type::VariableList(lv * (num as i64))
-                } else {
-                    Type::Invalid("Can only multiply list by an integer".to_string())
-                }
+        // 列表与常数标量之间的操作
+        (List(l), Number(Constant(c))) | (Number(Constant(c)), List(l)) => {
+            if !is_integer(c) || c < 0.0 {
+                Invalid("List operations require non-negative integer constants.".to_string())
+            } else if *op != BinOp::Mul {
+                Invalid("Only multiplication is allowed between list and constant.".to_string())
             } else {
-                Type::Invalid(
-                    "Only multiplication is supported between number and list".to_string(),
-                )
+                match l {
+                    ConstantList(lst) => {
+                        // 列表与常数相乘，结果为常数列表
+                        let mut new_list = Vec::new();
+                        for _ in 0..(c as i64) {
+                            new_list.extend(lst.iter());
+                        }
+                        Type::const_list(new_list)
+                    }
+                    VariableList(len) => {
+                        // 列表与常数相乘，结果为变量列表，长度为原长度乘以常数
+                        Type::var_list(len * (c as i64))
+                    }
+                }
             }
         }
-        // 为变量数值和列表的组合进行报错
-        (Type::VariableNumber, Type::ConstantList(_))
-        | (Type::ConstantList(_), Type::VariableNumber)
-        | (Type::VariableNumber, Type::VariableList(_))
-        | (Type::VariableList(_), Type::VariableNumber) => {
-            Type::Invalid("Cannot operate between variable number and list".to_string())
+        // 列表与列表之间的操作
+        (List(l), List(r)) => {
+            // 只允许加法运算
+            match op {
+                BinOp::Add => {
+                    match (l, r) {
+                        (ConstantList(lc), ConstantList(rc)) => {
+                            //两个常数列表相加，结果为常数列表
+                            let mut new_list = lc.clone();
+                            new_list.extend(rc.iter());
+                            Type::const_list(new_list)
+                        }
+                        (VariableList(llen), VariableList(rlen)) => {
+                            //两个变量列表相加，结果为变量列表，长度为两者之和
+                            Type::var_list(llen + rlen)
+                        }
+                        (ConstantList(c), VariableList(len))
+                        | (VariableList(len), ConstantList(c)) => {
+                            //常数列表与变量列表相加，结果为变量列表，长度为常数列表长度加变量列表长度
+                            Type::var_list(len + c.len() as i64)
+                        }
+                    }
+                }
+                _ => Invalid("Only addition is allowed between lists.".to_string()),
+            }
         }
-        // 其他情况报错
-        _ => Type::Invalid("Invalid binary operation".to_string()),
+        // 列表与变量之间执行特殊警告
+        (List(_), Number(Variable(_))) | (Number(Variable(_)), List(_)) => {
+            Invalid("Cannot perform operations between list and variable number.".to_string())
+        }
     }
 }
 
-fn only_list_args(args: &Vec<Expr>) -> Option<Type> {
-    if args.len() == 1 {
-        let arg_type = typecheck_expr(&args[0]);
-        match arg_type {
-            Type::ConstantList(_) | Type::VariableList(_) => Some(arg_type),
-            _ => None,
-        }
-    } else {
-        None
-    }
+#[derive(Clone)]
+enum ArgsType {
+    OneNumber(NumberType),
+    OneList(ListType),
+    OneListAndOneNumber(ListType, NumberType),
 }
-fn one_list_and_one_constant_args(args: &Vec<Expr>) -> Option<(Type, i64)> {
-    if args.len() == 2 {
-        let first_type = typecheck_expr(&args[0]);
-        let second_type = typecheck_expr(&args[1]);
-        match (&first_type, second_type) {
-            (Type::ConstantList(_) | Type::VariableList(_), Type::ConstantNumber(n))
-                if is_integer(n) =>
-            {
-                Some((first_type, n as i64))
+fn preprocess_call_args(args: &Vec<Type>) -> Result<ArgsType, String> {
+    match args.as_slice() {
+        [] => Err("Function requires at least one argument.".to_string()), // 空向量错误
+        [Type::Number(nt)] => Ok(ArgsType::OneNumber(nt.clone())),         // 单数值参数
+        [Type::List(lt)] => Ok(ArgsType::OneList(lt.clone())),             // 单列表参数
+        [Type::List(lt), Type::Number(nt)] => {
+            Ok(ArgsType::OneListAndOneNumber(lt.clone(), nt.clone()))
+        } // 列表与数值参数
+        // 其他情况，尝试将所有参数解释一起解释为列表，如果失败则视为错误
+        _ => {
+            let mut is_variable = false;
+            let mut consts = Vec::new();
+            for arg_type in args {
+                use NumberType::*;
+                use Type::*;
+                match arg_type {
+                    Invalid(s) => return Err(s.to_string()), // 遇到无效类型，直接返回错误
+                    List(_) => return Err("Nested lists are not allowed.".to_string()), // 不允许嵌套列表
+                    Number(Variable(_)) => is_variable = true, // 统计变量数值
+                    Number(Constant(c)) => {
+                        if !is_variable {
+                            consts.push(*c); // 仅当没有变量数值时，收集常数数值
+                        }
+                    }
+                }
             }
-            _ => None,
-        }
-    } else {
-        None
-    }
-}
-fn common_numeric_args(args: &Vec<Expr>) -> bool {
-    for arg in args {
-        let arg_type = typecheck_expr(arg);
-        match arg_type {
-            Type::ConstantNumber(_) | Type::VariableNumber | Type::DicePool(_) => {}
-            _ => return false,
+            if is_variable {
+                Ok(ArgsType::OneList(ListType::VariableList(args.len() as i64)))
+            } else {
+                Ok(ArgsType::OneList(ListType::ConstantList(consts)))
+            }
         }
     }
-    true
 }
 fn type_of_call(func_name: &str, args: &Vec<Expr>) -> Type {
-    match func_name {
-        "max" | "min" => {
-            // 先检查args中是否有无效类型
-            for arg in args {
-                let arg_type = typecheck_expr(arg);
-                if let Type::Invalid(err) = arg_type {
-                    return Type::Invalid(err);
-                }
-            }
-            // 允许3种输入
-            // 1. args中所有参数均为数值类型
-            // 2. args有且只有一个参数，且为列表
-            // 3. args有且只有两个参数，第一个为列表，第二个为常整数 取出前n个最大/小值，仍然为列表
-            // 处理第一种类型
-            if common_numeric_args(args) {
-                let mut values = Vec::new();
-                for arg in args {
-                    let arg_type = typecheck_expr(arg);
-                    match arg_type {
-                        Type::ConstantNumber(x) => values.push(x),
-                        Type::VariableNumber | Type::DicePool(_) => {
-                            return Type::VariableNumber;
-                        }
-                        _ => unreachable!(),
-                    }
-                }
-                if values.is_empty() {
-                    return Type::Invalid("No arguments provided to max/min function".to_string());
-                }
-                let max_min = if func_name == "max" {
-                    values.into_iter().fold(f64::MIN, f64::max)
-                } else {
-                    values.into_iter().fold(f64::MAX, f64::min)
-                };
-                return Type::ConstantNumber(max_min);
-            }
-            // 处理第二种类型
-            if let Some(list_type) = only_list_args(args) {
-                return match list_type {
-                    Type::ConstantList(values) => {
-                        if values.is_empty() {
-                            Type::Invalid("Cannot compute max/min of empty list".to_string())
-                        } else {
-                            let max_min = if func_name == "max" {
-                                values.into_iter().fold(f64::MIN, f64::max)
-                            } else {
-                                values.into_iter().fold(f64::MAX, f64::min)
-                            };
-                            Type::ConstantNumber(max_min)
-                        }
-                    }
-                    Type::VariableList(_) => Type::VariableNumber,
-                    _ => unreachable!(),
-                };
-            }
-            // 处理第三种类型
-            if let Some((list_type, n)) = one_list_and_one_constant_args(args) {
-                return match list_type {
-                    Type::ConstantList(values) => {
-                        if n <= 0 || n as usize > values.len() {
-                            Type::Invalid("Invalid count for max/min".to_string())
-                        } else if values.is_empty() {
-                            Type::Invalid("Cannot compute max/min of empty list".to_string())
-                        } else {
-                            if func_name == "max" {
-                                Type::ConstantList(top_n_preserve_order(&values, n as usize, true))
-                            } else {
-                                Type::ConstantList(top_n_preserve_order(&values, n as usize, false))
-                            }
-                        }
-                    }
-                    Type::VariableList(lv) => {
-                        if n > lv {
-                            Type::Invalid(
-                                "Count exceeds the length of the variable list".to_string(),
-                            )
-                        } else {
-                            Type::VariableList(n)
-                        }
-                    }
-                    _ => unreachable!(),
-                };
-            }
-            Type::Invalid("Invalid arguments for max/min function".to_string())
-        }
-        "sum" => {
-            // 允许两种输入
-            // 1. args中所有参数均为数值类型
-            // 2. args有且只有一个参数，且为列表
-            // 处理第一种类型
-            if common_numeric_args(args) {
-                let mut total = 0.0;
-                for arg in args {
-                    let arg_type = typecheck_expr(arg);
-                    match arg_type {
-                        Type::ConstantNumber(x) => total += x,
-                        Type::VariableNumber | Type::DicePool(_) => {
-                            return Type::VariableNumber;
-                        }
-                        _ => unreachable!(),
-                    }
-                }
-                return Type::ConstantNumber(total);
-            }
-            // 处理第二种类型
-            if let Some(list_type) = only_list_args(args) {
-                return match list_type {
-                    Type::ConstantList(values) => {
-                        let total: f64 = values.into_iter().sum();
-                        Type::ConstantNumber(total)
-                    }
-                    Type::VariableList(_) => Type::VariableNumber,
-                    _ => unreachable!(),
-                };
-            }
-            Type::Invalid("Invalid arguments for sum function".to_string())
-        }
-        "floor" | "ceil" | "round" | "abs" => {
-            // 只允许一个数值类型参数
-            if args.len() != 1 {
-                return Type::Invalid(format!(
-                    "{} function requires exactly one argument",
-                    func_name
-                ));
-            }
-            let arg_type = typecheck_expr(&args[0]);
-            match arg_type {
-                Type::Invalid(err) => Type::Invalid(err),
-                Type::ConstantNumber(x) => {
-                    let result = match func_name {
-                        "floor" => x.floor(),
-                        "ceil" => x.ceil(),
-                        "round" => x.round(),
-                        "abs" => x.abs(),
-                        _ => unreachable!(),
-                    };
-                    Type::ConstantNumber(result)
-                }
-                Type::VariableNumber | Type::DicePool(_) => Type::VariableNumber,
-                _ => Type::Invalid(format!(
-                    "{} function requires a numeric argument",
-                    func_name
-                )),
-            }
-        }
-        _ => Type::Invalid(format!("Unknown function: {}", func_name)),
-    }
-}
-
-fn type_of_list(args: &Vec<Expr>) -> Type {
-    // 检查每个元素的类型，确保都是数值类型
-    let mut is_constant = true;
+    use ArgsType::*;
+    use ListType::*;
+    use NumberType::*;
+    let mut args_type: Vec<Type> = Vec::new();
     for arg in args {
         let arg_type = typecheck_expr(arg);
-        match arg_type {
-            Type::Invalid(err) => return Type::Invalid(err),
-            Type::ConstantList(_) | Type::VariableList(_) => {
-                return Type::Invalid("Nested lists are not supported".to_string());
-            }
-            // 只要有一个元素是变量数值或骰池，整个列表就不是常量列表
-            Type::VariableNumber | Type::DicePool(_) => {
-                is_constant = false;
-            }
-            _ => {}
+        if let Type::Invalid(s) = arg_type {
+            return Type::Invalid(s); // 遇到无效类型，直接返回错误
         }
+        args_type.push(arg_type);
     }
-    if is_constant {
-        let mut values = Vec::new();
-        for arg in args {
-            if let Expr::Number(x) = arg {
-                values.push(*x);
-            }
-        }
-        Type::ConstantList(values)
-    } else {
-        Type::VariableList(args.len() as i64)
-    }
-}
-
-fn type_of_modifier(lhs: &Expr, op: &ModifierOp, param: &Option<ModifierParam>) -> Type {
-    let lhs_type = typecheck_expr(lhs);
-    match lhs_type {
-        Type::Invalid(err) => return Type::Invalid(err),
-        _ => (),
-    }
-    match op {
-        ModifierOp::DropHigh | ModifierOp::DropLow | ModifierOp::KeepHigh | ModifierOp::KeepLow => {
-            // 只能作用于原始骰池
-            match lhs_type {
-                Type::DicePool(DicePool::RawDicePool(count, side)) => match param {
-                    Some(ModifierParam::Value(e)) => {
-                        let param_type = typecheck_expr(e);
-                        match param_type {
-                            Type::ConstantNumber(n) if is_integer(n) && n >= 0.0 && n < count as f64 => {
-                                let n = n as i64;
-                                let new_pool = match op {
-                                    ModifierOp::DropHigh => {
-                                        DicePool::KeepOrDropPool(count - n, side)
-                                    }
-                                    ModifierOp::DropLow => {
-                                        DicePool::KeepOrDropPool(count - n, side)
-                                    }
-                                    ModifierOp::KeepHigh => {
-                                        DicePool::KeepOrDropPool(n, side)
-                                    }
-                                    ModifierOp::KeepLow => {
-                                        DicePool::KeepOrDropPool(n, side)
-                                    }
-                                    _ => unreachable!(),
-                                };
-                                Type::DicePool(new_pool)
+    let args_type = match preprocess_call_args(&args_type) {
+        Err(s) => return Type::Invalid(s),
+        Ok(at) => at,
+    };
+    match func_name {
+        "max" | "min" => {
+            match args_type {
+                OneNumber(Constant(c)) => Type::constant(c), // 单常数参数，结果为该常数
+                OneNumber(Variable(_)) => Type::unknown_var(), // 单变量参数，结果为未知变量数值
+                OneList(ConstantList(lst)) => {
+                    if lst.is_empty() {
+                        Type::Invalid("max/min function requires at least one element.".to_string())
+                    } else {
+                        let extreme = if func_name == "max" {
+                            lst.iter().cloned().fold(f64::MIN, f64::max)
+                        } else {
+                            lst.iter().cloned().fold(f64::MAX, f64::min)
+                        };
+                        Type::constant(extreme)
+                    }
+                }
+                OneList(VariableList(_)) => Type::unknown_var(), // 列表参数结果为未知变量数值
+                // 从列表中取最大/小的 n 个元素
+                OneListAndOneNumber(lst, nt) => {
+                    let nt = if let Constant(c) = nt {
+                        c
+                    } else {
+                        return Type::Invalid("If the first argument is a list, the second argument must be a constant number.".to_string());
+                    };
+                    if !is_integer(nt) || nt <= 0.0 {
+                        return Type::Invalid(
+                            "In min/max, the count parameter must be a positive integer."
+                                .to_string(),
+                        );
+                    }
+                    match lst {
+                        VariableList(len) => {
+                            if len < nt as i64 {
+                                Type::Invalid(format!(
+                                    "In min/max, the list length {} is less than the count parameter {}.",
+                                    len, nt
+                                ))
+                            } else {
+                                Type::var_list(nt as i64)
                             }
-                            _ => Type::Invalid(
-                                "Keep/Drop parameter must be a non-negative integer less than the dice count".to_string(),
-                            ),
+                        }
+                        ConstantList(ls) => {
+                            if ls.is_empty() {
+                                Type::Invalid(
+                                    "In min/max, the list argument must have at least one element."
+                                        .to_string(),
+                                )
+                            } else if (nt as i64) > ls.len() as i64 {
+                                Type::Invalid(format!(
+                                    "In min/max, the list length {} is less than the count parameter {}.",
+                                    ls.len(),
+                                    nt
+                                ))
+                            } else {
+                                let selected =
+                                    top_n_preserve_order(&ls, nt as usize, func_name == "max");
+                                Type::const_list(selected)
+                            }
                         }
                     }
-                    None => Type::Invalid("Keep/Drop modifiers require a parameter".to_string()),
-                    _ => Type::Invalid("Invalid parameter for Keep/Drop modifier".to_string()),
-                },
-                _ => Type::Invalid(
-                    "Keep/Drop modifiers can only be applied to raw dice pools".to_string(),
-                ),
-            }
-        }
-        ModifierOp::Explode => {
-            // 只能作用于原始骰池
-            match lhs_type {
-                Type::DicePool(DicePool::RawDicePool(count, side)) => {
-                    Type::DicePool(DicePool::ExplodePool(count, side))
                 }
-                _ => Type::Invalid(
-                    "Explode modifier can only be applied to raw dice pools".to_string(),
-                ),
             }
         }
-        ModifierOp::ExplodeCompound => {
-            // 只能作用于原始骰池
-            match lhs_type {
-                Type::DicePool(DicePool::RawDicePool(count, side)) => {
-                    Type::DicePool(DicePool::ExplodeCompoundPool(count, side))
+        "sum" => {
+            match args_type {
+                OneNumber(Constant(c)) => Type::constant(c), // 单常数参数，结果为该常数
+                OneNumber(Variable(_)) => Type::unknown_var(), // 单变量参数，结果为未知变量数值
+                OneList(ConstantList(lst)) => {
+                    let total: f64 = lst.iter().sum();
+                    Type::constant(total)
                 }
-                _ => Type::Invalid(
-                    "Explode Compound modifier can only be applied to raw dice pools".to_string(),
-                ),
-            }
-        }
-        ModifierOp::Limit => {
-            // 只能作用于ExplodeCompoundPool
-            match lhs_type {
-                Type::DicePool(DicePool::ExplodeCompoundPool(count, side)) => match param {
-                    Some(ModifierParam::Value(e)) => {
-                        let param_type = typecheck_expr(e);
-                        match param_type {
-                            Type::ConstantNumber(n) if is_integer(n) && n > 0.0 => {
-                                Type::DicePool(DicePool::LimitedExplodePool(count, side))
-                            }
-                            _ => Type::Invalid(
-                                "Limited Explode parameter must be a positive integer".to_string(),
-                            ),
-                        }
-                    }
-                    None => {
-                        Type::Invalid("Limited Explode modifier requires a parameter".to_string())
-                    }
-                    _ => {
-                        Type::Invalid("Invalid parameter for Limited Explode modifier".to_string())
-                    }
-                },
-                _ => Type::Invalid(
-                    "Limited Explode modifier can only be applied to compound explode pools"
+                OneList(VariableList(_)) => Type::unknown_var(), // 列表参数结果为未知变量数值
+                OneListAndOneNumber(_, _) => Type::Invalid(
+                    "sum function does not accept one list and one number as arguments."
                         .to_string(),
                 ),
             }
         }
-        ModifierOp::Reroll => match lhs_type {
-            Type::DicePool(DicePool::RawDicePool(count, side))
-            | Type::DicePool(DicePool::KeepOrDropPool(count, side)) => {
-                Type::DicePool(DicePool::RerollPool(count, side))
+        "floor" | "ceil" | "round" | "abs" => {
+            match args_type {
+                OneNumber(Constant(c)) => {
+                    let result = match func_name {
+                        "floor" => c.floor(),
+                        "ceil" => c.ceil(),
+                        "round" => c.round(),
+                        "abs" => c.abs(),
+                        _ => unreachable!(),
+                    };
+                    Type::constant(result)
+                }
+                OneNumber(Variable(_)) => Type::unknown_var(), // 变量参数，结果为未知变量数值
+                _ => Type::Invalid(format!(
+                    "{} function requires a single numeric argument.",
+                    func_name
+                )),
             }
-            _ => Type::Invalid(
-                "Reroll modifier can only be applied to raw or keep/drop dice pools".to_string(),
-            ),
-        },
-        ModifierOp::RerollOnce => match lhs_type {
-            Type::DicePool(DicePool::RawDicePool(count, side))
-            | Type::DicePool(DicePool::KeepOrDropPool(count, side)) => {
-                Type::DicePool(DicePool::RerollOncePool(count, side))
-            }
-            _ => Type::Invalid(
-                "Reroll Once modifier can only be applied to raw or keep/drop dice pools"
-                    .to_string(),
-            ),
-        },
+        }
+        _ => Type::Invalid(format!("Unknown function: {}", func_name)), // 未知函数
     }
 }
 
-fn type_of_success_check(lhs: &Expr) -> Type {
+fn type_of_list(args: &Vec<Expr>) -> Type {
+    use NumberType::*;
+    use Type::*;
+    let mut is_variable = false;
+    let mut consts = Vec::new();
+    for arg in args {
+        let arg_type = typecheck_expr(arg);
+        match arg_type {
+            Invalid(s) => return Invalid(s), // 遇到无效类型，直接返回错误
+            List(_) => return Invalid("Nested lists are not allowed.".to_string()), // 不允许嵌套列表
+            Number(Variable(_)) => is_variable = true,                              // 统计变量数值
+            Number(Constant(c)) => {
+                if !is_variable {
+                    consts.push(c); // 仅当没有变量数值时，收集常数数值
+                }
+            }
+        }
+    }
+    if is_variable {
+        Type::var_list(args.len() as i64)
+    } else {
+        Type::const_list(consts)
+    }
+}
+
+fn positive_integer_constant(param: &Option<ModifierParam>) -> Result<i64, String> {
+    use NumberType::*;
+    use Type::*;
+    if let Some(ModifierParam::Value(n)) = param {
+        match typecheck_expr(n) {
+            Invalid(s) => Err(s),
+            Number(Constant(c)) => {
+                if is_integer(c) && c >= 0.0 {
+                    Ok(c as i64)
+                } else {
+                    Err("Modifier parameter must be a non-negative integer.".to_string())
+                }
+            }
+            _ => Err("Modifier parameter must be a constant number.".to_string()),
+        }
+    } else {
+        Err("Modifier requires a count parameter.".to_string())
+    }
+}
+fn valid_compare_param(param: &Option<ModifierParam>) -> Result<Option<()>, String> {
+    match param {
+        Some(ModifierParam::Compare(ce)) => {
+            let ce_type = typecheck_expr(&ce.val);
+            match ce_type {
+                Type::Invalid(s) => Err(s),
+                Type::Number(_) => Ok(Some(())),
+                _ => {
+                    Err("Comparison modifier requires a numeric comparison parameter.".to_string())
+                }
+            }
+        }
+        Some(ModifierParam::Value(_)) => {
+            Err("Comparison modifier requires a comparison parameter, not a value.".to_string())
+        }
+        None => Ok(None), // 没有参数，可能也合法，需要交给外层处理
+    }
+}
+fn type_of_modifier(lhs: &Expr, op: &ModifierOp, param: &Option<ModifierParam>) -> Type {
+    use DicePoolType::*;
+    use ModifierOp::*;
+    use NumberType::*;
+    use Type::*;
+    use VariableNumber::*;
+
+    // 首先检查类型
+    let lhs_type = typecheck_expr(lhs);
+    let dice_pool = match lhs_type {
+        Invalid(s) => return Invalid(s),
+        Number(Variable(DicePool(pool))) => pool, // 正常进行后续计算
+        _ => return Invalid("Modifiers can only be applied to dice expressions.".to_string()),
+    };
+
+    // 根据不同的修饰符进行不同的处理
+    match op {
+        KeepHigh | KeepLow | DropHigh | DropLow => {
+            // 这些修饰符需要一个常整数参数
+            match positive_integer_constant(param) {
+                Err(s) => return Invalid(s),
+                Ok(c) => {
+                    match dice_pool {
+                        RawDicePool(item) | LimitableDicePool(item) => {
+                            if c as i64 > item.min_count {
+                                // 不允许超过边界的保留与丢弃
+                                Invalid(format!(
+                                    "Modifier parameter {} exceeds min dice count {}.",
+                                    c as i64, item.min_count
+                                ))
+                            } else {
+                                let new_min_count = match op {
+                                    KeepHigh | KeepLow => c as i64,
+                                    DropHigh | DropLow => item.min_count - (c as i64),
+                                    _ => unreachable!(),
+                                };
+                                Type::raw_dice_pool(DiceItem {
+                                    min_count: new_min_count, // 丢弃一些骰子后，最小值会变化
+                                    side: item.side,
+                                })
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        Reroll | RerollOnce => match valid_compare_param(param) {
+            Err(s) => Invalid(s),
+            Ok(None) => Invalid("Modifier requires a comparison parameter.".to_string()),
+            Ok(Some(())) => match dice_pool {
+                RawDicePool(item) | LimitableDicePool(item) => Type::raw_dice_pool(item),
+            },
+        },
+        Explode => match valid_compare_param(param) {
+            Err(s) => Invalid(s),
+            Ok(_) => match dice_pool {
+                // 参数是可选的，不强制要求
+                RawDicePool(item) | LimitableDicePool(item) => Type::raw_dice_pool(item),
+            },
+        },
+        ExplodeCompound => match valid_compare_param(param) {
+            Err(s) => Invalid(s),
+            Ok(_) => {
+                match dice_pool {
+                    // 参数是可选的，不需要检查
+                    // 只是唯一会生成 LimitableDicePool 的修饰符
+                    RawDicePool(item) | LimitableDicePool(item) => Type::limitable_dice_pool(item),
+                }
+            }
+        },
+        Limit => {
+            // 这些修饰符需要一个常整数参数
+            match positive_integer_constant(param) {
+                Err(s) => return Invalid(s),
+                Ok(_) => match dice_pool {
+                    LimitableDicePool(item) => Type::raw_dice_pool(item),
+                    RawDicePool(_) => Invalid(
+                        "Limit modifier can only be applied to limitable dice pools.".to_string(),
+                    ),
+                },
+            }
+        }
+    }
+}
+
+fn type_of_success_check(lhs: &Expr, param: &CompareExpr) -> Type {
+    use NumberType::*;
+    use Type::*;
+    use VariableNumber::*;
     let lhs_type = typecheck_expr(lhs);
     match lhs_type {
-        Type::Invalid(err) => Type::Invalid(err),
-        Type::DicePool(_) => Type::VariableNumber,
-        _ => Type::Invalid("Success check can only be applied to dice pools".to_string()),
+        Invalid(s) => Invalid(s),
+        Number(Variable(DicePool(_))) => {
+            match typecheck_expr(&param.val) {
+                Invalid(s) => Invalid(s),
+                Number(n) => {
+                    match n {
+                        Variable(_) => Invalid(
+                            "Comparison parameter for success check cannot be a variable number."
+                                .to_string(),
+                        ),
+                        Constant(_) => Type::unknown_var(), // 成功检定的结果为未知值
+                    }
+                }
+                _ => Invalid(
+                    "Comparison parameter for success check must be a numeric expression."
+                        .to_string(),
+                ),
+            }
+        }
+        _ => Invalid("Success check can only be applied to dice expressions.".to_string()),
     }
 }

@@ -4,10 +4,7 @@ use dice_roller::grammar::*;
 fn test_number_constant() {
     let result = parse_dice("20");
     assert!(result.is_ok());
-    assert_eq!(
-        result.unwrap(),
-        Expr::Number(20.0)
-    );
+    assert_eq!(result.unwrap(), Expr::Number(20.0));
 }
 
 #[test]
@@ -16,10 +13,10 @@ fn test_dice_expr() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Dice (
-            Box::new(Expr::Number(2.0)),
-            Box::new(Expr::Number(20.0)),
-        )
+        Expr::Dice {
+            count: Box::new(Expr::Number(2.0)),
+            side: Box::new(Expr::Number(20.0))
+        }
     );
 }
 
@@ -29,14 +26,14 @@ fn test_recursive_dice_expr() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Dice (
-            Box::new(Expr::Binary(
-                Box::new(Expr::Number(1.0)),
-                BinOp::Add, 
-                Box::new(Expr::Number(2.0))
-            )),
-            Box::new(Expr::Number(6.0)),
-        )
+        Expr::Dice {
+            count: Box::new(Expr::Binary {
+                lhs: Box::new(Expr::Number(1.0)),
+                op: BinOp::Add,
+                rhs: Box::new(Expr::Number(2.0))
+            }),
+            side: Box::new(Expr::Number(6.0)),
+        }
     );
 }
 
@@ -46,27 +43,23 @@ fn test_recursive_normal_expr() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Binary(
-            Box::new(Expr::Binary(
-                Box::new(Expr::Number(1.0)),
-                BinOp::Add, 
-                Box::new(Expr::Number(2.0))
-            )),
-            BinOp::Sub, 
-            Box::new(
-                Expr::Binary(
-                    Box::new(Expr::Number(3.0)),
-                    BinOp::Sub, 
-                    Box::new(
-                        Expr::Binary(
-                            Box::new(Expr::Number(1.0)),
-                            BinOp::Add, 
-                            Box::new(Expr::Number(1.0))
-                        )
-                    )
-                )
-            )
-        )
+        Expr::Binary {
+            lhs: Box::new(Expr::Binary {
+                lhs: Box::new(Expr::Number(1.0)),
+                op: BinOp::Add,
+                rhs: Box::new(Expr::Number(2.0))
+            }),
+            op: BinOp::Sub,
+            rhs: Box::new(Expr::Binary {
+                lhs: Box::new(Expr::Number(3.0)),
+                op: BinOp::Sub,
+                rhs: Box::new(Expr::Binary {
+                    lhs: Box::new(Expr::Number(1.0)),
+                    op: BinOp::Add,
+                    rhs: Box::new(Expr::Number(1.0))
+                })
+            })
+        }
     );
 }
 
@@ -76,10 +69,10 @@ fn test_implict_dice_expr() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Dice (
-            Box::new(Expr::Number(1.0)),
-            Box::new(Expr::Number(20.0)),
-        )
+        Expr::Dice {
+            count: Box::new(Expr::Number(1.0)),
+            side: Box::new(Expr::Number(20.0))
+        }
     );
 }
 
@@ -89,22 +82,18 @@ fn test_priority_expr() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Binary(
-            Box::new(Expr::Number(1.0)),
-            BinOp::Add, 
-            Box::new(
-                Expr::Binary(
-                    Box::new(
-                        Expr::Dice (
-                            Box::new(Expr::Number(2.0)),
-                            Box::new(Expr::Number(20.0)),
-                        )
-                    ),
-                    BinOp::Mul, 
-                    Box::new(Expr::Number(3.0))
-                )
-            )
-        )
+        Expr::Binary {
+            lhs: Box::new(Expr::Number(1.0)),
+            op: BinOp::Add,
+            rhs: Box::new(Expr::Binary {
+                lhs: Box::new(Expr::Dice {
+                    count: Box::new(Expr::Number(2.0)),
+                    side: Box::new(Expr::Number(20.0)),
+                }),
+                op: BinOp::Mul,
+                rhs: Box::new(Expr::Number(3.0))
+            })
+        }
     );
 }
 
@@ -114,16 +103,14 @@ fn test_div_expr() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Binary(
-            Box::new(Expr::Number(10.0)),
-            BinOp::Div, 
-            Box::new(
-                Expr::Dice (
-                    Box::new(Expr::Number(2.0)),
-                    Box::new(Expr::Number(5.0)),
-                )
-            )
-        )
+        Expr::Binary {
+            lhs: Box::new(Expr::Number(10.0)),
+            op: BinOp::Div,
+            rhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(5.0)),
+            })
+        }
     );
 }
 
@@ -133,16 +120,14 @@ fn test_mod_expr() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Binary(
-            Box::new(
-                Expr::Dice (
-                    Box::new(Expr::Number(3.0)),
-                    Box::new(Expr::Number(4.0)),
-                )
-            ),
-            BinOp::Mod, 
-            Box::new(Expr::Number(10.0))
-        )
+        Expr::Binary {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(3.0)),
+                side: Box::new(Expr::Number(4.0)),
+            }),
+            op: BinOp::Mod,
+            rhs: Box::new(Expr::Number(10.0))
+        }
     );
 }
 
@@ -153,18 +138,18 @@ fn test_list_expr() {
     assert_eq!(
         result.unwrap(),
         Expr::List(vec![
-            Expr::Dice (
-                Box::new(Expr::Number(2.0)),
-                Box::new(Expr::Number(6.0)),
-            ),
-            Expr::Dice (
-                Box::new(Expr::Number(3.0)),
-                Box::new(Expr::Number(4.0)),
-            ),
-            Expr::Dice (
-                Box::new(Expr::Number(1.0)),
-                Box::new(Expr::Number(20.0)),
-            ),
+            Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(6.0)),
+            },
+            Expr::Dice {
+                count: Box::new(Expr::Number(3.0)),
+                side: Box::new(Expr::Number(4.0)),
+            },
+            Expr::Dice {
+                count: Box::new(Expr::Number(1.0)),
+                side: Box::new(Expr::Number(20.0)),
+            },
         ])
     );
 }
@@ -175,26 +160,24 @@ fn test_list_multi_expr() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Binary(
-            Box::new(
-                Expr::List(vec![
-                    Expr::Dice (
-                        Box::new(Expr::Number(1.0)),
-                        Box::new(Expr::Number(6.0)),
-                    ),
-                    Expr::Dice (
-                        Box::new(Expr::Number(2.0)),
-                        Box::new(Expr::Number(8.0)),
-                    ),
-                    Expr::Dice (
-                        Box::new(Expr::Number(3.0)),
-                        Box::new(Expr::Number(10.0)),
-                    ),
-                ])
-            ),
-            BinOp::Mul, 
-            Box::new(Expr::Number(2.0))
-        )
+        Expr::Binary {
+            lhs: Box::new(Expr::List(vec![
+                Expr::Dice {
+                    count: Box::new(Expr::Number(1.0)),
+                    side: Box::new(Expr::Number(6.0)),
+                },
+                Expr::Dice {
+                    count: Box::new(Expr::Number(2.0)),
+                    side: Box::new(Expr::Number(8.0)),
+                },
+                Expr::Dice {
+                    count: Box::new(Expr::Number(3.0)),
+                    side: Box::new(Expr::Number(10.0)),
+                },
+            ])),
+            op: BinOp::Mul,
+            rhs: Box::new(Expr::Number(2.0))
+        }
     );
 }
 
@@ -204,25 +187,23 @@ fn test_max_list() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Call (
-            "max".to_string(),
-            vec![
-                Expr::List(vec![
-                    Expr::Dice (
-                        Box::new(Expr::Number(2.0)),
-                        Box::new(Expr::Number(6.0)),
-                    ),
-                    Expr::Dice (
-                        Box::new(Expr::Number(3.0)),
-                        Box::new(Expr::Number(4.0)),
-                    ),
-                    Expr::Dice (
-                        Box::new(Expr::Number(1.0)),
-                        Box::new(Expr::Number(20.0)),
-                    ),
-                ])
-            ],
-        )
+        Expr::Call {
+            func_name: "max".to_string(),
+            args: vec![Expr::List(vec![
+                Expr::Dice {
+                    count: Box::new(Expr::Number(2.0)),
+                    side: Box::new(Expr::Number(6.0)),
+                },
+                Expr::Dice {
+                    count: Box::new(Expr::Number(3.0)),
+                    side: Box::new(Expr::Number(4.0)),
+                },
+                Expr::Dice {
+                    count: Box::new(Expr::Number(1.0)),
+                    side: Box::new(Expr::Number(20.0)),
+                }
+            ])],
+        }
     );
 }
 
@@ -232,23 +213,23 @@ fn test_max_args() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Call (
-            "max".to_string(),
-            vec![
-                Expr::Dice (
-                    Box::new(Expr::Number(2.0)),
-                    Box::new(Expr::Number(6.0)),
-                ),
-                Expr::Dice (
-                    Box::new(Expr::Number(3.0)),
-                    Box::new(Expr::Number(4.0)),
-                ),
-                Expr::Dice (
-                    Box::new(Expr::Number(1.0)),
-                    Box::new(Expr::Number(20.0)),
-                ),
+        Expr::Call {
+            func_name: "max".to_string(),
+            args: vec![
+                Expr::Dice {
+                    count: Box::new(Expr::Number(2.0)),
+                    side: Box::new(Expr::Number(6.0)),
+                },
+                Expr::Dice {
+                    count: Box::new(Expr::Number(3.0)),
+                    side: Box::new(Expr::Number(4.0)),
+                },
+                Expr::Dice {
+                    count: Box::new(Expr::Number(1.0)),
+                    side: Box::new(Expr::Number(20.0)),
+                },
             ],
-        )
+        }
     )
 }
 
@@ -258,10 +239,10 @@ fn test_max_empty() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Call (
-            "max".to_string(),
-            vec![],
-        )
+        Expr::Call {
+            func_name: "max".to_string(),
+            args: vec![],
+        }
     )
 }
 
@@ -271,12 +252,10 @@ fn test_min_list_empty() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Call (
-            "min".to_string(),
-            vec![
-                Expr::List(vec![]),
-            ],
-        )
+        Expr::Call {
+            func_name: "min".to_string(),
+            args: vec![Expr::List(vec![]),],
+        }
     )
 }
 
@@ -286,11 +265,11 @@ fn test_keephigh() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(2.0)),
-                Box::new(Expr::Number(20.0)),
-            )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(20.0)),
+            }),
             op: ModifierOp::KeepHigh,
             param: Some(ModifierParam::Value(Box::new(Expr::Number(1.0)))),
         }
@@ -303,11 +282,11 @@ fn test_keeplow() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(3.0)),
-                Box::new(Expr::Number(20.0)),
-            )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(3.0)),
+                side: Box::new(Expr::Number(20.0)),
+            }),
             op: ModifierOp::KeepLow,
             param: Some(ModifierParam::Value(Box::new(Expr::Number(1.0)))),
         }
@@ -320,11 +299,11 @@ fn test_drophigh() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(4.0)),
-                Box::new(Expr::Number(20.0)),
-            )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(4.0)),
+                side: Box::new(Expr::Number(20.0)),
+            }),
             op: ModifierOp::DropHigh,
             param: Some(ModifierParam::Value(Box::new(Expr::Number(1.0)))),
         }
@@ -337,11 +316,11 @@ fn test_droplow() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(5.0)),
-                Box::new(Expr::Number(20.0)),
-            )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(5.0)),
+                side: Box::new(Expr::Number(20.0)),
+            }),
             op: ModifierOp::DropLow,
             param: Some(ModifierParam::Value(Box::new(Expr::Number(1.0)))),
         }
@@ -354,11 +333,11 @@ fn test_keephigh_with_param() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(2.0)),
-                Box::new(Expr::Number(20.0)),
-            )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(20.0)),
+            }),
             op: ModifierOp::KeepHigh,
             param: Some(ModifierParam::Value(Box::new(Expr::Number(1.0)))),
         }
@@ -371,11 +350,11 @@ fn test_keeplow_with_param() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(3.0)),
-                Box::new(Expr::Number(20.0)),
-            )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(3.0)),
+                side: Box::new(Expr::Number(20.0)),
+            }),
             op: ModifierOp::KeepLow,
             param: Some(ModifierParam::Value(Box::new(Expr::Number(2.0)))),
         }
@@ -388,11 +367,11 @@ fn test_drophigh_with_param() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(4.0)),
-                Box::new(Expr::Number(20.0)),
-            )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(4.0)),
+                side: Box::new(Expr::Number(20.0)),
+            }),
             op: ModifierOp::DropHigh,
             param: Some(ModifierParam::Value(Box::new(Expr::Number(3.0)))),
         }
@@ -405,11 +384,11 @@ fn test_droplow_with_param() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(5.0)),
-                Box::new(Expr::Number(20.0)),
-            )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(5.0)),
+                side: Box::new(Expr::Number(20.0)),
+            }),
             op: ModifierOp::DropLow,
             param: Some(ModifierParam::Value(Box::new(Expr::Number(4.0)))),
         }
@@ -422,11 +401,11 @@ fn test_pos() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(5.0)),
-                Box::new(Expr::Number(20.0)),
-            )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(5.0)),
+                side: Box::new(Expr::Number(20.0)),
+            }),
             op: ModifierOp::DropLow,
             param: Some(ModifierParam::Value(Box::new(Expr::Number(4.0)))),
         }
@@ -439,20 +418,18 @@ fn test_neg() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Binary(
-            Box::new(Expr::Number(0.0)),
-            BinOp::Sub, 
-            Box::new(
-                Expr::Modifier { 
-                    lhs: Box::new(Expr::Dice (
-                        Box::new(Expr::Number(5.0)),
-                        Box::new(Expr::Number(20.0)),
-                    )),
-                    op: ModifierOp::DropLow,
-                    param: Some(ModifierParam::Value(Box::new(Expr::Number(4.0)))),
-                }
-            )
-        )
+        Expr::Binary {
+            lhs: Box::new(Expr::Number(0.0)),
+            op: BinOp::Sub,
+            rhs: Box::new(Expr::Modifier {
+                lhs: Box::new(Expr::Dice {
+                    count: Box::new(Expr::Number(5.0)),
+                    side: Box::new(Expr::Number(20.0)),
+                }),
+                op: ModifierOp::DropLow,
+                param: Some(ModifierParam::Value(Box::new(Expr::Number(4.0)))),
+            })
+        }
     );
 }
 
@@ -462,11 +439,11 @@ fn test_compare_expr() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::SuccessCheck { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(2.0)),
-                Box::new(Expr::Number(20.0))),
-            ),
+        Expr::SuccessCheck {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(20.0))
+            },),
             compare_expr: CompareExpr {
                 op: CompareOp::LessEqual,
                 val: Box::new(Expr::Number(15.0)),
@@ -481,11 +458,11 @@ fn test_compare_expr2() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::SuccessCheck { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(2.0)),
-                Box::new(Expr::Number(20.0))),
-            ),
+        Expr::SuccessCheck {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(20.0))
+            },),
             compare_expr: CompareExpr {
                 op: CompareOp::GreaterEqual,
                 val: Box::new(Expr::Number(15.0)),
@@ -500,11 +477,11 @@ fn test_compare_expr3() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::SuccessCheck { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(2.0)),
-                Box::new(Expr::Number(20.0))),
-            ),
+        Expr::SuccessCheck {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(20.0))
+            },),
             compare_expr: CompareExpr {
                 op: CompareOp::Equal,
                 val: Box::new(Expr::Number(15.0)),
@@ -519,11 +496,11 @@ fn test_compare_expr4() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::SuccessCheck { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(2.0)),
-                Box::new(Expr::Number(20.0))),
-            ),
+        Expr::SuccessCheck {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(20.0))
+            },),
             compare_expr: CompareExpr {
                 op: CompareOp::Greater,
                 val: Box::new(Expr::Number(15.0)),
@@ -538,11 +515,11 @@ fn test_compare_expr5() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::SuccessCheck { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(2.0)),
-                Box::new(Expr::Number(20.0))),
-            ),
+        Expr::SuccessCheck {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(20.0))
+            },),
             compare_expr: CompareExpr {
                 op: CompareOp::Less,
                 val: Box::new(Expr::Number(15.0)),
@@ -557,11 +534,11 @@ fn test_explode_expr() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(2.0)),
-                Box::new(Expr::Number(6.0)),
-            )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(6.0)),
+            }),
             op: ModifierOp::Explode,
             param: None,
         }
@@ -572,19 +549,18 @@ fn test_explode_expr() {
 fn test_explode_expr_with_param() {
     let result = parse_dice("2d6!3");
     assert!(result.is_ok());
-        assert_eq!(
+    assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(2.0)),
-                Box::new(Expr::Number(6.0)),
-            )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(6.0)),
+            }),
             op: ModifierOp::Explode,
-            param: Some(
-                ModifierParam::Compare(
-                    CompareExpr { op: CompareOp::Equal, val: Box::new(Expr::Number(3.0)) }
-                )
-            ),
+            param: Some(ModifierParam::Compare(CompareExpr {
+                op: CompareOp::Equal,
+                val: Box::new(Expr::Number(3.0))
+            })),
         }
     );
 }
@@ -595,11 +571,11 @@ fn test_explode_compound_expr() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(2.0)),
-                Box::new(Expr::Number(6.0)),
-            )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(6.0)),
+            }),
             op: ModifierOp::ExplodeCompound,
             param: None,
         }
@@ -610,19 +586,18 @@ fn test_explode_compound_expr() {
 fn test_explode_compound_expr_with_param() {
     let result = parse_dice("2d6!!<=4");
     assert!(result.is_ok());
-        assert_eq!(
+    assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(2.0)),
-                Box::new(Expr::Number(6.0)),
-            )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(6.0)),
+            }),
             op: ModifierOp::ExplodeCompound,
-            param: Some(
-                ModifierParam::Compare(
-                    CompareExpr { op: CompareOp::LessEqual, val: Box::new(Expr::Number(4.0)) }
-                )
-            ),
+            param: Some(ModifierParam::Compare(CompareExpr {
+                op: CompareOp::LessEqual,
+                val: Box::new(Expr::Number(4.0))
+            })),
         }
     );
 }
@@ -631,28 +606,26 @@ fn test_explode_compound_expr_with_param() {
 fn test_explode_compound_expr_with_param_and_limit() {
     let result = parse_dice("2d6!!<=4l(1+1)");
     assert!(result.is_ok());
-        assert_eq!(
+    assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Modifier { 
-                lhs: Box::new(Expr::Dice (
-                    Box::new(Expr::Number(2.0)),
-                    Box::new(Expr::Number(6.0)),
-                )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Modifier {
+                lhs: Box::new(Expr::Dice {
+                    count: Box::new(Expr::Number(2.0)),
+                    side: Box::new(Expr::Number(6.0)),
+                }),
                 op: ModifierOp::ExplodeCompound,
-                param: Some(
-                    ModifierParam::Compare(
-                        CompareExpr { op: CompareOp::LessEqual, val: Box::new(Expr::Number(4.0)) }
-                    )
-                ),
+                param: Some(ModifierParam::Compare(CompareExpr {
+                    op: CompareOp::LessEqual,
+                    val: Box::new(Expr::Number(4.0))
+                })),
             }),
             op: ModifierOp::Limit,
-            param: Some(ModifierParam::Value(
-                Box::new(Expr::Binary(
-                    Box::new(Expr::Number(1.0)), 
-                    BinOp::Add, 
-                    Box::new(Expr::Number(1.0))))
-            ))
+            param: Some(ModifierParam::Value(Box::new(Expr::Binary {
+                lhs: Box::new(Expr::Number(1.0)),
+                op: BinOp::Add,
+                rhs: Box::new(Expr::Number(1.0))
+            })))
         }
     );
 }
@@ -663,17 +636,16 @@ fn test_reroll_expr() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(2.0)),
-                Box::new(Expr::Number(20.0)),
-            )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(20.0)),
+            }),
             op: ModifierOp::Reroll,
-            param: Some(
-                ModifierParam::Compare(
-                    CompareExpr { op: CompareOp::Less, val: Box::new(Expr::Number(5.0)) }
-                )
-            ),
+            param: Some(ModifierParam::Compare(CompareExpr {
+                op: CompareOp::Less,
+                val: Box::new(Expr::Number(5.0))
+            })),
         }
     );
 }
@@ -684,17 +656,16 @@ fn test_reroll_once_expr() {
     assert!(result.is_ok());
     assert_eq!(
         result.unwrap(),
-        Expr::Modifier { 
-            lhs: Box::new(Expr::Dice (
-                Box::new(Expr::Number(2.0)),
-                Box::new(Expr::Number(20.0)),
-            )),
+        Expr::Modifier {
+            lhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(20.0)),
+            }),
             op: ModifierOp::RerollOnce,
-            param: Some(
-                ModifierParam::Compare(
-                    CompareExpr { op: CompareOp::GreaterEqual, val: Box::new(Expr::Number(5.0)) }
-                )
-            ),
+            param: Some(ModifierParam::Compare(CompareExpr {
+                op: CompareOp::GreaterEqual,
+                val: Box::new(Expr::Number(5.0))
+            })),
         }
     );
 }

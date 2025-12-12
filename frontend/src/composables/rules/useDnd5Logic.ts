@@ -1,20 +1,19 @@
 import type { Ref, ComputedRef } from 'vue'
 import { computed, reactive } from 'vue'
 import type { Dnd5Data, SixAbilityKeysDnd5 } from '@/stores/rules/dnd5'
+import { recusiveMacroReplace } from '../useDiceBox'
+import { check_constant_integer } from '@/wasm_utils/dice/pkg/dice_roller'
 
 export function formatWithSign(num: number): string {
   return num > 0 ? `+${num}` : `${num}`
 }
-
-const MATH_CONTEXT =
-  'const min = Math.min; const max = Math.max; const floor = Math.floor; const ceil = Math.ceil; const abs = Math.abs;'
 
 export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
   const SKILL_KEYS: Array<keyof Dnd5Data['skills']> = Object.keys(sheet.value.skills) as Array<
     keyof Dnd5Data['skills']
   >
 
-  const replaceVariablesInString = (input: string) => {
+  const costomMacroReplace = (input: string) => {
     const regex = /@(str|dex|con|int|wis|cha|pb|lv\d+)\b/gi
     return input.replace(regex, (match, key) => {
       const lowerKey = key.toLowerCase()
@@ -25,33 +24,25 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
       } else if (['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(lowerKey)) {
         value = abilityModifies[lowerKey as SixAbilityKeysDnd5]
       } else if (/^lv\d+$/.test(lowerKey)) {
-        const classIndex = parseInt(lowerKey.slice(2)) - 1 // lv1 对应索引 0
-        value = sheet.value.basic.classes[classIndex]?.level || 0
+        const index = parseInt(lowerKey.slice(2))
+        if (index === 0) {
+          // lv0 对应总等级
+          value = totalLevel.value
+        } else {
+          value = sheet.value.basic.classes[index - 1]?.level || 0
+        }
       }
-      return value !== undefined ? String(value) : '0'
+      return String(value)
     })
   }
 
-  const _isValidNumberExpression = (input: string): boolean => {
-    const clearedInput = input.replace(/\s+/g, '')
-    // 允许空字符串，表示没有额外调整
-    if (clearedInput === '') return true
+  const evalCostomFamula = (input: string): number => {
+    if (input.trim() === '') return 0
     try {
-      const func = new Function(`${MATH_CONTEXT} return ${input};`)
-      const result = func()
-      return typeof result === 'number' && !isNaN(result)
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      return false
-    }
-  }
-
-  const _evalStringExpression = (input: string) => {
-    try {
-      const func = new Function(`${MATH_CONTEXT} return ${input};`)
-      const result = func()
-      if (typeof result === 'number' && !isNaN(result)) {
-        return result
+      const replaced = recusiveMacroReplace(input, costomMacroReplace, 5)
+      const evalResult = check_constant_integer(replaced)
+      if (evalResult.result === 'Constant') {
+        return evalResult.value
       } else {
         return 0
       }
@@ -59,16 +50,6 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
     } catch (e) {
       return 0
     }
-  }
-
-  const evalStringWithVariables = (input: string): number => {
-    const replaced = replaceVariablesInString(input)
-    return _evalStringExpression(replaced)
-  }
-
-  const isValidStringWithVariables = (input: string): boolean => {
-    const replaced = replaceVariablesInString(input)
-    return _isValidNumberExpression(replaced)
   }
 
   const totalLevel = computed(() => {
@@ -107,12 +88,12 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
 
   // 计算成本较大，需要缓存
   const extraSaveModifies: Record<SixAbilityKeysDnd5, number> = reactive({
-    str: computed(() => evalStringWithVariables(sheet.value.extra_modify.save.str)),
-    dex: computed(() => evalStringWithVariables(sheet.value.extra_modify.save.dex)),
-    con: computed(() => evalStringWithVariables(sheet.value.extra_modify.save.con)),
-    int: computed(() => evalStringWithVariables(sheet.value.extra_modify.save.int)),
-    wis: computed(() => evalStringWithVariables(sheet.value.extra_modify.save.wis)),
-    cha: computed(() => evalStringWithVariables(sheet.value.extra_modify.save.cha)),
+    str: computed(() => evalCostomFamula(sheet.value.extra_modify.save.str)),
+    dex: computed(() => evalCostomFamula(sheet.value.extra_modify.save.dex)),
+    con: computed(() => evalCostomFamula(sheet.value.extra_modify.save.con)),
+    int: computed(() => evalCostomFamula(sheet.value.extra_modify.save.int)),
+    wis: computed(() => evalCostomFamula(sheet.value.extra_modify.save.wis)),
+    cha: computed(() => evalCostomFamula(sheet.value.extra_modify.save.cha)),
   })
   const getSaveModify = (ability: SixAbilityKeysDnd5): number => {
     return (
@@ -133,9 +114,7 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
   const extraSkillModifies: Record<keyof Dnd5Data['skills'], number> = reactive(
     SKILL_KEYS.reduce(
       (acc, skillKey) => {
-        acc[skillKey] = computed(() =>
-          evalStringWithVariables(sheet.value.extra_modify.skill[skillKey]),
-        )
+        acc[skillKey] = computed(() => evalCostomFamula(sheet.value.extra_modify.skill[skillKey]))
         return acc
       },
       {} as Record<keyof Dnd5Data['skills'], ComputedRef<number>>,
@@ -208,13 +187,12 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
       abilityModifies.dex +
       // 加上用户自定义的额外调整值（表达式计算）
       // 不允许不确定性，必须是确定的数字
-      evalStringWithVariables(sheet.value.extra_modify.initiative)
+      evalCostomFamula(sheet.value.extra_modify.initiative)
     )
   })
 
   return {
-    evalStringWithVariables,
-    isValidStringWithVariables,
+    costomMacroReplace,
     totalLevel,
     abilityModifies,
     proficiencyBonus,
@@ -226,5 +204,6 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
     removeAttack,
     passivePerception,
     initiativeTotal,
+    evalCostomFamula,
   }
 }

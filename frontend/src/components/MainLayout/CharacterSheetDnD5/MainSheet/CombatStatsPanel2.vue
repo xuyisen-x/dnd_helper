@@ -6,7 +6,7 @@ import { useDnd5Logic, formatWithSign } from '@/composables/rules/useDnd5Logic'
 import EditPopover from './EditPopover.vue'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import RollConfigPopover from './RollConfigPopover.vue'
-import { useDiceBox } from '@/composables/useDiceBoxOld'
+import { useDiceBox } from '@/composables/useDiceBox'
 import { addDiceResult } from '@/stores/dice-result'
 import { isUsingMouse } from '@/composables/useGlobalState'
 
@@ -16,7 +16,7 @@ const sheet = computed({
   set: (val) => (store.data = val),
 })
 
-const { initiativeTotal, passivePerception, evalStringWithVariables } = useDnd5Logic(sheet)
+const { initiativeTotal, passivePerception, evalCostomFamula } = useDnd5Logic(sheet)
 
 // 先攻编辑状态
 const isEditingInit = ref(false)
@@ -147,13 +147,13 @@ const openConfig = () => {
             class="big-value clickable"
             @click="isEditingAc = true"
             title="点击修改先攻表达式"
-            >{{ evalStringWithVariables(sheet.combat.ac) }}</span
+            >{{ evalCostomFamula(sheet.combat.ac) }}</span
           >
           <EditPopover
             v-if="isEditingAc"
             v-model="sheet.combat.ac"
             @close="isEditingAc = false"
-            title="护驾等级表达式"
+            title="护甲等级表达式"
             @click.stop
           />
         </div>

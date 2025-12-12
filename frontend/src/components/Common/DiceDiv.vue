@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useDiceBox } from '@/composables/useDiceBoxOld'
+import { useDiceBox } from '@/composables/useDiceBox'
 
 const { initDiceBox, canvasOpacity } = useDiceBox()
 onMounted(async () => {
@@ -8,6 +8,7 @@ onMounted(async () => {
 })
 </script>
 <template>
+  <div></div>
   <div
     id="dice-box-container"
     :style="{

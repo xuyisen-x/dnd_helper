@@ -5,7 +5,7 @@ import type { Dnd5Data } from '@/stores/rules/dnd5'
 import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import HitIcon from '@/components/Icons/HitIcon.vue'
-import { useDiceBox } from '@/composables/useDiceBoxOld'
+import { useDiceBox } from '@/composables/useDiceBox'
 import { addDiceResult } from '@/stores/dice-result'
 import RollConfigPopover from './RollConfigPopover.vue'
 import { isUsingMouse } from '@/composables/useGlobalState'
@@ -13,7 +13,7 @@ import { isUsingMouse } from '@/composables/useGlobalState'
 const showAttackRollConfig = ref<number | null>(null)
 const criticalList = ref<number[]>([])
 
-const { parseAndRoll, Preprocess, parseExpression } = useDiceBox()
+const { parseAndRoll, Preprocess } = useDiceBox()
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -25,23 +25,7 @@ const { addAttack, removeAttack } = useDnd5Logic(sheet)
 
 const DealWithCitical = (damage: string, isCritical: boolean) => {
   if (!isCritical) return damage
-  const parsed = parseExpression(damage)
-  // 找到所有以d开头的骰子表达式，开头替换为2d
-  // 找到所有以n d开头的骰子表达式，n替换为2n
-  // d8 -> 2d8, 3d6 -> 6d6
-  const processedParts = parsed.map((input) => {
-    if (/^(d\d)/.test(input)) {
-      return input.replace(/^d/, '2d')
-    } else if (/^(\d+)d\d/.test(input)) {
-      return input.replace(/^(\d+)\s*d/, (match, p1) => {
-        const n = parseInt(p1, 10)
-        return `${n * 2}d`
-      })
-    } else {
-      return input
-    }
-  })
-  return processedParts.join('')
+  return damage + ' '
 }
 
 const PreprocessDamage = (damage: string, isCritical: boolean) => {

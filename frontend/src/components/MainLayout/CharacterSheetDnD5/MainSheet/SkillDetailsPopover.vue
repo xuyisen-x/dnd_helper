@@ -15,8 +15,7 @@ const sheet = computed({
   set: (val) => (store.data = val),
 })
 
-const { skillModifies, abilityModifies, proficiencyBonus, evalStringWithVariables } =
-  useDnd5Logic(sheet)
+const { skillModifies, abilityModifies, proficiencyBonus, evalCostomFamula } = useDnd5Logic(sheet)
 
 const abilityKey = computed(() => sheet.value.skills[props.skillKey].key)
 const totalModify = computed(() => skillModifies[props.skillKey])
@@ -56,9 +55,7 @@ const extra_modify = computed(() => sheet.value.extra_modify.skill[props.skillKe
 
     <div class="detail-row" :class="{ inactive: extra_modify === '' }">
       <span class="label">额外调整</span>
-      <span class="value">{{
-        extra_modify !== '' ? evalStringWithVariables(extra_modify) : '—'
-      }}</span>
+      <span class="value">{{ extra_modify !== '' ? evalCostomFamula(extra_modify) : '—' }}</span>
     </div>
   </div>
 </template>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, type Ref } from 'vue'
 import { useEventListener } from '@vueuse/core'
-import { useDiceBox } from '@/composables/useDiceBoxOld'
+import { useDiceBox } from '@/composables/useDiceBox'
 import { addDiceResult } from '@/stores/dice-result'
 
 const props = withDefaults(

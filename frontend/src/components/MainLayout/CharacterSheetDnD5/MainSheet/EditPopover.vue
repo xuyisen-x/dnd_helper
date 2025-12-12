@@ -3,6 +3,8 @@ import { computed, onMounted, ref } from 'vue'
 import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
+import { recusiveMacroReplace } from '@/composables/useDiceBox'
+import { check_constant_integer } from '@/wasm_utils/dice/pkg/dice_roller'
 
 const props = withDefaults(defineProps<{ modelValue: string; title?: string }>(), {
   title: '额外调整',
@@ -19,16 +21,65 @@ const sheet = computed({
   set: (val) => (store.data = val),
 })
 
-const { isValidStringWithVariables } = useDnd5Logic(sheet)
+const { costomMacroReplace } = useDnd5Logic(sheet)
 
 const inputRef = ref<HTMLInputElement | null>(null)
 
 const localValue = ref(props.modelValue)
 const initValue = props.modelValue
 
-const isCurrentInputValid = computed(() => isValidStringWithVariables(localValue.value))
+const errorMessage = ref<string>('')
+const isCurrentInputValid = ref<boolean>(true)
+const shouldShowWarning = ref<boolean>(false)
+let warningTimeout: number | null = null
+const WARNING_DELAY_MS = 2000
+
+const validateInput = (input: string) => {
+  if (warningTimeout) {
+    clearTimeout(warningTimeout)
+    warningTimeout = null
+  }
+  shouldShowWarning.value = false
+
+  // 延迟显示警告信息，避免输入时频繁闪烁
+  warningTimeout = setTimeout(() => {
+    shouldShowWarning.value = true
+  }, WARNING_DELAY_MS)
+
+  if (input.trim() === '') {
+    // 允许空输入
+    isCurrentInputValid.value = true
+    errorMessage.value = ''
+    return
+  }
+  try {
+    // 1. 进行宏替换
+    const replaced = recusiveMacroReplace(input, costomMacroReplace)
+    // 2. 检查是否为常量整数
+    const evalResult = check_constant_integer(replaced)
+    if (evalResult.result === 'Constant') {
+      isCurrentInputValid.value = true
+      errorMessage.value = ''
+    } else {
+      isCurrentInputValid.value = false
+      errorMessage.value = evalResult.value
+    }
+  } catch (e) {
+    isCurrentInputValid.value = false
+    if (e instanceof Error) {
+      errorMessage.value = e.message
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } else if ('message' in (e as any)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      errorMessage.value = (e as any).message
+    } else {
+      errorMessage.value = '未知错误'
+    }
+  }
+}
 
 onMounted(() => {
+  validateInput(localValue.value)
   inputRef.value?.focus()
   inputRef.value?.select()
 })
@@ -58,10 +109,14 @@ const commitAndClose = () => {
         ref="inputRef"
         type="text"
         v-model="localValue"
+        @input="validateInput(localValue)"
         @blur="commitAndClose"
         @keyup.enter="commitAndClose"
         class="popover-input"
       />
+      <div class="warning-label" v-if="!isCurrentInputValid && shouldShowWarning">
+        {{ errorMessage }}
+      </div>
     </div>
   </div>
 </template>
@@ -127,5 +182,16 @@ const commitAndClose = () => {
 .popover-input:focus {
   border-color: var(--dnd-dragon-red);
   background: white;
+}
+
+.warning-label {
+  font-size: 0.7rem;
+  color: var(--dnd-ink-secondary);
+  text-align: center;
+  white-space: nowrap;
+  width: 120px;
+  overflow-wrap: break-word;
+  white-space: normal;
+  /* word-break: break-all; */
 }
 </style>

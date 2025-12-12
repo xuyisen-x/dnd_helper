@@ -3,7 +3,6 @@ import { ref, toRaw } from 'vue'
 import type { Dnd5Data } from './rules/dnd5'
 import { createEmptyDnd5Data } from './rules/dnd5'
 import { showToast } from '@/stores/toast'
-import LZString from 'lz-string'
 
 // 可以适配多种不同的规则
 export type RuleSystem = 'dnd5r' | 'dnd5e'
@@ -22,13 +21,11 @@ export const useActiveCharacterStore = defineStore('active-character', () => {
   }
 
   const exportData = () => {
-    const rawJson = JSON.stringify({ rule: rule.value, data: toRaw(data.value) })
-    return LZString.compressToBase64(rawJson)
+    return JSON.stringify({ rule: rule.value, data: toRaw(data.value) })
   }
 
-  const importData = (compressedString: string) => {
+  const importData = (jsonString: string) => {
     try {
-      const jsonString = LZString.decompressFromBase64(compressedString)
       const parsed = JSON.parse(jsonString)
       if (parsed.rule && parsed.data) {
         rule.value = parsed.rule

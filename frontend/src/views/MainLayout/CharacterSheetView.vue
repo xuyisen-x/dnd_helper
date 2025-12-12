@@ -15,7 +15,7 @@ const handleSave = () => {
   try {
     const dataStr = activeCharacterStore.exportData() // 获取导出的 Base64 字符串
 
-    const blob = new Blob([dataStr], { type: 'text/plain' }) // 创建 Blob 对象
+    const blob = new Blob([dataStr], { type: 'application/json' }) // 创建 Blob 对象
 
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')

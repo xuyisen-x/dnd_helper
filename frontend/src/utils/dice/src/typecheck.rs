@@ -6,37 +6,37 @@ use super::grammar::{BinOp, Expr, ModifierOp, ModifierParam};
 // 类型定义
 // ==========================================
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub struct DiceItem {
     pub min_count: i64, // 最小值，因为explode可能会导致这个值的增长
     pub side: i64,      // 骰子面数，一般是不会改变的
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum DicePoolType {
     RawDicePool(DiceItem), // 原始的骰池，除了ExplodeCompound外，生成的骰池子均为此类型
     LimitableDicePool(DiceItem), // 可限制爆骰的骰池，只有通过ExplodeCompound生成
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum VariableNumber {
     Unknown,                // 未知的变量数值
     DicePool(DicePoolType), // 来自骰池的变量数值
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum NumberType {
     Constant(f64),            // 常数数值
     Variable(VariableNumber), // 变量数值
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum ListType {
     ConstantList(Vec<f64>), // 常数列表
     VariableList(i64),      // 变量列表，记录长度
 }
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum Type {
     Invalid(String),    // 无效类型，携带错误信息
     Number(NumberType), // 数值类型
@@ -325,15 +325,9 @@ fn type_of_call(func_name: &str, args: &Vec<Expr>) -> Type {
     use ArgsType::*;
     use ListType::*;
     use NumberType::*;
-    let mut args_type: Vec<Type> = Vec::new();
-    for arg in args {
-        let arg_type = typecheck_expr(arg);
-        if let Type::Invalid(s) = arg_type {
-            return Type::Invalid(s); // 遇到无效类型，直接返回错误
-        }
-        args_type.push(arg_type);
-    }
-    let args_type = match preprocess_call_args(&args_type) {
+    use VariableNumber::*;
+    let raw_args_type: Vec<Type> = args.iter().map(|arg| typecheck_expr(arg)).collect();
+    let args_type = match preprocess_call_args(&raw_args_type) {
         Err(s) => return Type::Invalid(s),
         Ok(at) => at,
     };
@@ -435,7 +429,36 @@ fn type_of_call(func_name: &str, args: &Vec<Expr>) -> Type {
                 )),
             }
         }
-        _ => Type::Invalid(format!("Unknown function: {}", func_name)), // 未知函数
+        "rpdice" => {
+            match raw_args_type.as_slice() {
+                [Type::Number(Variable(DicePool(_)))] => {
+                    Type::unknown_var() // 单骰池参数，结果为未知变量数值
+                }
+                [t] => t.clone(), // 其他情况的单参数调用，直接返回该参数的类型
+                // 也可以接受第二个参数为常数数值，表示重复次数
+                [t, Type::Number(Constant(c))] => {
+                    if !is_integer(*c) || *c <= 1.0 {
+                        Type::Invalid(
+                            "In rpdice, the repeat count parameter must be a integer larger than 1."
+                                .to_string(),
+                        )
+                    } else {
+                        match t {
+                            Type::Number(Variable(DicePool(_))) => Type::unknown_var(),
+                            _ => t.clone(), // 其他情况，直接返回第一个参数的类型
+                        }
+                    }
+                }
+                [_, Type::Number(Variable(_))] => Type::Invalid(
+                    "In rpdice, the repeat count parameter must be a constant integer.".to_string(),
+                ),
+                _ => Type::Invalid(
+                    "rpdice function requires one argument, or one argument and a repeat count."
+                        .to_string(),
+                ),
+            }
+        }
+        _ => Type::Invalid(format!("Unknown function: {}", func_name)), // 未知函数，should be unreachable
     }
 }
 
@@ -480,7 +503,7 @@ fn positive_integer_constant(param: &Option<ModifierParam>) -> Result<i64, Strin
             _ => Err("Modifier parameter must be a constant number.".to_string()),
         }
     } else {
-        Err("Modifier requires a count parameter.".to_string())
+        Err("Modifier requires a count parameter.".to_string()) // should be unreachable
     }
 }
 fn valid_compare_param(param: &Option<ModifierParam>) -> Result<Option<()>, String> {
@@ -489,14 +512,17 @@ fn valid_compare_param(param: &Option<ModifierParam>) -> Result<Option<()>, Stri
             let ce_type = typecheck_expr(&ce.val);
             match ce_type {
                 Type::Invalid(s) => Err(s),
-                Type::Number(_) => Ok(Some(())),
+                Type::Number(NumberType::Constant(_)) => Ok(Some(())),
+                Type::Number(NumberType::Variable(_)) => Err(
+                    "Comparison modifier cannot have a variable comparison parameter.".to_string(),
+                ),
                 _ => {
                     Err("Comparison modifier requires a numeric comparison parameter.".to_string())
                 }
             }
         }
         Some(ModifierParam::Value(_)) => {
-            Err("Comparison modifier requires a comparison parameter, not a value.".to_string())
+            Err("Comparison modifier requires a comparison parameter, not a value.".to_string()) // should be unreachable
         }
         None => Ok(None), // 没有参数，可能也合法，需要交给外层处理
     }
@@ -525,20 +551,19 @@ fn type_of_modifier(lhs: &Expr, op: &ModifierOp, param: &Option<ModifierParam>) 
                 Ok(c) => {
                     match dice_pool {
                         RawDicePool(item) | LimitableDicePool(item) => {
-                            if c as i64 > item.min_count {
-                                // 不允许超过边界的保留与丢弃
-                                Invalid(format!(
-                                    "Modifier parameter {} exceeds min dice count {}.",
-                                    c as i64, item.min_count
-                                ))
-                            } else {
-                                let new_min_count = match op {
+                            let remain_count = {
+                                match op {
                                     KeepHigh | KeepLow => c as i64,
                                     DropHigh | DropLow => item.min_count - (c as i64),
                                     _ => unreachable!(),
-                                };
+                                }
+                            };
+                            if remain_count <= 0 || remain_count > item.min_count {
+                                // 不允许超过边界的保留与丢弃
+                                Invalid("Drop / keep count exceeds dice pool size.".to_string())
+                            } else {
                                 Type::raw_dice_pool(DiceItem {
-                                    min_count: new_min_count, // 丢弃一些骰子后，最小值会变化
+                                    min_count: remain_count,
                                     side: item.side,
                                 })
                             }
@@ -549,7 +574,7 @@ fn type_of_modifier(lhs: &Expr, op: &ModifierOp, param: &Option<ModifierParam>) 
         }
         Reroll | RerollOnce => match valid_compare_param(param) {
             Err(s) => Invalid(s),
-            Ok(None) => Invalid("Modifier requires a comparison parameter.".to_string()),
+            Ok(None) => Invalid("Modifier requires a comparison parameter.".to_string()), // should be unreachable
             Ok(Some(())) => match dice_pool {
                 RawDicePool(item) | LimitableDicePool(item) => Type::raw_dice_pool(item),
             },

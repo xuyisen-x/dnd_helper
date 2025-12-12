@@ -260,6 +260,19 @@ fn test_min_list_empty() {
 }
 
 #[test]
+fn test_rpdice_list_empty() {
+    let result = parse_dice("rpdice([])");
+    assert!(result.is_ok());
+    assert_eq!(
+        result.unwrap(),
+        Expr::Call {
+            func_name: "rpdice".to_string(),
+            args: vec![Expr::List(vec![]),],
+        }
+    )
+}
+
+#[test]
 fn test_keephigh() {
     let result = parse_dice("2d20kh");
     assert!(result.is_ok());

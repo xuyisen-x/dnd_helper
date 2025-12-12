@@ -6,7 +6,7 @@ import { useDnd5Logic, formatWithSign } from '@/composables/rules/useDnd5Logic'
 import EditPopover from './EditPopover.vue'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import RollConfigPopover from './RollConfigPopover.vue'
-import { useDiceBox } from '@/composables/useDiceBox'
+import { useDiceBox } from '@/composables/useDiceBoxOld'
 import { addDiceResult } from '@/stores/dice-result'
 import { isUsingMouse } from '@/composables/useGlobalState'
 

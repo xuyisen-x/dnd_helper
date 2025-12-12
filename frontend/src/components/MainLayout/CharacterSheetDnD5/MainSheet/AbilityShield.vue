@@ -10,7 +10,7 @@ import SkillDetailsPopover from './SkillDetailsPopover.vue'
 import SaveDetailsPopover from './SaveDetailsPopover.vue'
 import OneAutoFitText from '@/components/Common/OneRowAutoFitText.vue'
 import RollConfigPopover from './RollConfigPopover.vue'
-import { useDiceBox } from '@/composables/useDiceBox'
+import { useDiceBox } from '@/composables/useDiceBoxOld'
 import { isUsingMouse } from '@/composables/useGlobalState'
 import { addDiceResult } from '@/stores/dice-result'
 

@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { RollOutput } from '@/composables/useDiceBox'
+import type { RollOutput } from '@/composables/useDiceBoxOld'
 
 export interface RollResultItem {
   id: number

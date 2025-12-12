@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useDiceBox } from '@/composables/useDiceBox'
+import { useDiceBox } from '@/composables/useDiceBoxOld'
 import DiceIcon from '../Icons/DiceIcon.vue'
 import MutiDiceIcon from '../Icons/MutiDiceIcon.vue'
 import { onClickOutside } from '@vueuse/core'

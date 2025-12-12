@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
-import { useDiceBox } from '@/composables/useDiceBox'
+import { useDiceBox } from '@/composables/useDiceBoxOld'
 
 const { initDiceBox, canvasOpacity } = useDiceBox()
 onMounted(async () => {

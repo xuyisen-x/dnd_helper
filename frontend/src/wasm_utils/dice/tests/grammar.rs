@@ -115,6 +115,23 @@ fn test_div_expr() {
 }
 
 #[test]
+fn test_idiv_expr() {
+    let result = parse_dice("10 // 2d5");
+    assert!(result.is_ok());
+    assert_eq!(
+        result.unwrap(),
+        Expr::Binary {
+            lhs: Box::new(Expr::Number(10.0)),
+            op: BinOp::Idiv,
+            rhs: Box::new(Expr::Dice {
+                count: Box::new(Expr::Number(2.0)),
+                side: Box::new(Expr::Number(5.0)),
+            })
+        }
+    );
+}
+
+#[test]
 fn test_mod_expr() {
     let result = parse_dice("3d4 % 10");
     assert!(result.is_ok());

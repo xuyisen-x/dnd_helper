@@ -23,6 +23,24 @@ fn test_typecheck_constant_fold() {
     let result = typecheck("100 / 2");
     assert_eq!(result.unwrap(), Type::constant(50.0));
 
+    let result = typecheck("100 // 2");
+    assert_eq!(result.unwrap(), Type::constant(50.0));
+
+    let result = typecheck("101 // 2");
+    assert_eq!(result.unwrap(), Type::constant(50.0));
+
+    let result = typecheck("101 // 3");
+    assert_eq!(result.unwrap(), Type::constant(33.0));
+
+    let result = typecheck("-1 // 3");
+    assert_eq!(result.unwrap(), Type::constant(0.0));
+
+    let result = typecheck("-5 // 3");
+    assert_eq!(result.unwrap(), Type::constant(-1.0));
+
+    let result = typecheck("5 // -3");
+    assert_eq!(result.unwrap(), Type::constant(-1.0));
+
     let result = typecheck("100 - 58");
     assert_eq!(result.unwrap(), Type::constant(42.0));
 
@@ -449,6 +467,12 @@ fn test_typecheck_invalid_expressions() {
     let result = typecheck("1d10 % (1 - 1)");
     assert!(matches!(result.unwrap(), Type::Invalid(_)));
 
+    // 非整数除法除0
+    let result = typecheck("10 // max(-1, 2 - 2)");
+    assert!(matches!(result.unwrap(), Type::Invalid(_)));
+    let result = typecheck("1d10 // min(0, 2)");
+    assert!(matches!(result.unwrap(), Type::Invalid(_)));
+
     // 取模非整数
     let result = typecheck("10 % 2.5");
     assert!(matches!(result.unwrap(), Type::Invalid(_)));
@@ -457,6 +481,16 @@ fn test_typecheck_invalid_expressions() {
     let result = typecheck("10 % [1, 2]");
     assert!(matches!(result.unwrap(), Type::Invalid(_)));
     let result = typecheck("2.5 % 10");
+    assert!(matches!(result.unwrap(), Type::Invalid(_)));
+
+    // 整数除法非整数
+    let result = typecheck("10 // 2.5");
+    assert!(matches!(result.unwrap(), Type::Invalid(_)));
+    let result = typecheck("(1d10 + 2) // 2.5");
+    assert!(matches!(result.unwrap(), Type::Invalid(_)));
+    let result = typecheck("10 // [1, 2]");
+    assert!(matches!(result.unwrap(), Type::Invalid(_)));
+    let result = typecheck("2.5 // 10");
     assert!(matches!(result.unwrap(), Type::Invalid(_)));
 
     // 无效的骰子表达式

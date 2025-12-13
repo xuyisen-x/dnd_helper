@@ -17,6 +17,7 @@ number = @{ ASCII_DIGIT+ ~ ("." ~ ASCII_DIGIT+)? }
 add = { "+" }
 sub = { "-" }
 mul = { "*" }
+idiv = { "//" }
 div = { "/" }
 rem = { "%" }
 
@@ -114,7 +115,7 @@ atom = {
 dice_expr = { atom ~ (dice_op ~ atom)? | dice_op ~ atom }
 
 // D. 运算符分类
-bin_op    = _{ add | sub | mul | div | rem }
+bin_op    = _{ idiv | add | sub | mul | div | rem }
 prefix_op = _{ neg | pos }
 postfix_op = _{ modifier }
 

@@ -19,4 +19,4 @@ lazy_static = "1.5.0"
 lto = true
 opt-level = 'z'    # 优化代码体积
 codegen-units = 1
-panic = 'abort'    # 发生错误直接崩溃，不回溯堆栈。这一条通常能减小几十 KB。
+panic = 'abort'    # 发生错误直接崩溃，不回溯堆栈

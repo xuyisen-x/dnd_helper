@@ -1,6 +1,11 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import type DiceBox from '@3d-dice/dice-box'
+
+// 用于规则自定义的宏替换
+import { useActiveCharacterStore } from '@/stores/active-character'
+import { useDnd5Logic } from './rules/useDnd5Logic'
+import type { Dnd5Data } from '@/stores/rules/dnd5'
 
 function globalMacroReplace(input: string): string {
   // TODO: 全局生效的宏替换
@@ -43,6 +48,22 @@ export function recusiveMacroReplace(
     throw new Error(`Macro replacement did not converge: ${result}`)
   }
   return result
+}
+
+export function specificMacroReplace(input: string, maxDepth = 5): string {
+  const store = useActiveCharacterStore()
+  let comstomReplace = (s: string): string => {
+    return s
+  }
+  if (store.rule === 'dnd5r' || store.rule === 'dnd5e') {
+    const sheet = computed({
+      get: () => store.data as Dnd5Data,
+      set: (val) => (store.data = val),
+    })
+    const { costomMacroReplace } = useDnd5Logic(sheet)
+    comstomReplace = costomMacroReplace
+  }
+  return recusiveMacroReplace(input, comstomReplace, maxDepth)
 }
 
 const canvasOpacity = ref(1)

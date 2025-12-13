@@ -209,14 +209,29 @@ fn type_of_binary_op(lhs: &Expr, op: &BinOp, rhs: &Expr) -> Type {
                                 Invalid("Modulo operator requires integer operands.".to_string())
                             }
                         }
+                        BinOp::Idiv => {
+                            if rc == 0.0 {
+                                Invalid("Integer division by zero.".to_string())
+                            } else if is_integer(lc) && is_integer(rc) {
+                                Type::constant((lc as i64 / rc as i64) as f64)
+                            } else {
+                                Invalid(
+                                    "Integer division operator requires integer operands."
+                                        .to_string(),
+                                )
+                            }
+                        }
                     }
                 }
                 (_, Constant(rc)) => {
                     // 检查除零和整数要求
-                    if (op == &BinOp::Div || op == &BinOp::Mod) && rc == 0.0 {
+                    if (op == &BinOp::Div || op == &BinOp::Mod || op == &BinOp::Idiv) && rc == 0.0 {
                         Invalid("Division or modulo by zero.".to_string())
-                    } else if op == &BinOp::Mod && !is_integer(rc) {
-                        Invalid("Modulo operator requires integer operands.".to_string())
+                    } else if (op == &BinOp::Mod || op == &BinOp::Idiv) && !is_integer(rc) {
+                        Invalid(
+                            "Modulo or integer division operator requires integer operands."
+                                .to_string(),
+                        )
                     } else {
                         // 变量与常数之间的操作，结果为变量数值
                         Type::unknown_var()

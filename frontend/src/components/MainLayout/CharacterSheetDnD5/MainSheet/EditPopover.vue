@@ -1,10 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
-import { useActiveCharacterStore } from '@/stores/active-character'
-import type { Dnd5Data } from '@/stores/rules/dnd5'
-import { recusiveMacroReplace } from '@/composables/useDiceBox'
+import { onMounted, ref } from 'vue'
 import { check_constant_integer } from '@/wasm_utils/dice/pkg/dice_roller'
+import { specificMacroReplace } from '@/composables/useDiceBox'
 
 const props = withDefaults(defineProps<{ modelValue: string; title?: string }>(), {
   title: '额外调整',
@@ -14,14 +11,6 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void
   (e: 'close'): void
 }>()
-
-const store = useActiveCharacterStore()
-const sheet = computed({
-  get: () => store.data as Dnd5Data,
-  set: (val) => (store.data = val),
-})
-
-const { costomMacroReplace } = useDnd5Logic(sheet)
 
 const inputRef = ref<HTMLInputElement | null>(null)
 
@@ -54,7 +43,7 @@ const validateInput = (input: string) => {
   }
   try {
     // 1. 进行宏替换
-    const replaced = recusiveMacroReplace(input, costomMacroReplace)
+    const replaced = specificMacroReplace(input)
     // 2. 检查是否为常量整数
     const evalResult = check_constant_integer(replaced)
     if (evalResult.result === 'Constant') {

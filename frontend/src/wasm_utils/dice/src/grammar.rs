@@ -23,6 +23,7 @@ pub enum BinOp {
     Mul,
     Div,
     Mod,
+    Idiv,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Tsify, PartialEq)]
@@ -129,7 +130,8 @@ lazy_static! {
             // 优先级 2: 乘除模
             .op(Op::infix(Rule::mul, Assoc::Left) |
                 Op::infix(Rule::div, Assoc::Left) |
-                Op::infix(Rule::rem, Assoc::Left))
+                Op::infix(Rule::rem, Assoc::Left) |
+                Op::infix(Rule::idiv, Assoc::Left))
             // 优先级 3: 前缀 (负号)
             .op(Op::prefix(Rule::neg) | Op::prefix(Rule::pos))
             // 优先级 4: 后缀 (修饰符) - 优先级最高，紧贴左侧
@@ -216,6 +218,7 @@ fn process_infix(lhs: Expr, op: pest::iterators::Pair<Rule>, rhs: Expr) -> Expr 
         Rule::mul => BinOp::Mul,
         Rule::div => BinOp::Div,
         Rule::rem => BinOp::Mod,
+        Rule::idiv => BinOp::Idiv,
         _ => unreachable!("Unknown infix operator: {:?}", op.as_rule()),
     };
     Expr::Binary {

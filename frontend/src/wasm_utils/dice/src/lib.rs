@@ -2,7 +2,9 @@
 //!
 //! This crate provides functionality for dice rolling and related utilities.
 
+// pub mod fold_binary;
 pub mod grammar;
+// pub mod preprocessor;
 pub mod typecheck;
 
 use crate::grammar::parse_dice;
@@ -30,7 +32,7 @@ pub enum ConstantIntegerCheckResult {
 #[tsify(into_wasm_abi)]
 #[serde(tag = "result", content = "value")]
 pub enum ResultWithReason {
-    Ture,
+    True,
     False(String),
 }
 
@@ -38,7 +40,7 @@ pub enum ResultWithReason {
 // 相关函数定义
 // ==========================================
 
-// 检查输入的表达式是否为常量整数
+//检查输入的表达式是否为常量整数
 #[wasm_bindgen]
 pub fn check_constant_integer(input: String) -> ConstantIntegerCheckResult {
     use crate::typecheck::NumberType; // 有Constant命名冲突，所以单独引入
@@ -46,11 +48,11 @@ pub fn check_constant_integer(input: String) -> ConstantIntegerCheckResult {
     use ConstantIntegerCheckResult::*;
     match parse_dice(&input) {
         Ok(ast) => match typecheck_expr(&ast) {
-            Invalid(s) => NotConstant(s),
-            Number(NumberType::Constant(c)) if c.fract() == 0.0 => Constant(c),
-            Number(NumberType::Constant(_)) => NotConstant("Not an integer".to_string()),
-            Number(NumberType::Variable(_)) => NotConstant("Not a constant number".to_string()),
-            List(_) => NotConstant("It's a list, not a number".to_string()),
+            Err(s) => NotConstant(s),
+            Ok(Number(NumberType::Constant(c))) if c.fract() == 0.0 => Constant(c),
+            Ok(Number(NumberType::Constant(_))) => NotConstant("Not an integer".to_string()),
+            Ok(Number(NumberType::Variable(_))) => NotConstant("Not a constant number".to_string()),
+            Ok(List(_)) => NotConstant("It's a list, not a number".to_string()),
         },
         Err(e) => NotConstant(format!("Parse error: {}", e.to_string())),
     }
@@ -62,8 +64,8 @@ pub fn check_valid_dice_expression(input: String) -> ResultWithReason {
     use ResultWithReason::*;
     match parse_dice(&input) {
         Ok(ast) => match typecheck_expr(&ast) {
-            crate::typecheck::Type::Invalid(s) => False(s),
-            _ => Ture,
+            Err(s) => False(s),
+            Ok(_) => True,
         },
         Err(e) => False(format!("Parse error: {}", e.to_string())),
     }

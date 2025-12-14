@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { check_constant_integer } from '@/wasm_utils/dice/pkg/dice_roller'
 import { specificMacroReplace } from '@/composables/useDiceBox'
 
@@ -21,9 +21,9 @@ const errorMessage = ref<string>('')
 const isCurrentInputValid = ref<boolean>(true)
 const shouldShowWarning = ref<boolean>(false)
 let warningTimeout: number | null = null
-const WARNING_DELAY_MS = 2000
+const WARNING_DELAY_MS = 1000
 
-const validateInput = (input: string) => {
+watch(localValue, (newVal) => {
   if (warningTimeout) {
     clearTimeout(warningTimeout)
     warningTimeout = null
@@ -35,7 +35,7 @@ const validateInput = (input: string) => {
     shouldShowWarning.value = true
   }, WARNING_DELAY_MS)
 
-  if (input.trim() === '') {
+  if (newVal.trim() === '') {
     // 允许空输入
     isCurrentInputValid.value = true
     errorMessage.value = ''
@@ -43,7 +43,7 @@ const validateInput = (input: string) => {
   }
   try {
     // 1. 进行宏替换
-    const replaced = specificMacroReplace(input)
+    const replaced = specificMacroReplace(newVal)
     // 2. 检查是否为常量整数
     const evalResult = check_constant_integer(replaced)
     if (evalResult.result === 'Constant') {
@@ -65,10 +65,9 @@ const validateInput = (input: string) => {
       errorMessage.value = '未知错误'
     }
   }
-}
+})
 
 onMounted(() => {
-  validateInput(localValue.value)
   inputRef.value?.focus()
   inputRef.value?.select()
 })
@@ -98,7 +97,6 @@ const commitAndClose = () => {
         ref="inputRef"
         type="text"
         v-model="localValue"
-        @input="validateInput(localValue)"
         @blur="commitAndClose"
         @keyup.enter="commitAndClose"
         class="popover-input"

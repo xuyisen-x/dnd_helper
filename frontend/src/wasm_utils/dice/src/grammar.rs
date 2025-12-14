@@ -2,8 +2,6 @@ use lazy_static::lazy_static;
 use pest::Parser;
 use pest::pratt_parser::{Assoc, Op, PrattParser};
 use pest_derive::Parser;
-use serde::{Deserialize, Serialize};
-use tsify::Tsify;
 
 // 加载语法文件
 #[derive(Parser)]
@@ -11,12 +9,10 @@ use tsify::Tsify;
 pub struct DiceGrammar;
 
 // ==========================================
-// 2. AST 数据结构 (导出给前端)
+// AST 数据结构
 // ==========================================
 
-// 二元运算符
-#[derive(Debug, Clone, Serialize, Deserialize, Tsify, PartialEq)]
-#[tsify(into_wasm_abi)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum BinOp {
     Add,
     Sub,
@@ -26,8 +22,7 @@ pub enum BinOp {
     Idiv,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Tsify, PartialEq)]
-#[tsify(into_wasm_abi)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum CompareOp {
     Greater,
     Less,
@@ -36,74 +31,79 @@ pub enum CompareOp {
     LessEqual,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Tsify, PartialEq)]
-#[tsify(into_wasm_abi)]
-pub enum ModifierOp {
+#[derive(Debug, Clone, PartialEq)]
+pub enum KeepOrDropModifierOp {
     KeepHigh,
     KeepLow,
     DropHigh,
     DropLow,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum RerollModifierOp {
     Reroll,
     RerollOnce,
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum ExplodeModifierOp {
     Explode,
-    ExplodeCompound,
-    Limit,
+    CompoundExplode,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Tsify, PartialEq)]
-#[tsify(into_wasm_abi)]
+#[derive(Debug, Clone, PartialEq)]
+pub enum MinMaxModifierOp {
+    Min,
+    Max,
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub struct CompareExpr {
-    pub op: CompareOp,  // 比较符号
-    pub val: Box<Expr>, // 目标值
+    pub op: CompareOp,
+    pub val: Box<Expr>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Tsify, PartialEq)]
-#[tsify(into_wasm_abi)]
-#[serde(untagged)]
-pub enum ModifierParam {
-    Compare(CompareExpr),
-    Value(Box<Expr>),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize, Tsify, PartialEq)]
-#[tsify(into_wasm_abi)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Expr {
-    // 基础数值: 1, 1.5
     Number(f64),
-
-    // 骰子: 数量, 面数 (例如 1d20 -> Dice(Number(1), Number(20)))
     Dice {
         count: Box<Expr>,
         side: Box<Expr>,
     },
-
-    // 二元运算: 1 + 2
     Binary {
         lhs: Box<Expr>,
         op: BinOp,
         rhs: Box<Expr>,
     },
-
-    // 函数调用: max(1, 2)
     Call {
         func_name: String,
         args: Vec<Expr>,
     },
-
-    // 列表: [1, 2]
     List(Vec<Expr>),
-
-    // 通用修饰符节点 (kh1, r>5, !!)
-    Modifier {
-        lhs: Box<Expr>,               // lhs: 被修饰的对象 (如 1d20)，不支持标量表达式
-        op: ModifierOp,               // op:修饰符名称 (kh, kl, r, ro, !, !!, l)
-        param: Option<ModifierParam>, // param参数，可能是数值或者比较表达式
+    KeepOrDropModifier {
+        lhs: Box<Expr>,
+        op: KeepOrDropModifierOp,
+        count: Box<Expr>,
     },
-
-    // 成功/失败判定 (>10, =5)
+    RerollModifier {
+        lhs: Box<Expr>,
+        op: RerollModifierOp,
+        compare_expr: CompareExpr, // compare_expr: 必须显式指定
+    },
+    ExplodeModifier {
+        lhs: Box<Expr>,
+        op: ExplodeModifierOp,
+        compare_expr: Option<CompareExpr>, // compare_expr: 可选指定，如果缺省，需要在预处理阶段确定
+        limit: Option<Box<Expr>>,          // limit: 可选指定爆炸上限（最多爆炸多少次）
+    },
     SuccessCheck {
-        lhs: Box<Expr>,            // lhs: 被判定的对象，可以是标量也可以是列表
-        compare_expr: CompareExpr, // 比较表达式
+        lhs: Box<Expr>,
+        compare_expr: CompareExpr, // compare_expr: 必须显式指定
+    },
+    MinMaxModifier {
+        lhs: Box<Expr>,
+        op: MinMaxModifierOp,
+        target: Box<Expr>,
     },
 }
 
@@ -144,13 +144,10 @@ lazy_static! {
 // ==========================================
 
 pub fn parse_dice(input: &str) -> Result<Expr, pest::error::Error<Rule>> {
-    // A. 调用 Pest 解析
+    // 语法解析
     let mut pairs = DiceGrammar::parse(Rule::main, input)?;
-
-    // B. 获取 expr
     let expr_pair = pairs.next().unwrap(); // expr
-
-    // C. 转换为 AST
+    // 转换为 AST
     Ok(parse_expr_pratt(expr_pair))
 }
 
@@ -242,78 +239,35 @@ fn process_prefix(op: pest::iterators::Pair<Rule>, rhs: Expr) -> Expr {
 
 fn process_postfix(lhs: Expr, op: pest::iterators::Pair<Rule>) -> Expr {
     let op = op.into_inner().next().unwrap(); // 取得第一个操作符
-    println!("Processing postfix operator: {:?}", op.as_rule());
     match op.as_rule() {
         Rule::keep_high | Rule::keep_low | Rule::drop_high | Rule::drop_low => {
             let op_enum = match op.as_rule() {
-                Rule::keep_high => ModifierOp::KeepHigh,
-                Rule::keep_low => ModifierOp::KeepLow,
-                Rule::drop_high => ModifierOp::DropHigh,
-                Rule::drop_low => ModifierOp::DropLow,
+                Rule::keep_high => KeepOrDropModifierOp::KeepHigh,
+                Rule::keep_low => KeepOrDropModifierOp::KeepLow,
+                Rule::drop_high => KeepOrDropModifierOp::DropHigh,
+                Rule::drop_low => KeepOrDropModifierOp::DropLow,
                 _ => unreachable!(), // should not reach here
             };
-            let mut inner_pairs = op.into_inner(); // 进入内部
-            let param = if let Some(mod_param) = inner_pairs.next() {
-                Some(ModifierParam::Value(Box::new(parse_atom(mod_param))))
-            } else {
-                // 默认值为1
-                Some(ModifierParam::Value(Box::new(Expr::Number(1.0))))
-            };
-            Expr::Modifier {
-                lhs: Box::new(lhs),
-                op: op_enum,
-                param: param,
-            }
+            let inner_pairs = op.into_inner(); // 进入内部
+            process_keep_or_drop_modifier(lhs, op_enum, inner_pairs)
         }
-        Rule::reroll_once | Rule::reroll | Rule::explode_compound | Rule::explode => {
+        Rule::reroll | Rule::reroll_once => {
             let op_enum = match op.as_rule() {
-                Rule::reroll_once => ModifierOp::RerollOnce,
-                Rule::reroll => ModifierOp::Reroll,
-                Rule::explode_compound => ModifierOp::ExplodeCompound,
-                Rule::explode => ModifierOp::Explode,
+                Rule::reroll_once => RerollModifierOp::RerollOnce,
+                Rule::reroll => RerollModifierOp::Reroll,
                 _ => unreachable!(), // should not reach here
             };
-            let mut inner_pairs = op.into_inner(); // 进入内部
-            let param = if let Some(mod_param) = inner_pairs.next() {
-                let mut mod_param_inner = mod_param.into_inner(); // mod_param内部
-                let first = mod_param_inner.next().unwrap();
-                match first.as_rule() {
-                    Rule::atom => {
-                        // 是值，默认op为等于
-                        let value = parse_atom(first);
-                        Some(ModifierParam::Compare(CompareExpr {
-                            op: CompareOp::Equal,
-                            val: Box::new(value),
-                        }))
-                    }
-                    Rule::compare_op => {
-                        // 是比较表达式
-                        let op_symbol = first; // >, <, =
-                        let val_pair = mod_param_inner.next().unwrap(); // atom
-                        let compare_expr = CompareExpr {
-                            op: string_to_compare_op(op_symbol.as_str()),
-                            val: Box::new(parse_atom(val_pair)),
-                        };
-                        Some(ModifierParam::Compare(compare_expr))
-                    }
-                    _ => unreachable!("Unknown modifier parameter: {:?}", first.as_rule()),
-                }
-            } else {
-                None
-            };
-            Expr::Modifier {
-                lhs: Box::new(lhs),
-                op: op_enum,
-                param: param,
-            }
+            let inner_pairs = op.into_inner(); // 进入内部
+            process_reroll_modifier(lhs, op_enum, inner_pairs)
         }
-        Rule::limit => {
-            let inner_pairs = op.into_inner().next().unwrap(); // atom, limit_param是隐式的
-            Expr::Modifier {
-                lhs: Box::new(lhs),
-                op: ModifierOp::Limit,
-                param: Some(ModifierParam::Value(Box::new(parse_atom(inner_pairs)))),
-            }
+        Rule::explode | Rule::compound_explode => {
+            let op_enum = match op.as_rule() {
+                Rule::explode => ExplodeModifierOp::Explode,
+                Rule::compound_explode => ExplodeModifierOp::CompoundExplode,
+                _ => unreachable!(), // should not reach here
+            };
+            let inner_pairs = op.into_inner(); // 进入内部
+            process_explode_modifier(lhs, op_enum, inner_pairs)
         }
         Rule::compare_param => {
             let mut inner_pairs = op.into_inner(); // 进入compare_param内部
@@ -327,7 +281,128 @@ fn process_postfix(lhs: Expr, op: pest::iterators::Pair<Rule>) -> Expr {
                 },
             }
         }
+        Rule::min | Rule::max => {
+            let op_enum = match op.as_rule() {
+                Rule::min => MinMaxModifierOp::Min,
+                Rule::max => MinMaxModifierOp::Max,
+                _ => unreachable!(), // should not reach here
+            };
+            let inner_pairs = op.into_inner(); // 进入内部
+            process_min_max_modifier(lhs, op_enum, inner_pairs)
+        }
         _ => unreachable!("Unknown postfix operator: {:?}", op.as_rule()),
+    }
+}
+
+fn process_mod_parameter(mut inner: pest::iterators::Pairs<Rule>) -> CompareExpr {
+    let first = inner.next().unwrap();
+    match first.as_rule() {
+        Rule::atom => {
+            let value = parse_atom(first);
+            CompareExpr {
+                op: CompareOp::Equal,
+                val: Box::new(value),
+            }
+        }
+        Rule::compare_op => {
+            let op_symbol = first; // >, <, =
+            let val_pair = inner.next().unwrap(); // atom
+            CompareExpr {
+                op: string_to_compare_op(op_symbol.as_str()),
+                val: Box::new(parse_atom(val_pair)),
+            }
+        }
+        _ => unreachable!("Unknown modifier parameter: {:?}", first.as_rule()),
+    }
+}
+
+fn process_keep_or_drop_modifier(
+    lhs: Expr,
+    op: KeepOrDropModifierOp,
+    mut inner: pest::iterators::Pairs<Rule>,
+) -> Expr {
+    let param = if let Some(mod_param) = inner.next() {
+        Box::new(parse_atom(mod_param))
+    } else {
+        Box::new(Expr::Number(1.0))
+    };
+    Expr::KeepOrDropModifier {
+        lhs: Box::new(lhs),
+        op: op,
+        count: param,
+    }
+}
+
+fn process_reroll_modifier(
+    lhs: Expr,
+    op: RerollModifierOp,
+    mut inner: pest::iterators::Pairs<Rule>,
+) -> Expr {
+    let param = if let Some(mod_param) = inner.next() {
+        let mod_param_inner = mod_param.into_inner(); // mod_param内部
+        process_mod_parameter(mod_param_inner)
+    } else {
+        unreachable!("Reroll modifier requires a compare expression")
+    };
+    Expr::RerollModifier {
+        lhs: Box::new(lhs),
+        op: op,
+        compare_expr: param,
+    }
+}
+
+fn process_explode_modifier(
+    lhs: Expr,
+    op: ExplodeModifierOp,
+    mut inner: pest::iterators::Pairs<Rule>,
+) -> Expr {
+    let mut compare_expr: Option<CompareExpr> = None;
+    let mut limit: Option<Box<Expr>> = None;
+
+    match inner.next() {
+        Some(first) => {
+            match first.as_rule() {
+                Rule::mod_param => {
+                    let mod_param_inner = first.into_inner(); // mod_param内部
+                    compare_expr = Some(process_mod_parameter(mod_param_inner));
+                    // 如果还有下一个，则是limit
+                    if let Some(second) = inner.next() {
+                        let limit_inner = second.into_inner().next().unwrap(); // limit内部只有一个atom
+                        limit = Some(Box::new(parse_atom(limit_inner)));
+                    }
+                }
+                Rule::limit => {
+                    let limit_inner = first.into_inner().next().unwrap(); // limit内部只有一个atom
+                    limit = Some(Box::new(parse_atom(limit_inner)));
+                }
+                _ => unreachable!("Unknown explode modifier parameter: {:?}", first.as_rule()),
+            }
+        }
+        None => {} // 没有参数，全部为None
+    }
+
+    Expr::ExplodeModifier {
+        lhs: Box::new(lhs),
+        op: op,
+        compare_expr: compare_expr,
+        limit: limit,
+    }
+}
+
+fn process_min_max_modifier(
+    lhs: Expr,
+    op: MinMaxModifierOp,
+    mut inner: pest::iterators::Pairs<Rule>,
+) -> Expr {
+    let param = if let Some(mod_param) = inner.next() {
+        Box::new(parse_atom(mod_param))
+    } else {
+        unreachable!("Min/Max modifier requires a count parameter")
+    };
+    Expr::MinMaxModifier {
+        lhs: Box::new(lhs),
+        op: op,
+        target: param,
     }
 }
 

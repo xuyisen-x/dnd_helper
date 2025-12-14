@@ -61,19 +61,19 @@ reroll_once = { ^"ro" ~ mod_param }
 reroll      = { ^"r"  ~ mod_param }
 
 // Explode
-// 注意：!! 必须在 ! 之前定义
-explode_compound = { "!!" ~ mod_param? }
-explode          = { "!"  ~ mod_param? }
+limit = { ^"l" ~ limit_param } // Limit
+compound_explode = { "!!" ~ mod_param? ~ limit?}
+explode          = { "!"  ~ mod_param? ~ limit?}
 
-// Limit
-limit = { ^"l" ~ limit_param }
+// Min/max
+min = { ^"min" ~ atom }
+max  = { ^"max" ~ atom }
 
 // 所有后缀修饰符的集合
 modifier = {
     keep_high | keep_low | drop_high | drop_low |
-    reroll_once | reroll |
-    explode_compound | explode |
-    limit | compare_param
+    reroll_once | reroll | compound_explode | explode |
+    compare_param | min | max
 }
 
 // ==========================================
@@ -81,7 +81,7 @@ modifier = {
 // ==========================================
 
 // 函数名
-func_name = @{ ^"floor" | ^"ceil" | ^"round" | ^"abs" | ^"max" | ^"min" | ^"sum" | ^"rpdice" }
+func_name = @{ ^"floor" | ^"ceil" | ^"round" | ^"abs" | ^"max" | ^"min" | ^"sum" | ^"rpdice" | ^"sortd" | ^"sort" | ^"sortd" | ^"tolist" }
 
 // 参数列表: 1, 2, 3
 args = { expr ~ ("," ~ expr)* }

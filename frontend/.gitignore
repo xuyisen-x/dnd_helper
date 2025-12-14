@@ -24,3 +24,5 @@ coverage
 
 # Vitest
 __screenshots__/
+
+/stats.html

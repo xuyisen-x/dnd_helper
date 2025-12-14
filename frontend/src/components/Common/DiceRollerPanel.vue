@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { useDiceBox } from '@/composables/useDiceBox'
 import DiceIcon from '../Icons/DiceIcon.vue'
 import MutiDiceIcon from '../Icons/MutiDiceIcon.vue'
 import { onClickOutside } from '@vueuse/core'
 import { addDiceResult } from '@/stores/dice-result'
+import { check_valid_dice_expression } from '@/wasm_utils/dice/pkg/dice_roller'
+import { specificMacroReplace } from '@/composables/useDiceBox'
 
 const { parseAndRoll, showAnimation } = useDiceBox()
 
@@ -17,7 +19,7 @@ interface DiceConfig {
 
 const isPanelOpen = ref(false) // 控制面板展开与否
 const customFormula = ref('') // 自定义骰子表达式
-const rollHistory = ref<string[]>([]) // 投掷历史记录
+const rollHistory = ref<string[]>(['1d20']) // 投掷历史记录
 const MAX_HISTORY_LENGTH = 8
 
 // 记录每种骰子的数量
@@ -101,9 +103,8 @@ const rollDiceText = async (diceExpression: string) => {
   }
 }
 
-const rollDice = async () => {
-  if (totalSelected.value === 0 && customFormula.value === '') return
-
+const completedRollNotion = computed(() => {
+  if (totalSelected.value === 0 && customFormula.value === '') return ''
   // 构建骰子表达式
   const temp = Object.entries(selection.value)
     .map(([type, count]) => {
@@ -127,8 +128,69 @@ const rollDice = async () => {
     }
   })()
 
+  return diceExpression
+})
+
+const rollDice = async () => {
+  const diceExpression = completedRollNotion.value
+  if (diceExpression === '') return
+  if (!isCurrentInputValid.value) return
   await rollDiceText(diceExpression)
 }
+
+// 用于记录和显示骰子解析相关错误
+const errorMessage = ref<string>('')
+const lastValidPreprocessed = ref<string>('')
+const isCurrentInputValid = ref<boolean>(true)
+const shouldShowWarning = ref<boolean>(false)
+let warningTimeout: number | null = null
+const WARNING_DELAY_MS = 1000
+
+watch(completedRollNotion, (newVal) => {
+  if (warningTimeout) {
+    clearTimeout(warningTimeout)
+    warningTimeout = null
+  }
+  shouldShowWarning.value = false
+
+  // 延迟显示警告信息，避免输入时频繁闪烁
+  warningTimeout = setTimeout(() => {
+    shouldShowWarning.value = true
+  }, WARNING_DELAY_MS)
+
+  if (newVal.trim() === '') {
+    // 允许空输入
+    isCurrentInputValid.value = true
+    lastValidPreprocessed.value = ''
+    errorMessage.value = ''
+    return
+  }
+  try {
+    // 1. 进行宏替换
+    const replaced = specificMacroReplace(newVal)
+    // 2. 检查是否为合法表达式
+    const evalResult = check_valid_dice_expression(replaced)
+    if (evalResult.result === 'True') {
+      isCurrentInputValid.value = true
+      lastValidPreprocessed.value = replaced
+      errorMessage.value = ''
+    } else {
+      isCurrentInputValid.value = false
+      errorMessage.value = evalResult.value
+    }
+  } catch (e) {
+    isCurrentInputValid.value = false
+    if (e instanceof Error) {
+      errorMessage.value = e.message
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } else if ('message' in (e as any)) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      errorMessage.value = (e as any).message
+    } else {
+      errorMessage.value = '未知错误'
+    }
+  }
+})
 
 const containnerRef = ref(null)
 onClickOutside(containnerRef, () => {
@@ -194,15 +256,26 @@ onClickOutside(containnerRef, () => {
           class="roll-action-btn"
           :class="{ 'mode-roll': isPanelOpen }"
           @click="isPanelOpen ? rollDice() : togglePanel()"
-          :disabled="isPanelOpen && totalSelected === 0 && customFormula.trim() === ''"
+          :disabled="isPanelOpen && (completedRollNotion === '' || !isCurrentInputValid)"
         >
           <DiceIcon v-if="!isPanelOpen" class="roll-btn-icon" />
           <span v-else class="roll-text">ROLL</span>
         </button>
       </div>
 
-      <div v-if="isPanelOpen" class="input-wrapper">
+      <div
+        v-if="isPanelOpen"
+        class="input-wrapper"
+        :class="{ 'input-invalid': !isCurrentInputValid }"
+      >
         <input v-model="customFormula" placeholder="自定义 (如 2d6+5)" @keyup.enter="rollDice" />
+        <Transition name="pop">
+          <div class="related-info" v-if="errorMessage !== '' || lastValidPreprocessed !== ''">
+            <span class="info-text">
+              {{ !isCurrentInputValid && shouldShowWarning ? errorMessage : lastValidPreprocessed }}
+            </span>
+          </div>
+        </Transition>
       </div>
 
       <!-- 控制动画开关的按钮 -->
@@ -430,6 +503,7 @@ body.has-mouse .roll-btn-icon:hover {
 
 /* 3. 输入框容器 */
 .input-wrapper {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -438,6 +512,33 @@ body.has-mouse .roll-btn-icon:hover {
   border-radius: 30px;
   background-color: var(--dnd-parchment-card);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+}
+
+.related-info {
+  height: 60px;
+  max-height: 60px;
+  width: 250px;
+  border-radius: 30px;
+  background-color: var(--dnd-parchment-bg);
+  position: absolute;
+  bottom: 75px;
+  left: -25px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+  overflow-y: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-text {
+  color: var(--dnd-ink-secondary);
+  font-size: 0.9rem;
+  font-weight: normal;
+  padding: 0 15px;
+  text-align: center;
+  overflow-wrap: break-word;
+  white-space: normal;
+  word-break: break-all;
 }
 
 .input-wrapper input {
@@ -460,6 +561,10 @@ body.has-mouse .roll-btn-icon:hover {
   background-color: rgba(0, 0, 0, 0.2);
 }
 
+.input-wrapper.input-invalid input {
+  border: 2px solid var(--dnd-dragon-red-hover);
+}
+
 .toggle-anim-btn {
   width: 60px;
   height: 60px;
@@ -478,8 +583,8 @@ body.has-mouse .roll-btn-icon:hover {
   /* 布局与尺寸 */
   width: 300px;
   /* 限制高度，超过则滚动，防止占满屏幕 */
-  min-height: 100%;
-  max-height: 380px;
+  height: 300px;
+  max-height: 300px;
   overflow-y: auto;
 
   /* 间距 */

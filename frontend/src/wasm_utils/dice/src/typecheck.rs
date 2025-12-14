@@ -1,21 +1,15 @@
 use crate::grammar::CompareExpr;
 
-use super::grammar::{BinOp, Expr, KeepOrDropModifierOp};
+use super::grammar::{BinOp, Expr};
 
 // ==========================================
 // 类型定义
 // ==========================================
 
 #[derive(Clone, PartialEq, Debug)]
-pub struct DiceItem {
-    pub min_count: i64, // 最小值，因为explode可能会导致这个值的增长
-    pub side: i64,      // 骰子面数，一般是不会改变的
-}
-
-#[derive(Clone, PartialEq, Debug)]
 pub enum VariableNumber {
-    Unknown,            // 未知的变量数值
-    DicePool(DiceItem), // 来自骰池的变量数值
+    Unknown,  // 未知的变量数值
+    DicePool, // 来自骰池的变量数值
 }
 
 #[derive(Clone, PartialEq, Debug)]
@@ -49,8 +43,8 @@ impl Type {
         Type::Number(NumberType::Variable(VariableNumber::Unknown))
     }
 
-    pub fn dice_pool(item: DiceItem) -> Self {
-        Type::Number(NumberType::Variable(VariableNumber::DicePool(item)))
+    pub fn dice_pool() -> Self {
+        Type::Number(NumberType::Variable(VariableNumber::DicePool))
     }
 
     pub fn const_list(list: Vec<f64>) -> Self {
@@ -73,7 +67,7 @@ pub fn typecheck_expr(expr: &Expr) -> Result<Type, String> {
         Expr::List(args) => type_of_list(args),
         Expr::Binary { lhs, op, rhs } => type_of_binary_op(lhs, op, rhs),
         Expr::SuccessCheck { lhs, compare_expr } => type_of_success_check(lhs, compare_expr),
-        Expr::KeepOrDropModifier { lhs, op, count } => type_of_keep_drop_modifier(lhs, op, count),
+        Expr::KeepOrDropModifier { lhs, op: _, count } => type_of_keep_drop_modifier(lhs, count),
         Expr::ExplodeModifier {
             lhs,
             op: _,
@@ -153,11 +147,7 @@ fn type_of_dice(count: &Expr, side: &Expr) -> Result<Type, String> {
         // 两边必须都是常数
         (Number(Constant(c)), Number(Constant(s))) => {
             if is_integer(c) && is_integer(s) && c > 0.0 && s >= 2.0 {
-                let dice_item = DiceItem {
-                    min_count: c as i64,
-                    side: s as i64,
-                };
-                Ok(Type::dice_pool(dice_item))
+                Ok(Type::dice_pool())
             } else {
                 Err(format!(
                     "Invalid dice parameters: count = {}, side = {}",
@@ -177,15 +167,24 @@ fn type_of_list(args: &Vec<Expr>) -> Result<Type, String> {
     use NumberType::*;
     use Type::*;
     let mut consts = Vec::new();
+    let mut is_var_list = false;
     for arg in args {
         let arg_type = typecheck_expr(arg)?;
         match arg_type {
             List(_) => return Err("Nested lists are not allowed.".to_string()), // 不允许嵌套列表
-            Number(Variable(_)) => return Ok(Type::var_list()),                 // 统计变量数值
-            Number(Constant(c)) => consts.push(c),                              // 收集常数数值
+            Number(Variable(_)) => is_var_list = true,                          // 统计变量数值
+            Number(Constant(c)) => {
+                if !is_var_list {
+                    consts.push(c)
+                }
+            } // 收集常数数值
         }
     }
-    Ok(Type::const_list(consts))
+    if is_var_list {
+        Ok(Type::var_list())
+    } else {
+        Ok(Type::const_list(consts))
+    }
 }
 
 fn type_of_binary_op(lhs: &Expr, op: &BinOp, rhs: &Expr) -> Result<Type, String> {
@@ -295,40 +294,20 @@ fn type_of_binary_op(lhs: &Expr, op: &BinOp, rhs: &Expr) -> Result<Type, String>
     }
 }
 
-fn type_of_keep_drop_modifier(
-    lhs: &Expr,
-    op: &KeepOrDropModifierOp,
-    count: &Expr,
-) -> Result<Type, String> {
+fn type_of_keep_drop_modifier(lhs: &Expr, count: &Expr) -> Result<Type, String> {
     use NumberType::*;
     use Type::*;
     use VariableNumber::*;
     let lhs_type = typecheck_expr(lhs)?;
     let count_type = typecheck_expr(count)?;
     match (lhs_type, count_type) {
-        (Number(Variable(DicePool(dice_item))), Number(Constant(c))) => {
+        (Number(Variable(DicePool)), Number(Constant(c))) => {
             if !is_integer(c) || c <= 0.0 {
                 return Err("Keep/Drop count must be a positive integer.".to_string());
             }
-            let (count, side) = (c as i64, dice_item.side);
-            if count >= dice_item.min_count {
-                return Err(format!(
-                    "Keep/Drop count {} exceeds or equals the number of dice {}.",
-                    count, dice_item.min_count
-                ));
-            }
-            let new_count = match op {
-                KeepOrDropModifierOp::KeepHigh | KeepOrDropModifierOp::KeepLow => count,
-                KeepOrDropModifierOp::DropHigh | KeepOrDropModifierOp::DropLow => {
-                    dice_item.min_count - count
-                }
-            };
-            Ok(Type::dice_pool(DiceItem {
-                min_count: new_count,
-                side,
-            }))
+            Ok(Type::dice_pool())
         }
-        (Number(Variable(DicePool(_))), _) => {
+        (Number(Variable(DicePool)), _) => {
             Err("Keep/Drop count must be a constant number.".to_string())
         }
         _ => Err("Keep/Drop modifier can only be applied to dice expressions.".to_string()),
@@ -338,7 +317,7 @@ fn type_of_reroll_modifier(lhs: &Expr, param: &CompareExpr) -> Result<Type, Stri
     let lhs_type = typecheck_expr(lhs)?;
     if !matches!(
         lhs_type,
-        Type::Number(NumberType::Variable(VariableNumber::DicePool(_)))
+        Type::Number(NumberType::Variable(VariableNumber::DicePool))
     ) {
         return Err("Reroll modifier can only be applied to dice expressions.".to_string());
     }
@@ -359,7 +338,7 @@ fn type_of_explode_modifier(
     let lhs_type = typecheck_expr(lhs)?;
     if !matches!(
         lhs_type,
-        Type::Number(NumberType::Variable(VariableNumber::DicePool(_)))
+        Type::Number(NumberType::Variable(VariableNumber::DicePool))
     ) {
         return Err("Explode modifier can only be applied to dice expressions.".to_string());
     }
@@ -398,13 +377,13 @@ fn type_of_min_max_modifier(lhs: &Expr, target: &Expr) -> Result<Type, String> {
     let lhs_type = typecheck_expr(lhs)?;
     let target_type = typecheck_expr(target)?;
     match (lhs_type, target_type) {
-        (Number(Variable(DicePool(dice_item))), Number(Constant(c))) => {
+        (Number(Variable(DicePool)), Number(Constant(c))) => {
             if c <= 0.0 || !is_integer(c) {
                 return Err("Min/Max count must be a positive integer.".to_string());
             }
-            Ok(Type::dice_pool(dice_item))
+            Ok(Type::dice_pool())
         }
-        (Number(Variable(DicePool(_))), _) => {
+        (Number(Variable(DicePool)), _) => {
             Err("Min/Max count must be a constant number.".to_string())
         }
         _ => Err("Keep/Drop modifier can only be applied to dice expressions.".to_string()),
@@ -417,7 +396,7 @@ fn type_of_success_check(lhs: &Expr, param: &CompareExpr) -> Result<Type, String
     use VariableNumber::*;
     let lhs_type = typecheck_expr(lhs)?;
     match lhs_type {
-        Number(Variable(DicePool(_))) => {
+        Number(Variable(DicePool)) => {
             match typecheck_expr(&param.val)? {
                 Number(Constant(_)) => Ok(Type::unknown_var()), // 成功检定的结果为未知值
                 Number(Variable(_)) => Err(
@@ -563,9 +542,6 @@ fn type_of_call(func_name: &str, args: &Vec<Expr>) -> Result<Type, String> {
         }
         "rpdice" => {
             match raw_args_type.as_slice() {
-                [Type::Number(Variable(DicePool(_)))] => {
-                    Ok(Type::unknown_var()) // 单骰池参数，结果为未知变量数值
-                }
                 [t] => Ok(t.clone()), // 其他情况的单参数调用，直接返回该参数的类型
                 // 也可以接受第二个参数为常数数值，表示重复次数
                 [t, Type::Number(Constant(c))] => {
@@ -609,7 +585,7 @@ fn type_of_call(func_name: &str, args: &Vec<Expr>) -> Result<Type, String> {
         "tolist" => {
             // 将骰池转换为列表
             match raw_args_type.as_slice() {
-                [Type::Number(Variable(DicePool(_)))] => Ok(Type::var_list()), // 单骰池参数，结果为变量列表
+                [Type::Number(Variable(DicePool))] => Ok(Type::var_list()), // 单骰池参数，结果为变量列表
                 _ => Err("tolist function requires a single dice expression argument.".to_string()),
             }
         }

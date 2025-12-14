@@ -2,9 +2,9 @@
 //!
 //! This crate provides functionality for dice rolling and related utilities.
 
-// pub mod fold_binary;
+pub mod fold_binary;
 pub mod grammar;
-// pub mod preprocessor;
+pub mod preprocessor;
 pub mod typecheck;
 
 use crate::grammar::parse_dice;

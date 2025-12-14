@@ -1,5 +1,5 @@
 use dice_roller::grammar::parse_dice;
-use dice_roller::typecheck::{DiceItem, Type, typecheck_expr};
+use dice_roller::typecheck::{Type, typecheck_expr};
 
 fn typecheck(input: &str) -> Result<Type, String> {
     let parsed_expr = parse_dice(input).map_err(|e| format!("Parse error: {}", e))?;
@@ -125,22 +125,10 @@ fn test_typecheck_constant_fold() {
 #[test]
 fn test_typecheck_dice_pool_variable() {
     let result = typecheck("6d6");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 6,
-            side: 6
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("(3+3)d(max(1, 2, 6/2) + 3)");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 6,
-            side: 6
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     // 吸收率特殊情况（乘法）
     let result = typecheck("0 * 1d6");
@@ -230,7 +218,7 @@ fn test_typecheck_function_calls() {
     assert_eq!(result.unwrap(), Type::constant(42.0));
 
     let result = typecheck("rpdice(1d10)");
-    assert_eq!(result.unwrap(), Type::unknown_var());
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("rpdice([1, 2, 3], 2)");
     assert_eq!(result.unwrap(), Type::const_list(vec![1.0, 2.0, 3.0]));
@@ -242,13 +230,7 @@ fn test_typecheck_function_calls() {
     assert_eq!(result.unwrap(), Type::constant(42.0));
 
     let result = typecheck("rpdice(1d10, 2)");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 1,
-            side: 10
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("min([5, 3, 1, 4, 2], 6)");
     assert_eq!(
@@ -298,184 +280,64 @@ fn test_typecheck_function_calls() {
 #[test]
 fn test_modifier() {
     let result = typecheck("2d20kh1");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 1,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("3d20kh2");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 2,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("3d20dh2");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 1,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("2d20kh");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 1,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("2d20!");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 2,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("2d20!!");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 2,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("2d20!!3");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 2,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("2d20!!<3");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 2,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("2d20kh!!<3");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 1,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("3d20kh2!!<3");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 2,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("3d20!!<3kh2");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 2,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("3d20!!<3kh");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 1,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("3d20!!ro<3");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 3,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("3d20!!r<3");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 3,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("3d20!ro<3");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 3,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("3d20!r<3");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 3,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("3d20!!!");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 3,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("3d20!!!!");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 3,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("3d20!!=3l3");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 3,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("2d20!!<(1+2)");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 2,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("2d20kh1 + 5");
     assert_eq!(result.unwrap(), Type::unknown_var());
@@ -490,22 +352,10 @@ fn test_modifier() {
     assert_eq!(result.unwrap(), Type::unknown_var());
 
     let result = typecheck("2d20min10");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 2,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 
     let result = typecheck("3d20max10");
-    assert_eq!(
-        result.unwrap(),
-        Type::dice_pool(DiceItem {
-            min_count: 3,
-            side: 20
-        })
-    );
+    assert_eq!(result.unwrap(), Type::dice_pool());
 }
 
 #[test]
@@ -715,8 +565,6 @@ fn test_typecheck_invalid_expressions() {
     assert!(result.is_err());
     let result = typecheck("2d20kh(max(1,2,1d6))");
     assert!(result.is_err());
-    let result = typecheck("2d20dh2");
-    assert!(result.is_err());
     let result = typecheck("0d20dh2");
     assert!(result.is_err());
     let result = typecheck("[2d20]dh2");
@@ -758,10 +606,6 @@ fn test_typecheck_invalid_expressions() {
     let result = typecheck("2d20!!<3l(1/0)");
     assert!(result.is_err());
     let result = typecheck("2d20kh(-1)");
-    assert!(result.is_err());
-    let result = typecheck("3d20!!<3kh4");
-    assert!(result.is_err());
-    let result = typecheck("3d20!!<3dl3");
     assert!(result.is_err());
     let result = typecheck("3d20l3");
     assert!(result.is_err());

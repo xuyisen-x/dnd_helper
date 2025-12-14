@@ -81,7 +81,10 @@ modifier = {
 // ==========================================
 
 // 函数名
-func_name = @{ ^"floor" | ^"ceil" | ^"round" | ^"abs" | ^"max" | ^"min" | ^"sum" | ^"rpdice" | ^"sortd" | ^"sort" | ^"sortd" | ^"tolist" }
+func_name = @{ 
+    ^"floor" | ^"ceil" | ^"round" | ^"abs" | 
+    ^"max" | ^"min" | ^"sum" | ^"avg" | ^"len" |
+    ^"rpdice" | ^"sortd" | ^"sort" | ^"tolist" }
 
 // 参数列表: 1, 2, 3
 args = { expr ~ ("," ~ expr)* }

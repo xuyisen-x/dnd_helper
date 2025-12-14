@@ -90,7 +90,7 @@ pub fn typecheck_expr(expr: &Expr) -> Result<Type, String> {
 
 // 判断一个浮点数是否为整数
 pub fn is_integer(num: f64) -> bool {
-    num.fract() == 0.0
+    (num - num.round()).abs() < 1e-9
 }
 
 // 从切片中选出前 n 个最大值或最小值，并按原顺序返回
@@ -386,7 +386,7 @@ fn type_of_min_max_modifier(lhs: &Expr, target: &Expr) -> Result<Type, String> {
         (Number(Variable(DicePool)), _) => {
             Err("Min/Max count must be a constant number.".to_string())
         }
-        _ => Err("Keep/Drop modifier can only be applied to dice expressions.".to_string()),
+        _ => Err("Min/Max modifier can only be applied to dice expressions.".to_string()),
     }
 }
 
@@ -521,6 +521,32 @@ fn type_of_call(func_name: &str, args: &Vec<Expr>) -> Result<Type, String> {
                 }
             }
         }
+        "avg" => {
+            match args_type {
+                OneNumber(Constant(c)) => Ok(Type::constant(c)), // 单常数参数，结果为该常数
+                OneNumber(Variable(_)) => Ok(Type::unknown_var()), // 单变量参数，结果为未知变量数值
+                OneList(ConstantList(lst)) => {
+                    if lst.is_empty() {
+                        return Err("sum function requires at least one element.".to_string());
+                    }
+                    let avg = lst.iter().sum::<f64>() / (lst.len() as f64);
+                    Ok(Type::constant(avg))
+                }
+                OneList(VariableList) => Ok(Type::unknown_var()), // 列表参数结果为未知变量数值
+                _ => {
+                    Err("avg function requires numeric arguments or one list argument.".to_string())
+                }
+            }
+        }
+        "len" => match raw_args_type.as_slice() {
+            [Type::List(ConstantList(lst))] => {
+                Ok(Type::constant(lst.len() as f64)) // 常数列表，结果为常数数值
+            }
+            [Type::List(VariableList)] => {
+                Ok(Type::unknown_var()) // 变量列表，结果为未知变量数值
+            }
+            _ => Err("len function requires a single list argument.".to_string()),
+        },
         "floor" | "ceil" | "round" | "abs" => {
             match args_type {
                 OneNumber(Constant(c)) => {
@@ -545,9 +571,9 @@ fn type_of_call(func_name: &str, args: &Vec<Expr>) -> Result<Type, String> {
                 [t] => Ok(t.clone()), // 其他情况的单参数调用，直接返回该参数的类型
                 // 也可以接受第二个参数为常数数值，表示重复次数
                 [t, Type::Number(Constant(c))] => {
-                    if !is_integer(*c) || *c <= 1.0 {
+                    if !is_integer(*c) || *c <= 0.0 {
                         Err(
-                            "In rpdice, the repeat count parameter must be a integer larger than 1."
+                            "In rpdice, the repeat count parameter must be a postive integer."
                                 .to_string(),
                         )
                     } else {

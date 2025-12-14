@@ -85,6 +85,23 @@ fn test_typecheck_constant_fold() {
     let result = typecheck("sum(1, 2, 3)");
     assert_eq!(result.unwrap(), Type::constant(6.0));
 
+    // avg(1, 2, 3) = 6
+    let result = typecheck("avg(1, 2, 3)");
+    assert_eq!(result.unwrap(), Type::constant(2.0));
+    let result = typecheck("avg(2)");
+    assert_eq!(result.unwrap(), Type::constant(2.0));
+    let result = typecheck("avg(1d6)");
+    assert_eq!(result.unwrap(), Type::unknown_var());
+
+    let result = typecheck("avg(1, 2, 1d6)");
+    assert_eq!(result.unwrap(), Type::unknown_var());
+
+    let result = typecheck("len([1, 2, 1d6])");
+    assert_eq!(result.unwrap(), Type::unknown_var());
+
+    let result = typecheck("len([1, 2, 3])");
+    assert_eq!(result.unwrap(), Type::constant(3.0));
+
     // 5. 列表与数值的混合运算折叠
     // [1, 2] * 2 = [1, 2, 1, 2]
     let result = typecheck("[1, 2] * 2");
@@ -523,6 +540,10 @@ fn test_typecheck_invalid_expressions() {
     // sum非法参数
     let result = typecheck("sum([1, 2, 3], 4)");
     assert!(result.is_err());
+    let result = typecheck("len(1d6)");
+    assert!(result.is_err());
+    let reulst = typecheck("avg([1,2,3],4)");
+    assert!(reulst.is_err());
 
     // ceil / floor / round非法参数
     let result = typecheck("ceil([1, 2, 3])");
@@ -613,6 +634,8 @@ fn test_typecheck_invalid_expressions() {
     assert!(result.is_err());
     let result = typecheck("sum([])");
     assert!(result.is_err());
+    let result = typecheck("avg([])");
+    assert!(result.is_err());
     let result = typecheck("sortd([5, 3, 1, 4, 2d6],1)");
     assert!(result.is_err());
     let result = typecheck("sortd([5, 3, 1, 4, 2d6],[5, 3, 1, 4, 2d6])");
@@ -643,5 +666,9 @@ fn test_typecheck_invalid_expressions() {
     let result = typecheck("2d0min10");
     assert!(result.is_err());
     let result = typecheck("3d0max10");
+    assert!(result.is_err());
+    let result = typecheck("1min10");
+    assert!(result.is_err());
+    let result = typecheck("2max10");
     assert!(result.is_err());
 }

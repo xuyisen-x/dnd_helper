@@ -2,7 +2,7 @@ import type { Ref, ComputedRef } from 'vue'
 import { computed, reactive } from 'vue'
 import type { Dnd5Data, SixAbilityKeysDnd5 } from '@/stores/rules/dnd5'
 import { recusiveMacroReplace } from '../useDiceBox'
-import { check_constant_integer } from '@/wasm_utils/dice/pkg/dice_roller'
+import { check_constant_integer } from '@/wasm_utils/oxidice/pkg/oxidice'
 
 export function formatWithSign(num: number): string {
   return num > 0 ? `+${num}` : `${num}`

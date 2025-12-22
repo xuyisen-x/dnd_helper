@@ -5,7 +5,7 @@ import DiceIcon from '../Icons/DiceIcon.vue'
 import MutiDiceIcon from '../Icons/MutiDiceIcon.vue'
 import { onClickOutside } from '@vueuse/core'
 import { addDiceResult } from '@/stores/dice-result'
-import { check_valid_dice_expression } from '@/wasm_utils/dice/pkg/dice_roller'
+import { try_fold_dice_expression } from '@/wasm_utils/oxidice/pkg/oxidice'
 import { specificMacroReplace } from '@/composables/useDiceBox'
 
 const { parseAndRoll, showAnimation } = useDiceBox()
@@ -169,10 +169,10 @@ watch(completedRollNotion, (newVal) => {
     // 1. 进行宏替换
     const replaced = specificMacroReplace(newVal)
     // 2. 检查是否为合法表达式
-    const evalResult = check_valid_dice_expression(replaced)
-    if (evalResult.result === 'True') {
+    const evalResult = try_fold_dice_expression(replaced)
+    if (evalResult.result === 'Valid') {
       isCurrentInputValid.value = true
-      lastValidPreprocessed.value = replaced
+      lastValidPreprocessed.value = evalResult.value
       errorMessage.value = ''
     } else {
       isCurrentInputValid.value = false

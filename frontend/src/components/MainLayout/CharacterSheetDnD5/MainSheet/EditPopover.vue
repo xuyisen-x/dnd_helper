@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { check_constant_integer } from '@/wasm_utils/dice/pkg/dice_roller'
+import { check_constant_integer } from '@/wasm_utils/oxidice/pkg/oxidice'
 import { specificMacroReplace } from '@/composables/useDiceBox'
 
 const props = withDefaults(defineProps<{ modelValue: string; title?: string }>(), {

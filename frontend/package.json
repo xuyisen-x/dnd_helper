@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "run-p type-check \"build-only {@}\" --",
     "report": "cross-env REPORT=true npm run build",
-    "build:wasm": "wasm-pack build src/wasm_utils/dice --target bundler",
+    "build:wasm": "wasm-pack build src/wasm_utils/oxidice --target bundler",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",

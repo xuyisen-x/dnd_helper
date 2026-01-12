@@ -366,7 +366,7 @@ export function createEmptyDnd5Data(): Dnd5Data {
       {
         id: 1,
         name: '徒手攻击',
-        bonus: '(@str+@pb)',
+        bonus: '@str+@pb',
         damage: '1+@str',
         damageType: '钝击',
         notes: '',

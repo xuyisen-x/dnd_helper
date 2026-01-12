@@ -1,8 +1,7 @@
 import type { Ref, ComputedRef } from 'vue'
 import { computed, reactive } from 'vue'
 import type { Dnd5Data, SixAbilityKeysDnd5 } from '@/stores/rules/dnd5'
-import { recusiveMacroReplace } from '../useDiceBox'
-import { check_constant_integer } from '@/wasm_utils/oxidice/pkg/oxidice'
+import { useDiceBox } from '../useDiceBox'
 
 export function formatWithSign(num: number): string {
   return num > 0 ? `+${num}` : `${num}`
@@ -38,18 +37,9 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
 
   const evalCostomFamula = (input: string): number => {
     if (input.trim() === '') return 0
-    try {
-      const replaced = recusiveMacroReplace(input, costomMacroReplace, 5)
-      const evalResult = check_constant_integer(replaced)
-      if (evalResult.result === 'Constant') {
-        return evalResult.value
-      } else {
-        return 0
-      }
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (e) {
-      return 0
-    }
+    const { foldAndCheckConstantsInteger } = useDiceBox()
+    const [result, value] = foldAndCheckConstantsInteger(input)
+    return result ? value : 0
   }
 
   const totalLevel = computed(() => {

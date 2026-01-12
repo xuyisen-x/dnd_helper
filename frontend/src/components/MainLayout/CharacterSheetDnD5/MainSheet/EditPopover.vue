@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue'
-import { check_constant_integer } from '@/wasm_utils/oxidice/pkg/oxidice'
-import { specificMacroReplace } from '@/composables/useDiceBox'
+import { useDiceBox } from '@/composables/useDiceBox'
+
+const { foldAndCheckConstantsInteger } = useDiceBox()
 
 const props = withDefaults(defineProps<{ modelValue: string; title?: string }>(), {
   title: '额外调整',
@@ -41,29 +42,14 @@ watch(localValue, (newVal) => {
     errorMessage.value = ''
     return
   }
-  try {
-    // 1. 进行宏替换
-    const replaced = specificMacroReplace(newVal)
-    // 2. 检查是否为常量整数
-    const evalResult = check_constant_integer(replaced)
-    if (evalResult.result === 'Constant') {
-      isCurrentInputValid.value = true
-      errorMessage.value = ''
-    } else {
-      isCurrentInputValid.value = false
-      errorMessage.value = evalResult.value
-    }
-  } catch (e) {
+
+  const [isValid, message] = foldAndCheckConstantsInteger(newVal)
+  if (isValid) {
+    isCurrentInputValid.value = true
+    errorMessage.value = ''
+  } else {
     isCurrentInputValid.value = false
-    if (e instanceof Error) {
-      errorMessage.value = e.message
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } else if ('message' in (e as any)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      errorMessage.value = (e as any).message
-    } else {
-      errorMessage.value = '未知错误'
-    }
+    errorMessage.value = message
   }
 })
 

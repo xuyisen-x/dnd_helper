@@ -13,7 +13,7 @@ import { isUsingMouse } from '@/composables/useGlobalState'
 const showAttackRollConfig = ref<number | null>(null)
 const criticalList = ref<number[]>([])
 
-const { parseAndRoll, Preprocess } = useDiceBox()
+const { parseAndRoll, foldAndCheckNumber } = useDiceBox()
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -25,22 +25,20 @@ const { addAttack, removeAttack } = useDnd5Logic(sheet)
 
 const DealWithCitical = (damage: string, isCritical: boolean) => {
   if (!isCritical) return damage
-  return damage + ' '
-}
-
-const PreprocessDamage = (damage: string, isCritical: boolean) => {
-  return Preprocess(DealWithCitical(damage, isCritical))
+  return 'rpdice(' + damage + ')'
 }
 
 const rollAttack = async (index: number) => {
   const attack = sheet.value.attacks[index]
   if (!attack) return
-  const bonus = attack.bonus || '0'
+  const bonus = computedBonus.value[index]?.isValid ? attack.bonus : '0'
   const formula =
     bonus.startsWith('+') || bonus.startsWith('-') ? `1d20 ${bonus}` : `1d20 + ${bonus}`
+  const [valid, foledFormula] = foldAndCheckNumber(formula)
+  if (!valid) return // 公式无效则不投掷
   const result = await parseAndRoll(formula)
   if (result !== null) {
-    addDiceResult(result, formula, `攻击检定: ${attack.name}`)
+    addDiceResult(result, foledFormula, `攻击检定: ${attack.name}`)
   }
 }
 
@@ -48,9 +46,11 @@ const rollDamage = async (index: number) => {
   const attack = sheet.value.attacks[index]
   if (!attack || !attack.damage) return
   const damage = DealWithCitical(attack.damage, criticalList.value.includes(index))
-  const result = await parseAndRoll(damage)
+  const [valid, foledDamage] = foldAndCheckNumber(damage)
+  if (!valid) return // 公式无效则不投掷
+  const result = await parseAndRoll(foledDamage)
   if (result !== null) {
-    addDiceResult(result, damage, `伤害: ${attack.name}`)
+    addDiceResult(result, foledDamage, `伤害: ${attack.name}`)
   }
 }
 
@@ -91,6 +91,22 @@ const toggleCritical = (index: number) => {
     criticalList.value.splice(idx, 1)
   }
 }
+
+const computedBonus = computed(() => {
+  return sheet.value.attacks.map((attack) => {
+    const bonusString = attack.bonus
+    const [result, message] = foldAndCheckNumber(bonusString)
+    return { isValid: result, message }
+  })
+})
+
+const computedDamage = computed(() => {
+  return sheet.value.attacks.map((attack, index) => {
+    const damageString = DealWithCitical(attack.damage, criticalList.value.includes(index))
+    const [result, message] = foldAndCheckNumber(damageString)
+    return { isValid: result, message }
+  })
+})
 
 onMounted(() => {
   // capture = true，可以捕获到任意滚动容器的 scroll 事件
@@ -136,7 +152,9 @@ onBeforeUnmount(() => {
                 class="bare-input text-center"
                 placeholder="@str + @pb"
               />
-              <div class="eval-label">{{ Preprocess(attack.bonus) }}</div>
+              <div class="eval-label" :class="{ 'warning-text': !computedBonus[index]?.isValid }">
+                {{ computedBonus[index]?.message }}
+              </div>
             </div>
             <div
               @click="rollAttack(index)"
@@ -157,7 +175,7 @@ onBeforeUnmount(() => {
                 <RollConfigPopover
                   v-if="showAttackRollConfig === index"
                   :title="'攻击检定:' + attack.name"
-                  :baseModifier="attack.bonus"
+                  :baseModifier="computedBonus[index]?.isValid ? attack.bonus : 0"
                   :style="attackPopoverStyle"
                   :enable-elven-accuracy="true"
                   @close="((showAttackRollConfig = null), (anchorEl = null))"
@@ -173,8 +191,14 @@ onBeforeUnmount(() => {
                 class="bare-input text-center"
                 placeholder="1d8 + @str"
               />
-              <div class="eval-label" :class="{ 'critical-label': criticalList.includes(index) }">
-                {{ PreprocessDamage(attack.damage, criticalList.includes(index)) }}
+              <div
+                class="eval-label"
+                :class="{
+                  'critical-label': criticalList.includes(index) && computedDamage[index]?.isValid,
+                  'warning-text': !computedDamage[index]?.isValid,
+                }"
+              >
+                {{ computedDamage[index]?.message }}
               </div>
             </div>
             <div @click="toggleCritical(index)" class="icon-check icon">
@@ -371,6 +395,10 @@ body.has-mouse .btn-add:hover {
   color: var(--dnd-ink-secondary);
 }
 
+.warning-text.eval-label {
+  color: var(--dnd-dragon-red);
+}
+
 .icon {
   font-size: 1.5rem;
   margin-left: 0.2rem;
@@ -394,7 +422,7 @@ body.has-mouse .icon-check:active {
   transform: scale(0.95);
 }
 
-.icon-check.checked {
+.icon.checked {
   color: var(--dnd-dragon-red);
   opacity: 1;
 }

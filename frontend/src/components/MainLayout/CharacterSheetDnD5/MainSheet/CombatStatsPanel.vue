@@ -131,7 +131,19 @@ const rollDeathSave = async () => {
   const result = await parseAndRoll('1d20')
   if (result !== null) {
     addDiceResult(result, '1d20', '死亡豁免检定')
-    rollResultCallback(result.result)
+    let resultValue: undefined | number = undefined
+    if (result.value.type === 'number') {
+      resultValue = result.value.value
+    } else if (result.value.type === 'dicePool') {
+      resultValue = result.value.value.total
+    } else if (result.value.type === 'successPool') {
+      resultValue = result.value.value.count
+    } else {
+      resultValue = undefined
+    }
+    if (resultValue !== undefined) {
+      rollResultCallback(resultValue)
+    }
   }
 }
 </script>

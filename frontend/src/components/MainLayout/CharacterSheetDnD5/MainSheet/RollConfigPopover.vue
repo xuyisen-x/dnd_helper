@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, type Ref } from 'vue'
+import { computed, ref, watch, type Ref } from 'vue'
 import { useEventListener } from '@vueuse/core'
 import { useDiceBox } from '@/composables/useDiceBox'
 import { addDiceResult } from '@/stores/dice-result'
@@ -23,7 +23,7 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-const { parseAndRoll } = useDiceBox()
+const { parseAndRoll, foldAndCheckNumber } = useDiceBox()
 
 const rollMode = ref<'normal' | 'adv' | 'dis'>('normal')
 
@@ -58,7 +58,7 @@ useEventListener(window, 'pointerdown', (e) => {
 })
 
 // --- 核心：构建最终公式 ---
-const constructFormula = () => {
+const completedRollNotation = computed(() => {
   let formula = ''
 
   // 处理优劣势
@@ -75,8 +75,8 @@ const constructFormula = () => {
   const modifyString = String(props.baseModifier)
   formula +=
     modifyString.startsWith('+') || modifyString.startsWith('-')
-      ? ` ${modifyString}`
-      : ` + ${modifyString}`
+      ? `${modifyString}`
+      : `+${modifyString}`
 
   // 加上额外骰子 (神导术/诗人激励)
   for (const [die, isActive] of Object.entries(bonusDice.value)) {
@@ -93,18 +93,49 @@ const constructFormula = () => {
   }
 
   return formula
-}
+})
+
+const message = ref<string>('')
+const isCurrentInputValid = ref<boolean>(true)
+watch(
+  completedRollNotation,
+  (newVal) => {
+    const [isValid, result] = foldAndCheckNumber(newVal)
+    if (isValid) {
+      isCurrentInputValid.value = true
+      message.value = result
+    } else {
+      isCurrentInputValid.value = false
+      message.value = result
+    }
+  },
+  { immediate: true },
+)
 
 // 执行投掷
 const handleRoll = async () => {
-  const formula = constructFormula()
   const title = props.title // 标题用于结果记录，固定
+  const [isValid, formula] = foldAndCheckNumber(completedRollNotation.value)
   emit('close') // 先关闭弹窗
+  if (!isValid) {
+    // 不合法就不投掷
+    return
+  }
   const result = await parseAndRoll(formula)
   if (result !== null) {
     addDiceResult(result, formula, title)
-    if (props.callbackAfterRoll) {
-      props.callbackAfterRoll(result.result)
+    let resultValue: undefined | number = undefined
+    if (result.value.type === 'number') {
+      resultValue = result.value.value
+    } else if (result.value.type === 'dicePool') {
+      resultValue = result.value.value.total
+    } else if (result.value.type === 'successPool') {
+      resultValue = result.value.value.count
+    } else {
+      resultValue = undefined
+    }
+    if (props.callbackAfterRoll && resultValue !== undefined) {
+      props.callbackAfterRoll(resultValue)
     }
   }
 }
@@ -180,7 +211,13 @@ const toggleBonusDice = (die: keyof BonusDiceState) => {
       </div>
     </div>
 
-    <button class="do-roll-btn" @click="handleRoll">ROLL</button>
+    <div class="divider"></div>
+
+    <div class="output-row" :class="{ 'text-danger': !isCurrentInputValid }">
+      <span>{{ message }}</span>
+    </div>
+
+    <button class="do-roll-btn" @click="handleRoll" :disabled="!isCurrentInputValid">ROLL</button>
   </div>
 </template>
 
@@ -318,6 +355,7 @@ body.has-mouse .bonus-die-btn.active:hover {
   padding: 2px;
   font-size: 0.9rem;
   outline: none;
+  font-family: Arial, sans-serif;
 }
 
 /* 投掷按钮 */
@@ -333,8 +371,12 @@ body.has-mouse .bonus-die-btn.active:hover {
   margin-top: 4px;
   font-size: 0.9rem;
 }
-body.has-mouse .do-roll-btn:hover {
+body.has-mouse .do-roll-btn:not(:disabled):hover {
   background-color: var(--dnd-dragon-red-hover);
+}
+.do-roll-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .circle-check {
@@ -359,5 +401,16 @@ body.has-mouse .circle-check.checked:hover {
   align-items: center;
   font-size: 0.9rem;
   color: var(--dnd-ink-primary);
+}
+
+.output-row {
+  font-size: 0.9rem;
+  color: var(--dnd-ink-primary);
+  text-align: center;
+  font-family: Arial, sans-serif;
+}
+
+.text-danger.output-row {
+  color: var(--dnd-dragon-red);
 }
 </style>

@@ -5,27 +5,20 @@ import type DiceBox from '@3d-dice/dice-box'
 // 用于规则自定义的宏替换
 import { useActiveCharacterStore } from '@/stores/active-character'
 import { useDnd5Logic } from './rules/useDnd5Logic'
+import {
+  rollWithoutAnimation,
+  tryFoldDiceExpression,
+  checkNumber,
+  checkConstantInteger,
+} from '@/wasm_utils/oxidice/pkg/oxidice'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
+import type { OutputNode } from '@/wasm_utils/oxidice/pkg/oxidice'
+
+import { showToast } from '@/stores/toast'
 
 function globalMacroReplace(input: string): string {
   // TODO: 全局生效的宏替换
   return input
-}
-
-export type RollOutput = {
-  result: number
-  groups: Array<{
-    type: 'die' | 'number'
-    value: number
-    dices?: Array<{
-      value: number
-      roll: number
-      valid: boolean
-      die: number
-      info: string
-    }>
-  }>
-  opts: Array<string>
 }
 
 export function recusiveMacroReplace(
@@ -109,11 +102,6 @@ export function useDiceBox() {
     return diceBoxInstance
   }
 
-  const Preprocess = (input: string): string => {
-    // 这里可以添加一些预处理逻辑，比如宏替换等
-    return input
-  }
-
   // const diceBoxFunction = (functionName: 'add' | 'roll') => {
   //   return async (...args: Parameters<DiceBox['roll']>): Promise<boolean> => {
   //     const box = getDiceBox()
@@ -184,17 +172,99 @@ export function useDiceBox() {
   //   return null
   // }
 
-  const parseAndRoll = async (notation: string): Promise<RollOutput | null> => {
-    // const preprocessedNotion = Preprocess(notation)
-    // if (showAnimation.value) {
-    //   const output = await parseAndRollWithAnimation(preprocessedNotion)
-    //   return parseOuptput(output)
-    // } else {
-    //   const output = parseAndRollWithoutAnimation(preprocessedNotion)
-    //   return parseOuptput(output)
-    // }
-    console.log('notation', notation)
-    return null
+  const parseAndRoll = async (notation: string): Promise<OutputNode | null> => {
+    if (showAnimation.value) {
+      try {
+        const preprocessedNotion = specificMacroReplace(notation)
+        return rollWithoutAnimation(preprocessedNotion, 20, 2000) // 后续改为带动画的投掷
+      } catch (e) {
+        showToast(e as string, 'error')
+        return null
+      }
+    } else {
+      try {
+        const preprocessedNotion = specificMacroReplace(notation)
+        return rollWithoutAnimation(preprocessedNotion, 20, 2000)
+      } catch (e) {
+        showToast(e as string, 'error')
+        return null
+      }
+    }
+  }
+
+  const foldAndCheckConstantsInteger = (notation: string): [true, number] | [false, string] => {
+    // 如果结果为真，表示合法，第二个返回值为折叠后的表达式
+    // 如果结果为假，表示不合法，第二个返回值为错误信息
+    try {
+      const preprocessedNotation = specificMacroReplace(notation)
+      const evalResult = checkConstantInteger(preprocessedNotation)
+      if (evalResult.result === 'constant') {
+        return [true, evalResult.value]
+      } else {
+        return [false, evalResult.value] // 错误信息
+      }
+    } catch (e) {
+      let errorMessage: string
+      if (e instanceof Error) {
+        errorMessage = e.message
+      } else if (typeof e === 'string') {
+        errorMessage = e
+      } else {
+        // 兜底：保证不再抛异常
+        errorMessage = String(e) || '未知错误'
+      }
+      return [false, errorMessage]
+    }
+  }
+
+  const checkNotationValidAndFold = (notation: string): [boolean, string] => {
+    // 如果结果为真，表示合法，第二个返回值为折叠后的表达式
+    // 如果结果为假，表示不合法，第二个返回值为错误信息
+    try {
+      const preprocessedNotation = specificMacroReplace(notation)
+      const evalResult = tryFoldDiceExpression(preprocessedNotation)
+      if (evalResult.result === 'valid') {
+        return [true, evalResult.value]
+      } else {
+        return [false, evalResult.value] // 错误信息
+      }
+    } catch (e) {
+      let errorMessage: string
+      if (e instanceof Error) {
+        errorMessage = e.message
+      } else if (typeof e === 'string') {
+        errorMessage = e
+      } else {
+        // 兜底：保证不再抛异常
+        errorMessage = String(e) || '未知错误'
+      }
+      return [false, errorMessage]
+    }
+  }
+
+  const foldAndCheckNumber = (notation: string): [boolean, string] => {
+    // 如果结果为真，表示合法，第二个返回值为折叠后的表达式
+    // 如果结果为假，表示不合法，第二个返回值为错误信息
+    try {
+      const preprocessedNotation = specificMacroReplace(notation)
+      const evalResult = checkNumber(preprocessedNotation)
+      if (evalResult.result === 'number') {
+        return [true, evalResult.value]
+      } else {
+        return [false, evalResult.value] // 错误信息
+      }
+    } catch (e) {
+      let errorMessage: string
+      if (e instanceof Error) {
+        errorMessage = e.message
+      } else if (typeof e === 'string') {
+        errorMessage = e
+      } else {
+        // 兜底：保证不再抛异常
+        errorMessage = String(e) || '未知错误'
+      }
+      return [false, errorMessage]
+    }
   }
 
   // 暴露给组件使用的属性和方法
@@ -204,6 +274,8 @@ export function useDiceBox() {
     showAnimation,
     canvasOpacity,
     parseAndRoll,
-    Preprocess,
+    checkNotationValidAndFold,
+    foldAndCheckNumber,
+    foldAndCheckConstantsInteger,
   }
 }

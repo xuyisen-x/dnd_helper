@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { RollResultItem } from '@/stores/dice-result'
+import type { ValueSummary } from '@/wasm_utils/oxidice/pkg/oxidice'
 
 const props = defineProps<{
   item: RollResultItem
@@ -10,8 +11,19 @@ const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
-// 辅助函数保持不变
-const isOperator = (index: number, total: number) => index < total - 1
+const getResultString = (value: ValueSummary): string => {
+  if (value.type === 'number') {
+    return value.value.toString()
+  } else if (value.type === 'dicePool') {
+    return value.value.total.toString()
+  } else if (value.type === 'successPool') {
+    return value.value.count.toString()
+  } else if (value.type === 'list') {
+    return '[' + value.value.map((v) => v.toString()).join(', ') + ']'
+  } else {
+    return ''
+  }
+}
 </script>
 
 <template>
@@ -24,7 +36,7 @@ const isOperator = (index: number, total: number) => index < total - 1
       <button class="close-btn" @click="emit('close')">×</button>
     </div>
 
-    <div v-if="isExpanded" class="toast-details">
+    <!-- <div v-if="isExpanded" class="toast-details">
       <div v-for="(group, gIdx) in props.item.output.groups" :key="gIdx" class="roll-group">
         <template v-if="group.type === 'number'">
           <span class="static-num">{{ group.value }}</span>
@@ -49,11 +61,11 @@ const isOperator = (index: number, total: number) => index < total - 1
           props.item.output.opts[gIdx]
         }}</span>
       </div>
-    </div>
+    </div> -->
 
     <div class="toast-footer">
       <span class="total-label">结果</span>
-      <span class="total-result">{{ item.output.result }}</span>
+      <span class="total-result">{{ getResultString(item.output.value) }}</span>
     </div>
   </div>
 </template>

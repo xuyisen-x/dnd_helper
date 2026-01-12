@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { RollOutput } from '@/composables/useDiceBox'
+import type { OutputNode } from '@/wasm_utils/oxidice/pkg/oxidice'
 
 export interface RollResultItem {
   id: number
   notation: string // 公式，如 "2d20kh + 3"
   title: string // 业务标题，如 "游说检定" 或 "自定义投掷"
-  output: RollOutput
+  output: OutputNode // 投掷结果
   timestamp: number
 }
 
@@ -16,7 +16,7 @@ export const useDiceResultStore = defineStore('dice-result', () => {
   const MAX_Items = 3
   const AUTO_DISMISS_TIME = 30 * 1000 // 30秒后自动移除
 
-  const addResult = (output: RollOutput, notation: string, title: string = '自定义') => {
+  const addResult = (output: OutputNode, notation: string, title: string = '自定义') => {
     const id = idCounter++
 
     results.value.unshift({
@@ -46,7 +46,7 @@ export const useDiceResultStore = defineStore('dice-result', () => {
   return { results, addResult, removeResult }
 })
 
-export function addDiceResult(output: RollOutput, notation: string, title: string = '自定义') {
+export function addDiceResult(output: OutputNode, notation: string, title: string = '自定义') {
   const { addResult } = useDiceResultStore()
 
   addResult(output, notation.replace(/\s/g, ''), title)

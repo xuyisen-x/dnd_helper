@@ -5,10 +5,8 @@ import DiceIcon from '../Icons/DiceIcon.vue'
 import MutiDiceIcon from '../Icons/MutiDiceIcon.vue'
 import { onClickOutside } from '@vueuse/core'
 import { addDiceResult } from '@/stores/dice-result'
-import { try_fold_dice_expression } from '@/wasm_utils/oxidice/pkg/oxidice'
-import { specificMacroReplace } from '@/composables/useDiceBox'
 
-const { parseAndRoll, showAnimation } = useDiceBox()
+const { parseAndRoll, showAnimation, checkNotationValidAndFold } = useDiceBox()
 
 type DiceType = 'd100' | 'd20' | 'd12' | 'd10' | 'd8' | 'd6' | 'd4'
 
@@ -77,6 +75,10 @@ const removeHistoryItem = (index: number) => {
 }
 
 const rollDiceText = async (diceExpression: string) => {
+  // 首先检查表达式合法性
+  const [isValid, foldedExpression] = checkNotationValidAndFold(diceExpression)
+  if (!isValid) return
+
   const promisedResult = parseAndRoll(diceExpression)
 
   // 投掷后的清理工作
@@ -99,11 +101,11 @@ const rollDiceText = async (diceExpression: string) => {
 
   // 添加到骰子结果通知
   if (result !== null) {
-    addDiceResult(result, diceExpression, '自定义')
+    addDiceResult(result, foldedExpression, '自定义')
   }
 }
 
-const completedRollNotion = computed(() => {
+const completedRollNotation = computed(() => {
   if (totalSelected.value === 0 && customFormula.value === '') return ''
   // 构建骰子表达式
   const temp = Object.entries(selection.value)
@@ -132,7 +134,7 @@ const completedRollNotion = computed(() => {
 })
 
 const rollDice = async () => {
-  const diceExpression = completedRollNotion.value
+  const diceExpression = completedRollNotation.value
   if (diceExpression === '') return
   if (!isCurrentInputValid.value) return
   await rollDiceText(diceExpression)
@@ -146,7 +148,7 @@ const shouldShowWarning = ref<boolean>(false)
 let warningTimeout: number | null = null
 const WARNING_DELAY_MS = 1000
 
-watch(completedRollNotion, (newVal) => {
+watch(completedRollNotation, (newVal) => {
   if (warningTimeout) {
     clearTimeout(warningTimeout)
     warningTimeout = null
@@ -165,30 +167,14 @@ watch(completedRollNotion, (newVal) => {
     errorMessage.value = ''
     return
   }
-  try {
-    // 1. 进行宏替换
-    const replaced = specificMacroReplace(newVal)
-    // 2. 检查是否为合法表达式
-    const evalResult = try_fold_dice_expression(replaced)
-    if (evalResult.result === 'Valid') {
-      isCurrentInputValid.value = true
-      lastValidPreprocessed.value = evalResult.value
-      errorMessage.value = ''
-    } else {
-      isCurrentInputValid.value = false
-      errorMessage.value = evalResult.value
-    }
-  } catch (e) {
+  const [isValid, result] = checkNotationValidAndFold(newVal)
+  if (isValid) {
+    isCurrentInputValid.value = true
+    lastValidPreprocessed.value = result
+    errorMessage.value = ''
+  } else {
     isCurrentInputValid.value = false
-    if (e instanceof Error) {
-      errorMessage.value = e.message
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } else if ('message' in (e as any)) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      errorMessage.value = (e as any).message
-    } else {
-      errorMessage.value = '未知错误'
-    }
+    errorMessage.value = result
   }
 })
 
@@ -256,7 +242,7 @@ onClickOutside(containnerRef, () => {
           class="roll-action-btn"
           :class="{ 'mode-roll': isPanelOpen }"
           @click="isPanelOpen ? rollDice() : togglePanel()"
-          :disabled="isPanelOpen && (completedRollNotion === '' || !isCurrentInputValid)"
+          :disabled="isPanelOpen && (completedRollNotation === '' || !isCurrentInputValid)"
         >
           <DiceIcon v-if="!isPanelOpen" class="roll-btn-icon" />
           <span v-else class="roll-text">ROLL</span>

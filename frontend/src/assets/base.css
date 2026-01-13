@@ -36,10 +36,12 @@
 
   /* --- 通用强调色 (Accents) --- */
   --dnd-dragon-red: #8a1c1c; /* 龙血红：用于主按钮、重要链接 */
-  --dnd-dragon-red-hover: #a62222; /* 龙血红高亮 */
+  --dnd-dragon-red-trans: #8a1c1c87; /* 龙血红：半透明背景 */
+  --dnd-dragon-red-hover: #a622229c; /* 龙血红高亮 */
   --dnd-gold: #c5a059; /* 古金：用于边框、图标 */
   --dnd-gold-dim: rgba(197, 160, 89, 0.2); /* 金色微光背景 */
   --dnd-magic-blue: #5b8bd1; /* 魔法蓝：用于选中态或链接 */
+  --dnd-magic-blue-trans: #5b8ad187; /* 魔法蓝：半透明背景 */
 }
 
 :root {

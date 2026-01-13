@@ -1,12 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { OutputNode } from '@/wasm_utils/oxidice/pkg/oxidice'
+import type { OutputNode, ValueSummary } from '@/wasm_utils/oxidice/pkg/oxidice'
 
 export interface RollResultItem {
   id: number
   notation: string // 公式，如 "2d20kh + 3"
   title: string // 业务标题，如 "游说检定" 或 "自定义投掷"
   output: OutputNode // 投掷结果
+  showedValue: ValueSummary | undefined // 需要展示的值
+  showedID: number | undefined // 需要展示的值对应的节点ID
   timestamp: number
 }
 
@@ -24,6 +26,8 @@ export const useDiceResultStore = defineStore('dice-result', () => {
       notation,
       title,
       output,
+      showedValue: undefined,
+      showedID: undefined,
       timestamp: Date.now(),
     })
 
@@ -43,7 +47,28 @@ export const useDiceResultStore = defineStore('dice-result', () => {
     }
   }
 
-  return { results, addResult, removeResult }
+  const setShowedValue = (itemId: number, value: ValueSummary, nodeId: number) => {
+    const item = results.value.find((item) => item.id === itemId)
+    if (item) {
+      item.showedValue = value
+      item.showedID = nodeId
+    }
+  }
+
+  const removeShowedValue = (itemId: number) => {
+    const item = results.value.find((item) => item.id === itemId)
+    if (item) {
+      item.showedValue = undefined
+      item.showedID = undefined
+    }
+  }
+
+  const getShowedId = (itemId: number): number | undefined => {
+    const item = results.value.find((item) => item.id === itemId)
+    return item?.showedID
+  }
+
+  return { results, addResult, removeResult, setShowedValue, removeShowedValue, getShowedId }
 })
 
 export function addDiceResult(output: OutputNode, notation: string, title: string = '自定义') {

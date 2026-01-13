@@ -57,7 +57,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .auto-fit-wrapper {
   width: 100%;
-  height: 100%;
+  height: auto;
 }
 
 .auto-fit-text {

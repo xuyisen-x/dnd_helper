@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import type { RollResultItem } from '@/stores/dice-result'
 import type { ValueSummary } from '@/wasm_utils/oxidice/pkg/oxidice'
+import OneAutoFitText from '@/components/Common/OneRowAutoFitText.vue'
+import ExpressionNode from './ExpressionNode.vue'
+import DiceValueDisplay from './DiceValueDisplay.vue'
+import { computed } from 'vue'
 
 const props = defineProps<{
   item: RollResultItem
@@ -24,6 +28,14 @@ const getResultString = (value: ValueSummary): string => {
     return ''
   }
 }
+
+const showedValue = computed<ValueSummary>(() => {
+  if (props.item.showedValue) {
+    return props.item.showedValue
+  } else {
+    return props.item.output.value
+  }
+})
 </script>
 
 <template>
@@ -31,41 +43,21 @@ const getResultString = (value: ValueSummary): string => {
     <div class="toast-header">
       <div class="header-info">
         <span class="title">{{ props.item.title }}</span>
-        <span class="notation">{{ props.item.notation }}</span>
+        <span class="notation" v-if="!isExpanded">{{ props.item.notation }}</span>
       </div>
       <button class="close-btn" @click="emit('close')">×</button>
     </div>
 
-    <!-- <div v-if="isExpanded" class="toast-details">
-      <div v-for="(group, gIdx) in props.item.output.groups" :key="gIdx" class="roll-group">
-        <template v-if="group.type === 'number'">
-          <span class="static-num">{{ group.value }}</span>
-        </template>
-
-        <template v-else>
-          <div class="dice-list">
-            <span
-              v-for="(die, dIdx) in group.dices"
-              :key="dIdx"
-              class="die-item"
-              :class="{
-                invalid: !die.valid,
-              }"
-            >
-              {{ die.value }}
-            </span>
-          </div>
-        </template>
-
-        <span v-if="isOperator(gIdx, item.output.groups.length)" class="operator">{{
-          props.item.output.opts[gIdx]
-        }}</span>
-      </div>
-    </div> -->
+    <div v-if="isExpanded" class="toast-details">
+      <ExpressionNode :node="item.output" :id="item.id" />
+    </div>
+    <DiceValueDisplay v-if="isExpanded" :value="showedValue" />
 
     <div class="toast-footer">
       <span class="total-label">结果</span>
-      <span class="total-result">{{ getResultString(item.output.value) }}</span>
+      <OneAutoFitText :min-size="10" :max-size="28" class="total-result-wrapper">
+        <span class="total-result">{{ getResultString(item.output.value) }}</span>
+      </OneAutoFitText>
     </div>
   </div>
 </template>
@@ -173,7 +165,7 @@ const getResultString = (value: ValueSummary): string => {
 /* 底部结果 */
 .toast-footer {
   display: flex;
-  justify-content: space-between;
+  gap: 10px;
   align-items: center;
   padding-top: 4px;
 }
@@ -184,9 +176,15 @@ const getResultString = (value: ValueSummary): string => {
   text-transform: uppercase;
 }
 .total-result {
-  font-size: 1.8rem; /* 结果更大 */
   font-weight: 900;
   color: var(--dnd-dragon-red);
   line-height: 1;
+}
+.total-result-wrapper {
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  max-height: 35px;
 }
 </style>

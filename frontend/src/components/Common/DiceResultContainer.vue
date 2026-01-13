@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useDiceResultStore } from '@/stores/dice-result'
 import { storeToRefs } from 'pinia'
-import DiceResultToast from './DiceResultToast.vue'
+import DiceResultToast from './DiceResultToast/DiceResultToast.vue'
 
 const store = useDiceResultStore()
 const { results } = storeToRefs(store)

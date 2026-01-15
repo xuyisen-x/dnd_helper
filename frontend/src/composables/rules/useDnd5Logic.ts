@@ -13,11 +13,11 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
   >
 
   const costomMacroReplace = (input: string) => {
-    const regex = /@(str|dex|con|int|wis|cha|pb|lv\d+)\b/gi
+    const regex = /@(ras|str|dex|con|int|wis|cha|pb|lv\d+)\b/gi
     return input.replace(regex, (match, key) => {
       const lowerKey = key.toLowerCase()
 
-      let value: number | undefined = undefined
+      let value: number | string | undefined = undefined
       if (lowerKey === 'pb') {
         value = proficiencyBonus.value
       } else if (['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(lowerKey)) {
@@ -30,6 +30,8 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
         } else {
           value = sheet.value.basic.classes[index - 1]?.level || 0
         }
+      } else if (lowerKey === 'ras') {
+        value = 'sortd([4d6kh3]**6)' // 这里返回一个骰子表达式字符串，表示属性点随机方法
       }
       return String(value)
     })

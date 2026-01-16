@@ -3,6 +3,7 @@ import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data, FeatureDnd5 } from '@/stores/rules/dnd5'
 import { computed, ref } from 'vue'
 import { useDiceBox } from '@/composables/useDiceBox'
+import { confirmationBox } from '@/composables/useConfirmationBox'
 
 interface Props {
   featureKey: 'class_features' | 'race_features' | 'feat'
@@ -42,7 +43,12 @@ const saveEditDialog = () => {
   emit('close')
 }
 
-const deleteFeature = () => {
+const deleteFeature = async () => {
+  const confirmed = await confirmationBox(
+    '删除特性',
+    `确定要删除特性「${feature.name}」吗？此操作不可撤销。`,
+  )
+  if (!confirmed) return
   const data = store.data as Dnd5Data
   data.features[props.featureKey].splice(props.index, 1)
   emit('close')

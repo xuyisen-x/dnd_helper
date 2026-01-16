@@ -3,6 +3,7 @@ import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data, EquipmentDnd5 } from '@/stores/rules/dnd5'
 import { computed, ref } from 'vue'
 import { useDiceBox } from '@/composables/useDiceBox'
+import { confirmationBox } from '@/composables/useConfirmationBox'
 
 interface Props {
   index: number
@@ -44,7 +45,12 @@ const saveEditDialog = () => {
   emit('close')
 }
 
-const deleteEquipment = () => {
+const deleteEquipment = async () => {
+  const confirmed = await confirmationBox(
+    '删除物品',
+    `确定要删除物品「${equipmentItem.name}」吗？此操作不可撤销。`,
+  )
+  if (!confirmed) return
   const data = store.data as Dnd5Data
   data.equipment.splice(props.index, 1)
   emit('close')

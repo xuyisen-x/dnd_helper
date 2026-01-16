@@ -113,6 +113,7 @@ export interface DamageSusceptibilitiesDnd5 {
 
 // 特性与能力
 export interface FeatureDnd5 {
+  id: string // 唯一编号，nanoid生成
   name: string // 特性名称
   description: string // 特性描述
   usageLimit: string // 使用限制，为空表示无限制
@@ -120,6 +121,20 @@ export interface FeatureDnd5 {
   afterShortRest: string // 短休后恢复次数
   afterLongRest: string // 长休后恢复次数
 }
+
+// 装备信息
+export interface EquipmentDnd5 {
+  id: string // 唯一编号，nanoid生成
+  name: string // 装备名称
+  description: string // 装备描述
+  quantity: number // 数量
+  attunement: boolean // 是否已同调
+  chargesLimit: string // 充能上限表达式，为空表示无充能
+  chargesCurrent: number // 当前充能数，仅当有充能上限时有效
+  afterShortRest: string // 短休后恢复充能表达式
+  afterLongRest: string // 长休后恢复充能表达式
+}
+
 // ==========================================
 // 2. 辅助映射表
 // ==========================================
@@ -293,6 +308,18 @@ export interface Dnd5Data {
     story: string
     languages: string
   }
+
+  // 货币
+  coins: {
+    cp: number
+    sp: number
+    ep: number
+    gp: number
+    pp: number
+  }
+
+  // 装备
+  equipment: EquipmentDnd5[]
 }
 
 // ==========================================
@@ -447,5 +474,13 @@ export function createEmptyDnd5Data(): Dnd5Data {
       story: '',
       languages: '',
     },
+    coins: {
+      cp: 0,
+      sp: 0,
+      ep: 0,
+      gp: 0,
+      pp: 0,
+    },
+    equipment: [],
   }
 }

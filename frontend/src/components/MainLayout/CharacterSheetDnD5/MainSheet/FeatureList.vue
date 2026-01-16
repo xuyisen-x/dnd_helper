@@ -1,11 +1,21 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import type { FeatureDnd5 } from '@/stores/rules/dnd5'
+import { computed, ref } from 'vue'
+import type { Dnd5Data } from '@/stores/rules/dnd5'
 import FeatureItem from './FeatureItem.vue'
+import { useActiveCharacterStore } from '@/stores/active-character'
+import { nanoid } from 'nanoid'
 
-const props = defineProps<{
-  features: FeatureDnd5[]
-}>()
+interface Props {
+  featureKey: 'class_features' | 'race_features' | 'feat'
+}
+
+const props = defineProps<Props>()
+const store = useActiveCharacterStore()
+
+const targetFeatures = computed(() => {
+  const data = store.data as Dnd5Data
+  return data.features[props.featureKey]
+})
 
 const draggingIndex = ref<number | null>(null)
 const dragOverIndex = ref<number | null>(null)
@@ -28,13 +38,16 @@ const handleDrop = (index: number) => {
   if (draggingIndex.value === null) return
   const from = draggingIndex.value
   if (from === index) return handleDragEnd()
-  const [moved] = props.features.splice(from, 1)
-  props.features.splice(index, 0, moved)
+  const [moved] = targetFeatures.value.splice(from, 1)
+  if (moved) {
+    targetFeatures.value.splice(index, 0, moved)
+  }
   handleDragEnd()
 }
 
 const addFeature = () => {
-  props.features.push({
+  targetFeatures.value.push({
+    id: nanoid(),
     name: '',
     description: '',
     usageLimit: '',
@@ -49,9 +62,9 @@ const addFeature = () => {
   <div class="feature-list">
     <div class="feature-items">
       <FeatureItem
-        v-for="(feature, index) in features"
-        :key="index"
-        :feature="feature"
+        v-for="(feature, index) in targetFeatures"
+        :key="feature.id"
+        :featureKey="props.featureKey"
         :index="index"
         :dragging-index="draggingIndex"
         :drag-over-index="dragOverIndex"
@@ -61,27 +74,26 @@ const addFeature = () => {
         @drop="handleDrop"
       />
     </div>
-    <div v-if="features.length === 0" class="empty-tip">暂无特性，点击下方按钮添加。</div>
+    <div v-if="targetFeatures.length === 0" class="empty-tip">点击下方按钮添加</div>
     <div class="feature-footer">
-      <button class="btn-add" @click="addFeature">+ 新增特性</button>
+      <button class="btn-add" @click="addFeature">+ 添加特性</button>
     </div>
   </div>
 </template>
 
 <style scoped>
 .feature-list {
+  margin: 5px 5px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  height: 100%;
+  gap: 5px;
+  height: auto;
 }
 
 .feature-items {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  overflow-y: auto;
-  padding-right: 4px;
 }
 
 .feature-footer {

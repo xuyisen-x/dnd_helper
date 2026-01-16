@@ -2,16 +2,15 @@
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
-import { useDnd5Logic, type FeatureViewDnd5 } from '@/composables/rules/useDnd5Logic'
-import DetailsWithTitle from './DetailsWithTitle.vue'
-import FeatureEditor from './FeatureEditor.vue'
+import { useDnd5Logic, type EquipmentViewDnd5 } from '@/composables/rules/useDnd5Logic'
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import FileTextIcon from '@/components/Icons/FileTextIcon.vue'
 import AddIcon from '@/components/Icons/AddIcon.vue'
 import MinusIcon from '@/components/Icons/MinusIcon.vue'
+import DetailsWithTitle from './DetailsWithTitle.vue'
+import EquipmentEditor from './EquipmentEditor.vue'
 
 const props = defineProps<{
-  featureKey: 'class_features' | 'race_features' | 'feat'
   index: number
   draggingIndex: number | null
   dragOverIndex: number | null
@@ -29,21 +28,9 @@ const sheet = computed({
   get: () => store.data as Dnd5Data,
   set: (val) => (store.data = val),
 })
-const featureView = computed(() => {
-  const view = (() => {
-    switch (props.featureKey) {
-      case 'class_features':
-        const { classFeaturesView } = useDnd5Logic(sheet)
-        return classFeaturesView
-      case 'race_features':
-        const { raceFeaturesView } = useDnd5Logic(sheet)
-        return raceFeaturesView
-      case 'feat':
-        const { featFeaturesView } = useDnd5Logic(sheet)
-        return featFeaturesView
-    }
-  })()
-  return view.value[props.index] as FeatureViewDnd5
+const equipmentView = computed(() => {
+  const { equipmentView } = useDnd5Logic(sheet)
+  return equipmentView.value[props.index] as EquipmentViewDnd5
 })
 
 const isDescriptionOpen = ref(false)
@@ -53,21 +40,21 @@ const descriptionAnchor = ref<HTMLElement | null>(null)
 const popoverPos = ref({ top: 0, left: 0 })
 
 // 虽然正无穷不会被展示，但是还是处理一下以防万一
-const usageLimitLabel = computed(() =>
-  featureView.value.displayLimit === Infinity ? '∞' : String(featureView.value.displayLimit),
+const chargeLimitLabel = computed(() =>
+  equipmentView.value.displayLimit === Infinity ? '∞' : String(equipmentView.value.displayLimit),
 )
 const remainingLabel = computed(() =>
-  featureView.value.displayLimit === Infinity ? '∞' : String(featureView.value.displayCount),
+  equipmentView.value.displayLimit === Infinity ? '∞' : String(equipmentView.value.displayCharges),
 )
 
 const showAdd = computed(() => {
-  if (featureView.value.displayLimit === Infinity) return false
-  return featureView.value.displayCount < featureView.value.displayLimit
+  if (equipmentView.value.displayLimit === Infinity) return false
+  return equipmentView.value.displayCharges < equipmentView.value.displayLimit
 })
 
 const showMinus = computed(() => {
-  if (featureView.value.displayLimit === Infinity) return false
-  return featureView.value.displayCount > 0
+  if (equipmentView.value.displayLimit === Infinity) return false
+  return equipmentView.value.displayCharges > 0
 })
 
 const updatePopoverPosition = () => {
@@ -94,13 +81,13 @@ const toggleDescription = (event: MouseEvent) => {
 }
 
 const addOneUsage = () => {
-  if (featureView.value.displayLimit === Infinity) return
-  featureView.value.setCount(featureView.value.displayCount + 1)
+  if (equipmentView.value.displayLimit === Infinity) return
+  equipmentView.value.setCharges(equipmentView.value.displayCharges + 1)
 }
 
 const subtractOneUsage = () => {
-  if (featureView.value.displayLimit === Infinity) return
-  featureView.value.setCount(Math.max(featureView.value.displayCount - 1, 0))
+  if (equipmentView.value.displayLimit === Infinity) return
+  equipmentView.value.setCharges(Math.max(equipmentView.value.displayCharges - 1, 0))
 }
 
 const handlePopoverUpdate = () => updatePopoverPosition()
@@ -135,18 +122,46 @@ onBeforeUnmount(() => {
     @dragend="emit('drag-end')"
   >
     <div class="drag-handle" title="拖动排序">⠿</div>
+    <div
+      title="同调"
+      class="circle-check clickable"
+      :class="{ checked: equipmentView.attunement }"
+      @click="equipmentView.toggleAttunement()"
+    ></div>
     <div class="feature-main">
-      <div class="feature-name">{{ featureView.name || '未命名特性' }}</div>
+      <div class="feature-name" :class="{ empty: equipmentView.quantity === 0 }">
+        {{ equipmentView.name || '未命名物品' }}
+      </div>
+      <span class="quantity-badge" title="调整数量">
+        <span class="qty-text" v-if="equipmentView.quantity != 1"
+          >×{{ equipmentView.quantity }}</span
+        >
+
+        <span class="qty-controls">
+          <span
+            class="qty-btn clickable"
+            @click.stop="equipmentView.changeQuantity(1)"
+            title="+1数量"
+            >▲</span
+          >
+          <span
+            class="qty-btn clickable"
+            @click.stop="equipmentView.changeQuantity(-1)"
+            title="-1数量"
+            >▼</span
+          >
+        </span>
+      </span>
     </div>
-    <div class="feature-meta" :class="{ 'hidden-button': featureView.displayLimit === Infinity }">
-      <span> {{ remainingLabel }} / {{ usageLimitLabel }}</span>
+    <div class="feature-meta" :class="{ 'hidden-button': equipmentView.displayLimit === Infinity }">
+      <span> {{ remainingLabel }} / {{ chargeLimitLabel }}</span>
     </div>
     <div class="feature-actions">
       <div class="btn-icon" @click="addOneUsage" :class="{ 'hidden-button': !showAdd }">
-        <add-icon class="clickable" title="+1" />
+        <add-icon class="clickable" title="+1充能" />
       </div>
       <div class="btn-icon" @click="subtractOneUsage" :class="{ 'hidden-button': !showMinus }">
-        <minus-icon class="clickable" title="-1" />
+        <minus-icon class="clickable" title="-1充能" />
       </div>
     </div>
     <div class="feature-actions">
@@ -161,20 +176,15 @@ onBeforeUnmount(() => {
         <DetailsWithTitle
           v-if="isDescriptionOpen"
           :style="popoverStyle"
-          :details="featureView.description"
-          :title="(featureView.name || '未命名特性') + '详细信息'"
+          :details="equipmentView.description"
+          :title="(equipmentView.name || '未命名物品') + '详细信息'"
           @close="isDescriptionOpen = false"
         />
       </teleport>
     </div>
 
     <teleport to="body">
-      <FeatureEditor
-        v-if="isEditOpen"
-        :index="props.index"
-        :feature-key="props.featureKey"
-        @close="isEditOpen = false"
-      />
+      <EquipmentEditor v-if="isEditOpen" :index="props.index" @close="isEditOpen = false" />
     </teleport>
   </div>
 </template>
@@ -182,7 +192,7 @@ onBeforeUnmount(() => {
 <style scoped>
 .feature-item {
   display: grid;
-  grid-template-columns: auto 1fr auto auto auto;
+  grid-template-columns: auto auto 1fr auto auto auto;
   align-items: center;
   gap: 10px;
   border-bottom: 1px dashed rgba(0, 0, 0, 0.1); /* 淡淡的分割线 */
@@ -209,12 +219,16 @@ onBeforeUnmount(() => {
 
 .feature-main {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 4px;
 }
 
 .feature-name {
   color: var(--dnd-ink-primary);
+}
+.feature-name.empty {
+  font-style: italic;
+  text-decoration: line-through;
 }
 
 .feature-meta {
@@ -239,5 +253,44 @@ onBeforeUnmount(() => {
 
 .hidden-button {
   visibility: hidden;
+}
+
+.circle-check {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--dnd-ink-primary);
+  border-radius: 50%;
+}
+.circle-check.checked {
+  background-color: var(--dnd-ink-primary);
+}
+body.has-mouse .circle-check:hover {
+  border-color: var(--dnd-dragon-red);
+}
+body.has-mouse .circle-check.checked:hover {
+  background-color: var(--dnd-dragon-red);
+}
+
+.quantity-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 1rem;
+  color: var(--dnd-ink-secondary);
+}
+
+.qty-text {
+  margin-right: 4px;
+  font-weight: bold;
+}
+
+.qty-controls {
+  display: flex;
+  flex-direction: row;
+  gap: 2px;
+  line-height: 0.6;
+}
+
+.qty-btn {
+  user-select: none;
 }
 </style>

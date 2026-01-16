@@ -88,6 +88,7 @@ import CoinPanel from './MainSheet/CoinPanel.vue'
   width: 100%;
   align-items: start; /* 顶部对齐 */
   height: 600px;
+  min-height: 0;
 }
 
 /* 左大栏内部布局：两列 */
@@ -145,6 +146,7 @@ import CoinPanel from './MainSheet/CoinPanel.vue'
   grid-template-rows: 1fr 1fr;
   gap: 10px;
   height: 100%;
+  min-height: 0;
 }
 
 .two-row2 {
@@ -152,5 +154,6 @@ import CoinPanel from './MainSheet/CoinPanel.vue'
   grid-template-rows: 3fr 1fr;
   gap: 10px;
   height: 100%;
+  min-height: 0;
 }
 </style>

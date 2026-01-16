@@ -112,6 +112,10 @@ export function useDiceBox() {
       scale: 5,
       origin: window.location.origin + import.meta.env.BASE_URL,
       theme: 'default',
+      gravity: 2,
+      friction: 0.6,
+      delay: 20,
+      startingHeight: 12,
     })
 
     try {

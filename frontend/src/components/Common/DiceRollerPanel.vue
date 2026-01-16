@@ -141,41 +141,19 @@ const rollDice = async () => {
 }
 
 // 用于记录和显示骰子解析相关错误
-const errorMessage = ref<string>('')
-const lastValidPreprocessed = ref<string>('')
+const foledNotationOrMessage = ref<string>('')
 const isCurrentInputValid = ref<boolean>(true)
-const shouldShowWarning = ref<boolean>(false)
-let warningTimeout: number | null = null
-const WARNING_DELAY_MS = 1000
 
 watch(completedRollNotation, (newVal) => {
-  if (warningTimeout) {
-    clearTimeout(warningTimeout)
-    warningTimeout = null
-  }
-  shouldShowWarning.value = false
-
-  // 延迟显示警告信息，避免输入时频繁闪烁
-  warningTimeout = setTimeout(() => {
-    shouldShowWarning.value = true
-  }, WARNING_DELAY_MS)
-
   if (newVal.trim() === '') {
     // 允许空输入
     isCurrentInputValid.value = true
-    lastValidPreprocessed.value = ''
-    errorMessage.value = ''
+    foledNotationOrMessage.value = ''
     return
   }
   const [isValid, result] = checkNotationValidAndFold(newVal)
-  if (isValid) {
-    isCurrentInputValid.value = true
-    lastValidPreprocessed.value = result
-    errorMessage.value = ''
-  } else {
-    isCurrentInputValid.value = false
-    errorMessage.value = result
-  }
+  isCurrentInputValid.value = isValid
+  foledNotationOrMessage.value = result
 })
 
 const containnerRef = ref(null)
@@ -256,9 +234,9 @@ onClickOutside(containnerRef, () => {
       >
         <input v-model="customFormula" placeholder="自定义 (如 2d6+5)" @keyup.enter="rollDice" />
         <Transition name="pop">
-          <div class="related-info" v-if="errorMessage !== '' || lastValidPreprocessed !== ''">
+          <div class="related-info" v-if="foledNotationOrMessage !== ''">
             <span class="info-text">
-              {{ !isCurrentInputValid && shouldShowWarning ? errorMessage : lastValidPreprocessed }}
+              {{ foledNotationOrMessage }}
             </span>
           </div>
         </Transition>

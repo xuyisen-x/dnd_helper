@@ -1,7 +1,27 @@
 import type { Ref, ComputedRef } from 'vue'
 import { computed, reactive } from 'vue'
-import type { Dnd5Data, SixAbilityKeysDnd5 } from '@/stores/rules/dnd5'
+import type { Dnd5Data, FeatureDnd5, SixAbilityKeysDnd5 } from '@/stores/rules/dnd5'
 import { useDiceBox } from '../useDiceBox'
+
+export interface FeatureViewDnd5 {
+  name: string // 特性名称
+  description: string // 特性描述
+  displayCount: number // 视图显示的数值（经过截断的）
+  displayLimit: number // 视图显示的上限数值，undefined表示无限制
+  setCount: (val: number) => void
+}
+
+export interface EquipmentViewDnd5 {
+  name: string // 装备名称
+  description: string // 装备描述
+  quantity: number // 数量
+  attunement: boolean // 是否已同调
+  displayLimit: number // 视图显示的上限数值，undefined表示无限制
+  displayCharges: number // 视图显示的数值（经过截断的）
+  setCharges: (val: number) => void
+  toggleAttunement: () => void
+  changeQuantity: (delta: number) => void
+}
 
 export function formatWithSign(num: number): string {
   return num > 0 ? `+${num}` : `${num}`
@@ -183,6 +203,89 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
     )
   })
 
+  // 特性限制和使用次数相关逻辑
+  const calculateLimit = (limitStr: string): number => {
+    if (limitStr.trim() === '') return Infinity
+    const max = Math.floor(evalCostomFamula(limitStr))
+    return Math.max(max, 0)
+  }
+
+  // 特性的视图数据
+  const createFeatureViewList = (
+    rawListGetter: () => FeatureDnd5[],
+  ): ComputedRef<FeatureViewDnd5[]> => {
+    return computed(() => {
+      const list = rawListGetter()
+
+      return list.map((feature) => {
+        const displayLimit = calculateLimit(feature.usageLimit)
+        const displayCount =
+          displayLimit === Infinity
+            ? feature.usageCount
+            : Math.max(Math.min(feature.usageCount, displayLimit), 0)
+
+        return {
+          name: feature.name,
+          description: feature.description,
+          displayCount,
+          displayLimit,
+          setCount: (newVal: number) => {
+            let targetVal = newVal < 0 ? 0 : newVal
+            if (displayLimit !== Infinity && targetVal > displayLimit) {
+              targetVal = displayLimit
+            }
+            feature.usageCount = targetVal
+          },
+        }
+      })
+    })
+  }
+  const classFeaturesView = createFeatureViewList(() => sheet.value.features.class_features)
+  const raceFeaturesView = createFeatureViewList(() => sheet.value.features.race_features)
+  const featFeaturesView = createFeatureViewList(() => sheet.value.features.feat)
+
+  // 装备的视图数据
+  const equipmentView: ComputedRef<EquipmentViewDnd5[]> = computed(() => {
+    return sheet.value.equipment.map((equip) => {
+      const displayLimit = calculateLimit(equip.chargesLimit)
+      const displayCharges =
+        displayLimit === Infinity
+          ? equip.chargesCurrent
+          : Math.max(Math.min(equip.chargesCurrent, displayLimit), 0)
+      const displayQuantity = equip.quantity < 0 ? 0 : equip.quantity
+
+      return {
+        name: equip.name,
+        description: equip.description,
+        quantity: displayQuantity,
+        attunement: equip.attunement,
+        displayLimit,
+        displayCharges,
+        setCharges: (newVal: number) => {
+          let targetVal = newVal < 0 ? 0 : newVal
+          if (displayLimit !== Infinity && targetVal > displayLimit) {
+            targetVal = displayLimit
+          }
+          equip.chargesCurrent = targetVal
+        },
+        toggleAttunement: () => {
+          equip.attunement = !equip.attunement
+        },
+        changeQuantity: (delta: number) => {
+          let newQuantity = equip.quantity + delta
+          if (newQuantity < 0) newQuantity = 0
+          equip.quantity = newQuantity
+        },
+      }
+    })
+  })
+
+  const attunedCount = computed(() => {
+    return equipmentView.value.reduce((count, equip) => {
+      return count + (equip.attunement ? 1 : 0)
+    }, 0)
+  })
+
   return {
     costomMacroReplace,
     totalLevel,
@@ -197,5 +300,10 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
     passivePerception,
     initiativeTotal,
     evalCostomFamula,
+    classFeaturesView,
+    raceFeaturesView,
+    featFeaturesView,
+    equipmentView,
+    attunedCount,
   }
 }

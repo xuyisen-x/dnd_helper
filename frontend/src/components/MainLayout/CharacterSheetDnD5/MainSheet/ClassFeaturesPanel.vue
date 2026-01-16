@@ -1,14 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useActiveCharacterStore } from '@/stores/active-character'
-import type { Dnd5Data } from '@/stores/rules/dnd5'
 import FeatureList from './FeatureList.vue'
-
-const store = useActiveCharacterStore()
-const sheet = computed({
-  get: () => store.data as Dnd5Data,
-  set: (val) => (store.data = val),
-})
 </script>
 
 <template>
@@ -20,7 +11,7 @@ const sheet = computed({
     <div class="panel-divider"></div>
 
     <div class="panel-body">
-      <FeatureList :features="sheet.features.class_features" />
+      <FeatureList featureKey="class_features" />
     </div>
   </div>
 </template>
@@ -34,9 +25,9 @@ const sheet = computed({
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   position: relative;
-  overflow: hidden;
   height: 100%;
   box-sizing: border-box;
+  min-height: 0;
 }
 
 .panel-header {
@@ -66,9 +57,8 @@ const sheet = computed({
 
 .panel-body {
   flex: 1;
-  padding: 10px 15px;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
+  padding: 2px 2px;
+  min-height: 0;
+  overflow: auto;
 }
 </style>

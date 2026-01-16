@@ -5,6 +5,7 @@ import type { Dnd5Data } from '@/stores/rules/dnd5'
 import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import ClassManager from './ClassManager.vue'
 import { confirmationBox } from '@/composables/useConfirmationBox'
+import { useShortRestDialog } from '@/composables/dnd5/useShortRestDialog'
 
 const store = useActiveCharacterStore()
 
@@ -13,7 +14,7 @@ const sheet = computed({
   set: (val) => (store.data = val),
 })
 
-const { totalLevel, longRest } = useDnd5Logic(sheet)
+const { totalLevel, longRest, shortRest } = useDnd5Logic(sheet)
 
 // 处理只允许输入正整数的函数
 const handleNumberInput = (e: Event) => {
@@ -23,9 +24,11 @@ const handleNumberInput = (e: Event) => {
   sheet.value.basic.xp = cleanValue === '' ? 0 : Number(cleanValue) // 3. 更新数据模型
 }
 
-const shortRestClicked = () => {
-  console.log('Short Rest triggered')
-  // TODO
+const shortRestClicked = async () => {
+  const confirmed = await confirmationBox('短休', '你确确定要进行短休吗？')
+  if (!confirmed) return
+  await shortRest()
+  useShortRestDialog().open()
 }
 
 const longRestCliked = async () => {

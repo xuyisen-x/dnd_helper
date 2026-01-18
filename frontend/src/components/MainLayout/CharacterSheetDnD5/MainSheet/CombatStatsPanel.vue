@@ -82,7 +82,20 @@ const handleNumInputHpChange = (e: Event) => {
 const handleNumInputMax = (e: Event) => {
   const target = e.target as HTMLInputElement
   target.value = target.value.replace(/\D/g, '')
+}
+
+const handleInputChangeMax = (e: Event) => {
+  const target = e.target as HTMLInputElement
+  if (target.value === '') {
+    sheet.value.combat.hp.max = 0
+  }
   sheet.value.combat.hp.max = Number(target.value)
+  // 如果当前生命值大于最大生命值，则调整为最大生命值
+  const currentVal = sheet.value.combat.hp.current
+  const maxVal = sheet.value.combat.hp.max
+  if (currentVal > maxVal) {
+    sheet.value.combat.hp.current = maxVal
+  }
 }
 
 const handleNumInputTemp = (e: Event) => {
@@ -94,7 +107,20 @@ const handleNumInputTemp = (e: Event) => {
 const handleNumInputCurrent = (e: Event) => {
   const target = e.target as HTMLInputElement
   target.value = target.value.replace(/\D/g, '')
+}
+
+const handleInputChangeCurrent = (e: Event) => {
+  const target = e.target as HTMLInputElement
+  if (target.value === '') {
+    sheet.value.combat.hp.current = 0
+  }
   sheet.value.combat.hp.current = Number(target.value)
+  // 如果当前生命值大于最大生命值，则调整为最大生命值
+  const currentVal = sheet.value.combat.hp.current
+  const maxVal = sheet.value.combat.hp.max
+  if (currentVal > maxVal) {
+    sheet.value.combat.hp.current = maxVal
+  }
 }
 
 const handleNumInputHd = (e: Event, type: hitDiceType, field: 'total' | 'current') => {
@@ -102,6 +128,30 @@ const handleNumInputHd = (e: Event, type: hitDiceType, field: 'total' | 'current
   const tmp = target.value.replace(/\D/g, '') // 只留数字
   target.value = tmp.length > 2 ? tmp.slice(0, 2) : tmp // 限制两位数
   sheet.value.combat.hitDice[type][field] = Number(target.value)
+}
+
+const handelInputChange = (e: Event, type: hitDiceType, field: 'total' | 'current') => {
+  const target = e.target as HTMLInputElement
+  if (target.value === '') {
+    sheet.value.combat.hitDice[type][field] = 0
+  }
+  sheet.value.combat.hitDice[type][field] = Number(target.value)
+  // 如果当前值大于总值，则调整为总值
+  if (field === 'current') {
+    const currentVal = sheet.value.combat.hitDice[type].current
+    const totalVal = sheet.value.combat.hitDice[type].total
+    if (currentVal > totalVal) {
+      sheet.value.combat.hitDice[type].current = totalVal
+    }
+  }
+  // 如果总值小于当前值，则调整当前值为总值
+  if (field === 'total') {
+    const currentVal = sheet.value.combat.hitDice[type].current
+    const totalVal = sheet.value.combat.hitDice[type].total
+    if (totalVal < currentVal) {
+      sheet.value.combat.hitDice[type].current = totalVal
+    }
+  }
 }
 
 const toggleDeathSave = (type: 'success' | 'fail', index: number) => {
@@ -161,6 +211,7 @@ const rollDeathSave = async () => {
             inputmode="numeric"
             v-model.number="sheet.combat.hp.current"
             @input="handleNumInputCurrent"
+            @change="handleInputChangeCurrent"
             class="input-huge"
           />
           <span class="label">当前</span>
@@ -186,6 +237,7 @@ const rollDeathSave = async () => {
               inputmode="numeric"
               v-model.number="sheet.combat.hp.max"
               @input="handleNumInputMax"
+              @change="handleInputChangeMax"
               class="input-medium"
             />
             <span class="label">最大</span>
@@ -225,6 +277,11 @@ const rollDeathSave = async () => {
                   handleNumInputHd(e, type as hitDiceType, 'current')
                 }
               "
+              @change="
+                (e) => {
+                  handelInputChange(e, type as hitDiceType, 'current')
+                }
+              "
               v-model.number="sheet.combat.hitDice[type as hitDiceType].current"
             />
             <div class="hd-separator">/</div>
@@ -235,6 +292,11 @@ const rollDeathSave = async () => {
               @input="
                 (e) => {
                   handleNumInputHd(e, type as hitDiceType, 'total')
+                }
+              "
+              @change="
+                (e) => {
+                  handelInputChange(e, type as hitDiceType, 'total')
                 }
               "
               v-model.number="sheet.combat.hitDice[type as hitDiceType].total"

@@ -151,7 +151,7 @@ const addFeature = () => {
 }
 
 .equipment-list {
-  margin: 5px 5px;
+  margin: 0 5px;
   display: flex;
   flex-direction: column;
   gap: 5px;
@@ -161,7 +161,6 @@ const addFeature = () => {
 .equipment-items {
   display: flex;
   flex-direction: column;
-  gap: 8px;
 }
 
 .equipment-footer {

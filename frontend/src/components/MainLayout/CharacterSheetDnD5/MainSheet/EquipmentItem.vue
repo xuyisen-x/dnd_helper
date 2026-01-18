@@ -196,6 +196,7 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 10px;
   border-bottom: 1px dashed rgba(0, 0, 0, 0.1); /* 淡淡的分割线 */
+  padding: 4px 0;
   transition:
     background-color 0.2s,
     border-color 0.2s;

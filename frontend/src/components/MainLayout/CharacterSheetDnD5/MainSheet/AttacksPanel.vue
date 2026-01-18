@@ -23,6 +23,34 @@ const sheet = computed({
 
 const { addAttack, removeAttack } = useDnd5Logic(sheet)
 
+const draggingIndex = ref<number | null>(null)
+const dragOverIndex = ref<number | null>(null)
+
+const handleDragStart = (index: number) => {
+  draggingIndex.value = index
+}
+
+const handleDragOver = (index: number) => {
+  if (draggingIndex.value === null || draggingIndex.value === index) return
+  dragOverIndex.value = index
+}
+
+const handleDragEnd = () => {
+  draggingIndex.value = null
+  dragOverIndex.value = null
+}
+
+const handleDrop = (index: number) => {
+  if (draggingIndex.value === null) return
+  const from = draggingIndex.value
+  if (from === index) return handleDragEnd()
+  const [moved] = sheet.value.attacks.splice(from, 1)
+  if (moved) {
+    sheet.value.attacks.splice(index, 0, moved)
+  }
+  handleDragEnd()
+}
+
 const DealWithCitical = (damage: string, isCritical: boolean) => {
   if (!isCritical) return damage
   return 'rpdice(' + damage + ')'
@@ -130,6 +158,7 @@ onBeforeUnmount(() => {
 
     <div class="table-container">
       <div class="grid-row header-row">
+        <div class="col-header col-drag"></div>
         <div class="col-header col-name">名称</div>
         <div class="col-header col-bonus">攻击加值</div>
         <div class="col-header col-damage">伤害</div>
@@ -139,7 +168,28 @@ onBeforeUnmount(() => {
       </div>
 
       <div class="rows-list">
-        <div v-for="(attack, index) in sheet.attacks" :key="attack.id" class="grid-row data-row">
+        <div
+          v-for="(attack, index) in sheet.attacks"
+          :key="attack.id"
+          class="grid-row data-row"
+          :class="{
+            dragging: draggingIndex === index,
+            'drag-target': dragOverIndex === index && draggingIndex !== null,
+          }"
+          @dragover.prevent="handleDragOver(index)"
+          @drop.prevent="handleDrop(index)"
+        >
+          <div class="col-drag">
+            <div
+              class="drag-handle"
+              title="拖动排序"
+              draggable="true"
+              @dragstart="handleDragStart(index)"
+              @dragend="handleDragEnd"
+            >
+              ⠿
+            </div>
+          </div>
           <div class="input-wrap col-name">
             <input type="text" v-model="attack.name" class="bare-input" placeholder="长剑" />
           </div>
@@ -281,8 +331,8 @@ onBeforeUnmount(() => {
 /* Grid 定义：根据内容重要性分配宽度比例 */
 .grid-row {
   display: grid;
-  /* 名称(3) 加值(1.5) 伤害(2) 备注(2.5) 删除按钮(auto) */
-  grid-template-columns: 1fr 2fr 2fr 0.75fr 1.5fr 30px;
+  /* 拖动(24px) 名称(3) 加值(1.5) 伤害(2) 类型(0.75) 备注(1.5) 删除按钮(auto) */
+  grid-template-columns: 24px 1fr 2fr 2fr 0.75fr 1.5fr 30px;
   gap: 10px;
   align-items: center;
 }
@@ -307,6 +357,18 @@ onBeforeUnmount(() => {
 .data-row {
   padding: 4px 0;
   border-bottom: 1px dashed rgba(0, 0, 0, 0.1); /* 淡淡的分割线 */
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
+}
+
+.data-row.dragging {
+  opacity: 0.6;
+}
+
+.data-row.drag-target {
+  border-color: var(--dnd-dragon-red);
+  background-color: rgba(138, 28, 28, 0.05);
 }
 
 /* 输入框容器 */
@@ -430,5 +492,17 @@ body.has-mouse .icon-check:active {
 .critical-label {
   font-weight: bold;
   color: var(--dnd-dragon-red);
+}
+
+.col-drag {
+  display: flex;
+  justify-content: center;
+}
+
+.drag-handle {
+  cursor: grab;
+  user-select: none;
+  color: var(--dnd-ink-secondary);
+  font-size: 1rem;
 }
 </style>

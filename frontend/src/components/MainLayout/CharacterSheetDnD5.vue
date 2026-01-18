@@ -88,7 +88,7 @@ onUnmounted(() => {
         法术
       </button>
       <button :class="{ active: currentTab === 'dice' }" @click="currentTab = 'dice'">
-        快速掷骰工具
+        伤害计算器
       </button>
       <div class="blank"></div>
       <button :class="{ active: currentTab === 'glossary' }" @click="currentTab = 'glossary'">
@@ -142,7 +142,7 @@ onUnmounted(() => {
 
   /* 保持原有样式 */
   width: 1300px;
-  min-height: 800px; /* 给一个最小高度 */
+  min-height: 400px; /* 给一个最小高度 */
   background-color: var(--dnd-parchment-bg, #f0e6d2);
   color: var(--dnd-ink-primary, #2b2118);
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);

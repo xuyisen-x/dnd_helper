@@ -1,7 +1,8 @@
+import { nanoid } from 'nanoid'
+
 // ==========================================
 // 1. 辅助类型、接口定义
-
-import { nanoid } from 'nanoid'
+// ==========================================
 
 // ==========================================
 export type SixAbilityKeysDnd5 = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'
@@ -65,7 +66,7 @@ export interface AttackDnd5 {
   name: string // 武器/攻击名称
   bonus: string // 攻击加值
   damage: string // 伤害
-  damageType: string // 伤害类型
+  damageType: keyof DamageSusceptibilitiesDnd5 // 伤害类型
   notes: string // 备注
 }
 
@@ -141,9 +142,23 @@ export interface EquipmentDnd5 {
   afterLongRest: string // 长休后恢复充能表达式
 }
 
+export interface DiceToolItemDnd5 {
+  id: string // 唯一编号，nanoid生成
+  name: string // 伤害标签
+  expression: string // 伤害表达式
+  damageType: keyof DamageSusceptibilitiesDnd5 // 伤害类型
+  count: number // 计数器
+  criticalCount: number // 暴击计数器
+}
+
 // ==========================================
 // 2. 辅助映射表
 // ==========================================
+
+interface damageOptionsType {
+  label: string
+  value: keyof DamageSusceptibilitiesDnd5
+}
 
 export const DND5R_ABILITY_FULL_NAMES: Record<SixAbilityKeysDnd5, string> = {
   str: '力量',
@@ -193,6 +208,25 @@ export const DAMAGE_TYEP_NAMES: Record<keyof DamageSusceptibilitiesDnd5, string>
   radiant: '光耀',
   necrotic: '暗蚀',
 }
+
+export const DAMAGE_OPTIONS: damageOptionsType[] = [
+  { label: '钝击P', value: 'nonmagicalbludgeoning' },
+  { label: '穿刺P', value: 'nonmagicalpiercing' },
+  { label: '挥砍P', value: 'nonmagicalslashing' },
+  { label: '钝击M', value: 'bludgeoning' },
+  { label: '穿刺M', value: 'piercing' },
+  { label: '挥砍M', value: 'slashing' },
+  { label: '火焰', value: 'fire' },
+  { label: '寒冷', value: 'cold' },
+  { label: '闪电', value: 'lightning' },
+  { label: '雷鸣', value: 'thunder' },
+  { label: '毒素', value: 'poison' },
+  { label: '强酸', value: 'acid' },
+  { label: '心灵', value: 'psychic' },
+  { label: '力场', value: 'force' },
+  { label: '光耀', value: 'radiant' },
+  { label: '暗蚀', value: 'necrotic' },
+]
 
 // ==========================================
 // 3. 核心数据结构定义
@@ -329,6 +363,12 @@ export interface Dnd5Data {
 
   // 装备
   equipment: EquipmentDnd5[]
+
+  // 投掷工具
+  diceTools: {
+    target_susceptibilities: DamageSusceptibilitiesDnd5
+    items: DiceToolItemDnd5[]
+  }
 }
 
 // ==========================================
@@ -404,7 +444,7 @@ export function createEmptyDnd5Data(): Dnd5Data {
         name: '徒手攻击',
         bonus: '@str+@pb',
         damage: '1+@str',
-        damageType: '钝击',
+        damageType: 'nonmagicalbludgeoning',
         notes: '',
       },
     ],
@@ -494,5 +534,26 @@ export function createEmptyDnd5Data(): Dnd5Data {
       pp: 0,
     },
     equipment: [],
+    diceTools: {
+      target_susceptibilities: {
+        nonmagicalbludgeoning: 'normal',
+        nonmagicalslashing: 'normal',
+        nonmagicalpiercing: 'normal',
+        bludgeoning: 'normal',
+        slashing: 'normal',
+        piercing: 'normal',
+        fire: 'normal',
+        cold: 'normal',
+        lightning: 'normal',
+        thunder: 'normal',
+        poison: 'normal',
+        acid: 'normal',
+        psychic: 'normal',
+        force: 'normal',
+        radiant: 'normal',
+        necrotic: 'normal',
+      },
+      items: [],
+    },
   }
 }

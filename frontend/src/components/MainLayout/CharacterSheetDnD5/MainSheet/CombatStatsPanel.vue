@@ -5,7 +5,7 @@ import type { Dnd5Data } from '@/stores/rules/dnd5'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import { useDiceBox } from '@/composables/useDiceBox'
 import { addDiceResult } from '@/stores/dice-result'
-import RollConfigPopover from './RollConfigPopover.vue'
+import RollConfigPopover from '../Common/RollConfigPopover.vue'
 import { isUsingMouse } from '@/composables/useGlobalState'
 
 const store = useActiveCharacterStore()

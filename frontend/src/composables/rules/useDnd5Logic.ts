@@ -180,7 +180,7 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
       name: '',
       bonus: '',
       damage: '',
-      damageType: '',
+      damageType: 'nonmagicalbludgeoning',
       notes: '',
     })
   }

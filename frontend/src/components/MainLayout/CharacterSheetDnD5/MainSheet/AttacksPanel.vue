@@ -1,16 +1,16 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
-import type { Dnd5Data } from '@/stores/rules/dnd5'
+import { DAMAGE_OPTIONS, type Dnd5Data } from '@/stores/rules/dnd5'
 import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import HitIcon from '@/components/Icons/HitIcon.vue'
 import { useDiceBox } from '@/composables/useDiceBox'
 import { addDiceResult } from '@/stores/dice-result'
-import RollConfigPopover from './RollConfigPopover.vue'
+import RollConfigPopover from '../Common/RollConfigPopover.vue'
 import { isUsingMouse } from '@/composables/useGlobalState'
 
-const showAttackRollConfig = ref<number | null>(null)
+const showAttackRollConfig = ref<string | null>(null)
 const criticalList = ref<number[]>([])
 
 const { parseAndRoll, foldAndCheckNumber } = useDiceBox()
@@ -97,10 +97,10 @@ const updatePopoverPosition = () => {
     left: rect.left + rect.width + 10,
   }
 }
-const openAttackConfig = (e: MouseEvent | HTMLElement, index: number) => {
+const openAttackConfig = (e: MouseEvent | HTMLElement, id: string) => {
   if ('currentTarget' in e) anchorEl.value = e.currentTarget as HTMLElement | null
   else anchorEl.value = e as HTMLElement | null
-  showAttackRollConfig.value = index
+  showAttackRollConfig.value = id
   updatePopoverPosition()
 }
 
@@ -211,19 +211,19 @@ onBeforeUnmount(() => {
               style="position: relative"
               @contextmenu.prevent.stop="
                 (e) => {
-                  if (isUsingMouse) openAttackConfig(e, index)
+                  if (isUsingMouse) openAttackConfig(e, attack.id)
                 }
               "
               v-longpress="
                 (e: PointerEvent, el: HTMLElement) => {
-                  if (!isUsingMouse) openAttackConfig(el, index)
+                  if (!isUsingMouse) openAttackConfig(el, attack.id)
                 }
               "
             >
               <DiceIcon class="clickable" />
               <teleport to="body">
                 <RollConfigPopover
-                  v-if="showAttackRollConfig === index"
+                  v-if="showAttackRollConfig === attack.id"
                   :title="'攻击检定:' + attack.name"
                   :baseModifier="computedBonus[index]?.isValid ? attack.bonus : 0"
                   :style="attackPopoverStyle"
@@ -258,12 +258,11 @@ onBeforeUnmount(() => {
           </div>
 
           <div class="input-wrap col-damage-type">
-            <input
-              type="text"
-              v-model="attack.damageType"
-              class="bare-input text-center"
-              placeholder="挥砍"
-            />
+            <select v-model="attack.damageType" class="dnd-select">
+              <option v-for="option in DAMAGE_OPTIONS" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
           </div>
 
           <div class="input-wrap col-notes">
@@ -348,7 +347,6 @@ onBeforeUnmount(() => {
   color: var(--dnd-ink-secondary);
 }
 .col-damage,
-.col-damage-type,
 .col-bonus {
   text-align: center;
 }
@@ -504,5 +502,18 @@ body.has-mouse .icon-check:active {
   user-select: none;
   color: var(--dnd-ink-secondary);
   font-size: 1rem;
+}
+
+.dnd-select {
+  background: transparent;
+  border: none;
+  width: 100%;
+  outline: none;
+  padding: 2px 4px;
+  color: var(--dnd-ink-primary);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 4px;
 }
 </style>

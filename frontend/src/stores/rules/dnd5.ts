@@ -1,5 +1,8 @@
 // ==========================================
 // 1. 辅助类型、接口定义
+
+import { nanoid } from 'nanoid'
+
 // ==========================================
 export type SixAbilityKeysDnd5 = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'
 
@@ -58,7 +61,7 @@ export interface CoinsDnd5 {
 
 // 武器/攻击
 export interface AttackDnd5 {
-  id: number // 唯一编号
+  id: string // 唯一编号，nanoid生成
   name: string // 武器/攻击名称
   bonus: string // 攻击加值
   damage: string // 伤害
@@ -397,7 +400,7 @@ export function createEmptyDnd5Data(): Dnd5Data {
     },
     attacks: [
       {
-        id: 1,
+        id: nanoid(),
         name: '徒手攻击',
         bonus: '@str+@pb',
         damage: '1+@str',

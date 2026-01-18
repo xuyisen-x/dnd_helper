@@ -3,6 +3,7 @@ import { computed, reactive } from 'vue'
 import type { Dnd5Data, FeatureDnd5, SixAbilityKeysDnd5 } from '@/stores/rules/dnd5'
 import { useDiceBox } from '../useDiceBox'
 import { addDiceResult } from '@/stores/dice-result'
+import { nanoid } from 'nanoid'
 
 export interface FeatureViewDnd5 {
   name: string // 特性名称
@@ -175,10 +176,7 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
 
   const addAttack = (): void => {
     sheet.value.attacks.push({
-      id:
-        sheet.value.attacks.length === 0
-          ? 1
-          : Math.max(...sheet.value.attacks.map((a) => a.id)) + 1,
+      id: nanoid(),
       name: '',
       bonus: '',
       damage: '',

@@ -75,6 +75,8 @@ const toggle_susceptibilities = (
 <style scoped>
 .name {
   margin-left: 8px;
+  width: 3.1rem;
+  text-align: center;
 }
 
 .status-panel {
@@ -99,6 +101,7 @@ const toggle_susceptibilities = (
   justify-content: center;
   flex-direction: row;
   border-bottom: 1px solid var(--dnd-ink-secondary);
+  height: 20px;
 }
 
 .icon-check {

@@ -96,6 +96,9 @@ export interface ClassItemDnd5 {
 
 // 伤害易感性
 export interface DamageSusceptibilitiesDnd5 {
+  nonmagicalbludgeoning: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
+  nonmagicalslashing: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
+  nonmagicalpiercing: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
   bludgeoning: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
   slashing: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
   piercing: 'normal' | 'immunity' | 'resistance' | 'vulnerability'
@@ -170,9 +173,12 @@ export const DND5R_SKILL_FULL_NAMES: Record<keyof SkillsListDnd5, string> = {
 }
 
 export const DAMAGE_TYEP_NAMES: Record<keyof DamageSusceptibilitiesDnd5, string> = {
-  bludgeoning: '钝击',
-  slashing: '挥砍',
-  piercing: '穿刺',
+  nonmagicalbludgeoning: '钝击P',
+  nonmagicalslashing: '挥砍P',
+  nonmagicalpiercing: '穿刺P',
+  bludgeoning: '钝击M',
+  slashing: '挥砍M',
+  piercing: '穿刺M',
   fire: '火焰',
   cold: '寒冷',
   lightning: '闪电',
@@ -401,6 +407,9 @@ export function createEmptyDnd5Data(): Dnd5Data {
     ],
     features: {
       damage_susceptibilities: {
+        nonmagicalbludgeoning: 'normal',
+        nonmagicalslashing: 'normal',
+        nonmagicalpiercing: 'normal',
         bludgeoning: 'normal',
         slashing: 'normal',
         piercing: 'normal',

@@ -17,7 +17,7 @@ const attrs = useAttrs()
 <template>
   <!-- 钝击 -->
   <svg
-    v-if="type === 'bludgeoning'"
+    v-if="type === 'bludgeoning' || type === 'nonmagicalbludgeoning'"
     class="icon"
     :class="attrs.class"
     xmlns="http://www.w3.org/2000/svg"
@@ -32,7 +32,7 @@ const attrs = useAttrs()
   </svg>
   <!-- 挥砍 -->
   <svg
-    v-if="type === 'slashing'"
+    v-if="type === 'slashing' || type === 'nonmagicalslashing'"
     class="icon"
     :class="attrs.class"
     xmlns="http://www.w3.org/2000/svg"
@@ -47,7 +47,7 @@ const attrs = useAttrs()
   </svg>
   <!-- 穿刺 -->
   <svg
-    v-if="type === 'piercing'"
+    v-if="type === 'piercing' || type === 'nonmagicalpiercing'"
     class="icon"
     :class="attrs.class"
     xmlns="http://www.w3.org/2000/svg"

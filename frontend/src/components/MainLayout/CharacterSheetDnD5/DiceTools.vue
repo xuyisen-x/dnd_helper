@@ -2,19 +2,22 @@
 import TargetSusceptibility from './DiceTools/TargetSusceptibility.vue'
 import AttacksBrief from './DiceTools/AttacksBrief.vue'
 import ItemList from './DiceTools/ItemList.vue'
+import ResultPanel from './DiceTools/ResultPanel.vue'
 import { computed, ref } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import { useDiceBox } from '@/composables/useDiceBox'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
-import { addDiceResult } from '@/stores/dice-result'
-import type { OutputNode } from '@/wasm_utils/oxidice/pkg/oxidice'
+import type { ValueSummary, OutputNode } from '@/wasm_utils/oxidice/pkg/oxidice'
+import { useDiceToolsResultStore } from '@/stores/rules/dnd5/dice-tool-stores'
 
 const { foldAndCheckNumber, parseAndRoll } = useDiceBox()
+const resultStore = useDiceToolsResultStore()
 
 const isRolling = ref(false)
 
-const resultTitles = ref<string[]>([])
-const resultNodes = ref<OutputNode[]>([])
+let resultTitles: string[] = []
+let resultNodes: OutputNode[] = []
+const rootValue = ref<ValueSummary | undefined>(undefined)
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -29,10 +32,11 @@ const rollDamage = async () => {
   const result = await parseAndRoll(notation)
   isRolling.value = false
   if (result !== null && result.layout.type === 'list') {
-    addDiceResult(result, notation, '伤害投掷')
     // 记录标题和结果节点
-    resultTitles.value = titles
-    resultNodes.value = result.layout.children
+    resultStore.clearSelectedValue()
+    resultTitles = titles
+    resultNodes = result.layout.children
+    rootValue.value = result.value
 
     // 然后清空投掷次数
     for (const item of sheet.value.diceTools.items) {
@@ -109,6 +113,13 @@ const rollBackSusceptibilities = () => {
     ] = 'normal'
   }
 }
+
+// 清空结果展示
+const clearResults = () => {
+  resultTitles = []
+  resultNodes = []
+  rootValue.value = undefined
+}
 </script>
 
 <template>
@@ -124,6 +135,14 @@ const rollBackSusceptibilities = () => {
       <AttacksBrief />
     </div>
     <div>
+      <div v-if="resultTitles.length > 0 && resultNodes.length === resultTitles.length">
+        <div class="items-header">
+          <div class="label">结果展示</div>
+          <button class="btn-primary" @click="clearResults">清空</button>
+        </div>
+        <ResultPanel :titles="resultTitles" :nodes="resultNodes" :root-value="rootValue!" />
+        <div style="height: 16px"></div>
+      </div>
       <div class="items-header">
         <div class="label">伤害项列表</div>
         <button
@@ -131,7 +150,7 @@ const rollBackSusceptibilities = () => {
           :class="{ hidden: !anySelected || isRolling }"
           @click="rollDamage"
         >
-          进行伤害投掷
+          投掷
         </button>
       </div>
       <ItemList />

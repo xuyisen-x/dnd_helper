@@ -7,6 +7,7 @@ import DiceTools from './CharacterSheetDnD5/DiceTools.vue'
 import SpellList from './CharacterSheetDnD5/SpellList.vue'
 import GlossaryList from './CharacterSheetDnD5/GlossaryList.vue'
 import ShortRestDialog from './CharacterSheetDnD5/ShortRestDialog.vue'
+import { useSpellStore } from '@/stores/rules/dnd5/spells'
 
 // --- Tabs 逻辑 ---
 const currentTab = ref<'main' | 'spells' | 'dice' | 'spell_list' | 'glossary'>('main')
@@ -70,6 +71,9 @@ onMounted(() => {
     })
     resizeObserver.observe(sheetRef.value)
   }
+
+  const spellStore = useSpellStore()
+  spellStore.fetchSpells()
 })
 
 onUnmounted(() => {

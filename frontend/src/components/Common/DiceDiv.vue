@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useDiceBox } from '@/composables/useDiceBox'
+import { useSpellStore } from '@/stores/rules/dnd5/spells'
+
+const spellStore = useSpellStore()
 
 const { initDiceBox, canvasOpacity } = useDiceBox()
 const isReady = ref(false)
@@ -12,9 +15,13 @@ onMounted(async () => {
     alert(error)
   }
 })
+
+const showInitPage = computed(() => {
+  return spellStore.isLoading || !isReady.value
+})
 </script>
 <template>
-  <div v-if="!isReady" class="loading-overlay">
+  <div v-if="showInitPage" class="loading-overlay">
     <div class="loading-content">
       <p>正在初始化……</p>
     </div>

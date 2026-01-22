@@ -4,6 +4,7 @@ import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import ClassManager from './ClassManager.vue'
+import RuleToggleButton from '../Common/RuleToggleButton.vue'
 import { confirmationBox } from '@/composables/useConfirmationBox'
 import { useShortRestDialog } from '@/composables/dnd5/useShortRestDialog'
 
@@ -52,6 +53,7 @@ const longRestCliked = async () => {
           <label>角色姓名</label>
         </div>
         <div class="btn-group">
+          <RuleToggleButton />
           <div class="rest-btn short-rest" @click="shortRestClicked">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
               <g fill="currentColor">
@@ -244,7 +246,7 @@ const longRestCliked = async () => {
 
 .btn-group {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 10px;
 }
 

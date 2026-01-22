@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import SpellSearchBar from './SpellList/SpellSearchBar.vue'
 import SpellResultsTable from './SpellList/SpellResultsTable.vue'
 import SpellDetailPanel from './SpellList/SpellDetailPanel.vue'
+import RuleToggleButton from './Common/RuleToggleButton.vue'
 import { useSpellStore } from '@/stores/rules/dnd5/spells'
 import type { Klass, MagicSchool, Source, Spell } from '@/types/dnd5-spells'
 
@@ -110,6 +111,7 @@ const filteredSpells = computed(() => {
     <header class="header">
       <div class="title">
         <h1>万法大全速查表</h1>
+        <RuleToggleButton />
       </div>
       <SpellSearchBar v-model="searchKeys" />
     </header>
@@ -144,6 +146,13 @@ const filteredSpells = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  justify-items: center;
+  justify-content: space-between;
 }
 
 .title h1 {

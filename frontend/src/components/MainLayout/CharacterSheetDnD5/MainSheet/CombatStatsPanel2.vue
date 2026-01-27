@@ -4,6 +4,7 @@ import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import { useDnd5Logic, formatWithSign } from '@/composables/rules/useDnd5Logic'
 import EditPopover from '../Common/EditPopover.vue'
+import EditArrayPopover from '../Common/EditArrayPopover.vue'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import RollConfigPopover from '../Common/RollConfigPopover.vue'
 import { useDiceBox } from '@/composables/useDiceBox'
@@ -127,12 +128,12 @@ const openConfig = () => {
             >{{ formatWithSign(initiativeTotal) }}
           </span>
 
-          <!-- <EditPopover
+          <EditArrayPopover
             v-if="isEditingInit"
             v-model="sheet.extra_modify.initiative"
             @close="isEditingInit = false"
             @click.stop
-          /> -->
+          />
         </div>
         <div class="deco-lines"></div>
       </div>

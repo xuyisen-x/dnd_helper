@@ -7,6 +7,7 @@ import { useDnd5Logic, formatWithSign } from '@/composables/rules/useDnd5Logic'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import SkillDetailsPopover from './SkillDetailsPopover.vue'
 import SaveDetailsPopover from './SaveDetailsPopover.vue'
+import EditArrayPopover from '../Common/EditArrayPopover.vue'
 import OneAutoFitText from '@/components/Common/OneRowAutoFitText.vue'
 import RollConfigPopover from '../Common/RollConfigPopover.vue'
 import { useDiceBox } from '@/composables/useDiceBox'
@@ -186,7 +187,8 @@ const openConfig = (skillKey: string) => {
           @click="sheet.abilities[abilityKey].save = !sheet.abilities[abilityKey].save"
         ></div>
         <div
-          class="modify-num clickable"
+          class="modify-num"
+          :class="{ clickable: currentEditPopover !== 'save' }"
           @contextmenu.prevent
           @click="modifyNumClicked('save')"
           @mouseenter="mouseEnterDetails('save')"
@@ -200,12 +202,12 @@ const openConfig = (skillKey: string) => {
             }}</span>
           </OneAutoFitText>
 
-          <!-- <EditPopover
+          <EditArrayPopover
             v-if="currentEditPopover === 'save'"
             v-model="sheet.extra_modify.save[props.abilityKey]"
             @close="currentEditPopover = null"
             @click.stop
-          /> -->
+          />
           <SaveDetailsPopover
             v-if="hoverTargetKey === 'save' && showDetails"
             :ability="props.abilityKey"
@@ -245,7 +247,8 @@ const openConfig = (skillKey: string) => {
           @click="sheet.skills[skillKey].prof = !sheet.skills[skillKey].prof"
         ></div>
         <div
-          class="modify-num clickable"
+          class="modify-num"
+          :class="{ clickable: currentEditPopover !== skillKey }"
           @contextmenu.prevent
           @click="modifyNumClicked(skillKey)"
           @mouseenter="mouseEnterDetails(skillKey)"
@@ -256,12 +259,12 @@ const openConfig = (skillKey: string) => {
           <OneAutoFitText :min-size="10" :max-size="16">
             <span class="modify-num-text"> {{ formatWithSign(skillModifies[skillKey]) }}</span>
           </OneAutoFitText>
-          <!-- <EditPopover
+          <EditArrayPopover
             v-if="currentEditPopover === skillKey"
             v-model="sheet.extra_modify.skill[skillKey]"
             @close="currentEditPopover = null"
             @click.stop
-          /> -->
+          />
           <SkillDetailsPopover
             v-if="hoverTargetKey === skillKey && showDetails"
             :skill-key="skillKey"

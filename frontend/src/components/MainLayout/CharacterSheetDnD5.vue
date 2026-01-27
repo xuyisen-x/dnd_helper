@@ -122,13 +122,13 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center; /* 水平居中 */
   width: 100%;
-  overflow-x: hidden; /* 防止极小屏幕出现横向滚动条 */
+  overflow-x: visible; /* 防止极小屏幕出现横向滚动条 */
 }
 
 /* 2. 中间层：关键修复层 */
 .scale-wrapper {
   /* 必须 hidden，Safari 才会忽略 transform 之前的原始尺寸 */
-  overflow: hidden;
+  overflow: visible;
   /* 平滑过渡，让缩放看起来更丝滑 */
   transition:
     width 0.1s linear,

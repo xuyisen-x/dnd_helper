@@ -35,7 +35,7 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
   >
 
   const costomMacroReplace = (input: string) => {
-    const regex = /@(ras|str|dex|con|int|wis|cha|pb|lv\d+)\b/gi
+    const regex = /@(att\.\S+|(?:ras|str|dex|con|int|wis|cha|pb|lv\d+)\b)/gi
     return input.replace(regex, (match, key) => {
       const lowerKey = key.toLowerCase()
 
@@ -50,10 +50,18 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
           // lv0 对应总等级
           value = totalLevel.value
         } else {
-          value = sheet.value.basic.classes[index - 1]?.level || 0
+          const tmp = sheet.value.basic.classes[index - 1]?.level
+          value = tmp !== undefined ? tmp : `@${lowerKey}` // 如果没有该职业，返回原表达式
         }
       } else if (lowerKey === 'ras') {
         value = 'sortd([4d6kh3]**6)' // 这里返回一个骰子表达式字符串，表示属性点随机方法
+      } else if (lowerKey.startsWith('att.')) {
+        const attName = lowerKey.slice(4)
+        if (attunedItems.value.includes(attName)) {
+          value = 1
+        } else {
+          value = 0
+        }
       }
       return String(value)
     })
@@ -295,6 +303,10 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
     return equipmentView.value.reduce((count, equip) => {
       return count + (equip.attunement ? 1 : 0)
     }, 0)
+  })
+
+  const attunedItems = computed(() => {
+    return equipmentView.value.filter((equip) => equip.attunement).map((equip) => equip.name)
   })
 
   // 长休逻辑
@@ -669,6 +681,7 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
     featFeaturesView,
     equipmentView,
     attunedCount,
+    attunedItems,
     longRest,
     shortRest,
     spellcastingLevel,

@@ -89,7 +89,7 @@ onUnmounted(() => {
         主要属性
       </button>
       <button :class="{ active: currentTab === 'spells' }" @click="currentTab = 'spells'">
-        法术
+        法术表
       </button>
       <button :class="{ active: currentTab === 'dice' }" @click="currentTab = 'dice'">
         伤害计算器

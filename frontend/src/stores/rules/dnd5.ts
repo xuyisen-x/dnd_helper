@@ -1,4 +1,5 @@
 import { nanoid } from 'nanoid'
+import type { Spell } from '@/types/dnd5-spells'
 
 // ==========================================
 // 1. 辅助类型、接口定义
@@ -72,7 +73,6 @@ export interface AttackDnd5 {
 
 // 法术位
 export interface SpellSlotDnd5 {
-  total: number // 法术位总数
   used: number // 已使用的法术位数
 }
 
@@ -149,6 +149,18 @@ export interface DiceToolItemDnd5 {
   damageType: keyof DamageSusceptibilitiesDnd5 // 伤害类型
   count: number // 计数器
   criticalCount: number // 暴击计数器
+}
+
+// 法术类型
+export type SpellTypeDnd5 = Spell | string // 支持自定义法术或者直接使用法术表中的法术
+
+// 法术表类型
+export interface SpellTableDnd5 {
+  name: string // 法术表名称
+  ability: 'int' | 'wis' | 'cha' | '' // 施法属性
+  extra_attack_bonus: [string, string][] // 额外攻击加值，[标签, 表达式]
+  extra_dc: [string, string][] // 额外豁免DC，[标签, 表达式]
+  spells: [SpellTypeDnd5, boolean][] // 法术列表，boolean表示该法术是否已准备
 }
 
 // ==========================================
@@ -306,41 +318,47 @@ export interface Dnd5Data {
   // --- 法术 ---
   spells: {
     slots: SpellSlotsDnd5
+    level: string // 施法者等级表达式
     pact_slots: SpellSlotsDnd5
-    list: string[]
+    pact_level: string // 契约法术等级表达式
+    list: SpellTableDnd5[]
     ability: 'int' | 'wis' | 'cha' | ''
   }
 
+  // --- 额外加成 ---
+  // [标签，表达式] 的数组形式
   extra_modify: {
     save: {
-      str: string
-      dex: string
-      con: string
-      int: string
-      wis: string
-      cha: string
+      str: [string, string][]
+      dex: [string, string][]
+      con: [string, string][]
+      int: [string, string][]
+      wis: [string, string][]
+      cha: [string, string][]
     }
+    save_all: [string, string][] // 全豁免增加，比如防护斗篷
     skill: {
-      athletics: string
-      acrobatics: string
-      sleight_of_hand: string
-      stealth: string
-      arcana: string
-      history: string
-      investigation: string
-      nature: string
-      religion: string
-      animal_handling: string
-      insight: string
-      medicine: string
-      perception: string
-      survival: string
-      deception: string
-      intimidation: string
-      performance: string
-      persuasion: string
+      athletics: [string, string][]
+      acrobatics: [string, string][]
+      sleight_of_hand: [string, string][]
+      stealth: [string, string][]
+      arcana: [string, string][]
+      history: [string, string][]
+      investigation: [string, string][]
+      nature: [string, string][]
+      religion: [string, string][]
+      animal_handling: [string, string][]
+      insight: [string, string][]
+      medicine: [string, string][]
+      perception: [string, string][]
+      survival: [string, string][]
+      deception: [string, string][]
+      intimidation: [string, string][]
+      performance: [string, string][]
+      persuasion: [string, string][]
     }
-    initiative: string
+    skill_all: [string, string][] // 全技能增加，比如万事通
+    initiative: [string, string][]
   }
 
   // 立绘图片的Base64字符串
@@ -473,53 +491,57 @@ export function createEmptyDnd5Data(): Dnd5Data {
     },
     spells: {
       slots: {
-        1: { total: 0, used: 0 },
-        2: { total: 0, used: 0 },
-        3: { total: 0, used: 0 },
-        4: { total: 0, used: 0 },
-        5: { total: 0, used: 0 },
-        6: { total: 0, used: 0 },
-        7: { total: 0, used: 0 },
-        8: { total: 0, used: 0 },
-        9: { total: 0, used: 0 },
+        1: { used: 0 },
+        2: { used: 0 },
+        3: { used: 0 },
+        4: { used: 0 },
+        5: { used: 0 },
+        6: { used: 0 },
+        7: { used: 0 },
+        8: { used: 0 },
+        9: { used: 0 },
       },
+      level: '0',
       pact_slots: {
-        1: { total: 0, used: 0 },
-        2: { total: 0, used: 0 },
-        3: { total: 0, used: 0 },
-        4: { total: 0, used: 0 },
-        5: { total: 0, used: 0 },
-        6: { total: 0, used: 0 },
-        7: { total: 0, used: 0 },
-        8: { total: 0, used: 0 },
-        9: { total: 0, used: 0 },
+        1: { used: 0 },
+        2: { used: 0 },
+        3: { used: 0 },
+        4: { used: 0 },
+        5: { used: 0 },
+        6: { used: 0 },
+        7: { used: 0 },
+        8: { used: 0 },
+        9: { used: 0 },
       },
+      pact_level: '0',
       list: [],
       ability: '',
     },
     extra_modify: {
-      save: { str: '', dex: '', con: '', int: '', wis: '', cha: '' },
+      save: { str: [], dex: [], con: [], int: [], wis: [], cha: [] },
+      save_all: [],
       skill: {
-        athletics: '',
-        acrobatics: '',
-        sleight_of_hand: '',
-        stealth: '',
-        arcana: '',
-        history: '',
-        investigation: '',
-        nature: '',
-        religion: '',
-        animal_handling: '',
-        insight: '',
-        medicine: '',
-        perception: '',
-        survival: '',
-        deception: '',
-        intimidation: '',
-        performance: '',
-        persuasion: '',
+        athletics: [],
+        acrobatics: [],
+        sleight_of_hand: [],
+        stealth: [],
+        arcana: [],
+        history: [],
+        investigation: [],
+        nature: [],
+        religion: [],
+        animal_handling: [],
+        insight: [],
+        medicine: [],
+        perception: [],
+        survival: [],
+        deception: [],
+        intimidation: [],
+        performance: [],
+        persuasion: [],
       },
-      initiative: '',
+      skill_all: [],
+      initiative: [],
     },
     portraitBase64: '',
     background: {

@@ -76,7 +76,7 @@ const removeAvatar = () => {
         if (!isUsingMouse) removeAvatar()
       }
     "
-    title="左键上传，右键移除"
+    title="左键添加，右键移除"
   >
     <img
       v-if="sheet.portraitBase64"
@@ -98,7 +98,7 @@ const removeAvatar = () => {
           <path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
         </g>
       </svg>
-      <span class="upload-text">点击以上传立绘</span>
+      <span class="upload-text">点击以添加立绘</span>
     </div>
 
     <input

@@ -15,12 +15,13 @@ const sheet = computed({
   set: (val) => (store.data = val),
 })
 
-const { abilityModifies, proficiencyBonus, saveModifies, evalCostomFamula } = useDnd5Logic(sheet)
+const { abilityModifies, proficiencyBonus, saveModifies, evalExtraModify } = useDnd5Logic(sheet)
 
 const totalModify = computed(() => saveModifies[props.ability])
 const abilityModify = computed(() => abilityModifies[props.ability])
 const isProficient = computed(() => sheet.value.abilities[props.ability].save)
 const extra_modify = computed(() => sheet.value.extra_modify.save[props.ability])
+const extra_modify_all = computed(() => sheet.value.extra_modify.save_all)
 </script>
 
 <template>
@@ -46,9 +47,18 @@ const extra_modify = computed(() => sheet.value.extra_modify.save[props.ability]
       <span class="value">{{ isProficient ? formatWithSign(proficiencyBonus) : '—' }}</span>
     </div>
 
-    <div class="detail-row" :class="{ inactive: extra_modify === '' }">
+    <div class="detail-row" :class="{ inactive: extra_modify.length === 0 }">
       <span class="label">额外调整</span>
-      <span class="value">{{ extra_modify !== '' ? evalCostomFamula(extra_modify) : '—' }}</span>
+      <span class="value">{{
+        extra_modify.length !== 0 ? evalExtraModify(extra_modify) : '—'
+      }}</span>
+    </div>
+
+    <div class="detail-row" :class="{ inactive: extra_modify_all.length === 0 }">
+      <span class="label">全局额外调整</span>
+      <span class="value">{{
+        extra_modify_all.length !== 0 ? evalExtraModify(extra_modify_all) : '—'
+      }}</span>
     </div>
   </div>
 </template>

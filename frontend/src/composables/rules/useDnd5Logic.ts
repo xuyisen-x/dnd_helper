@@ -1,6 +1,6 @@
 import type { Ref, ComputedRef } from 'vue'
 import { computed, reactive } from 'vue'
-import type { Dnd5Data, FeatureDnd5, SixAbilityKeysDnd5 } from '@/stores/rules/dnd5'
+import type { Dnd5Data, FeatureDnd5, SixAbilityKeysDnd5, SpellSlotDnd5 } from '@/stores/rules/dnd5'
 import { useDiceBox } from '../useDiceBox'
 import { addDiceResult } from '@/stores/dice-result'
 import { nanoid } from 'nanoid'
@@ -59,11 +59,19 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
     })
   }
 
-  const evalCostomFamula = (input: string): number => {
+  const evalCustomFormula = (input: string): number => {
     if (input.trim() === '') return 0
     const { foldAndCheckConstantsInteger } = useDiceBox()
     const [result, value] = foldAndCheckConstantsInteger(input)
     return result ? value : 0
+  }
+
+  const evalExtraModify = (modifies: [string, string][]): number => {
+    let total = 0
+    for (const [, expr] of modifies) {
+      total += evalCustomFormula(expr)
+    }
+    return total
   }
 
   const totalLevel = computed(() => {
@@ -102,18 +110,20 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
 
   // 计算成本较大，需要缓存
   const extraSaveModifies: Record<SixAbilityKeysDnd5, number> = reactive({
-    str: computed(() => evalCostomFamula(sheet.value.extra_modify.save.str)),
-    dex: computed(() => evalCostomFamula(sheet.value.extra_modify.save.dex)),
-    con: computed(() => evalCostomFamula(sheet.value.extra_modify.save.con)),
-    int: computed(() => evalCostomFamula(sheet.value.extra_modify.save.int)),
-    wis: computed(() => evalCostomFamula(sheet.value.extra_modify.save.wis)),
-    cha: computed(() => evalCostomFamula(sheet.value.extra_modify.save.cha)),
+    str: computed(() => evalExtraModify(sheet.value.extra_modify.save.str)),
+    dex: computed(() => evalExtraModify(sheet.value.extra_modify.save.dex)),
+    con: computed(() => evalExtraModify(sheet.value.extra_modify.save.con)),
+    int: computed(() => evalExtraModify(sheet.value.extra_modify.save.int)),
+    wis: computed(() => evalExtraModify(sheet.value.extra_modify.save.wis)),
+    cha: computed(() => evalExtraModify(sheet.value.extra_modify.save.cha)),
   })
+  const extraSaveAllModify = computed(() => evalExtraModify(sheet.value.extra_modify.save_all))
   const getSaveModify = (ability: SixAbilityKeysDnd5): number => {
     return (
       abilityModifies[ability] + // 能力调整值
       (sheet.value.abilities[ability].save ? proficiencyBonus.value : 0) + // 如果熟练豁免加上熟练加值
-      extraSaveModifies[ability] // 加上用户自定义的额外调整值
+      extraSaveModifies[ability] + // 加上用户自定义的额外调整值
+      extraSaveAllModify.value // 全豁免额外调整值
     )
   }
   const saveModifies: Record<SixAbilityKeysDnd5, number> = reactive({
@@ -128,12 +138,13 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
   const extraSkillModifies: Record<keyof Dnd5Data['skills'], number> = reactive(
     SKILL_KEYS.reduce(
       (acc, skillKey) => {
-        acc[skillKey] = computed(() => evalCostomFamula(sheet.value.extra_modify.skill[skillKey]))
+        acc[skillKey] = computed(() => evalExtraModify(sheet.value.extra_modify.skill[skillKey]))
         return acc
       },
       {} as Record<keyof Dnd5Data['skills'], ComputedRef<number>>,
     ),
   )
+  const extraSkillAllModify = computed(() => evalExtraModify(sheet.value.extra_modify.skill_all))
   const getSkillModify = (skillKey: keyof Dnd5Data['skills']): number => {
     const skill = sheet.value.skills[skillKey]
     const ability = skill.key
@@ -141,7 +152,8 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
       abilityModifies[ability] + // 能力调整值
       (skill.prof ? proficiencyBonus.value : 0) + // 如果熟练该技能加上熟练加值
       (skill.prof && skill.expert ? proficiencyBonus.value : 0) + // 如果精通该技能再加一次熟练加值
-      extraSkillModifies[skillKey] // 加上用户自定义的额外调整值
+      extraSkillModifies[skillKey] + // 加上用户自定义的额外调整值
+      extraSkillAllModify.value // 全技能额外调整值
     )
   }
   const skillModifies: Record<keyof Dnd5Data['skills'], number> = reactive(
@@ -198,14 +210,14 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
       abilityModifies.dex +
       // 加上用户自定义的额外调整值（表达式计算）
       // 不允许不确定性，必须是确定的数字
-      evalCostomFamula(sheet.value.extra_modify.initiative)
+      evalExtraModify(sheet.value.extra_modify.initiative)
     )
   })
 
   // 特性限制和使用次数相关逻辑
   const calculateLimit = (limitStr: string): number => {
     if (limitStr.trim() === '') return Infinity
-    const max = Math.floor(evalCostomFamula(limitStr))
+    const max = Math.floor(evalCustomFormula(limitStr))
     return Math.max(max, 0)
   }
 
@@ -512,6 +524,131 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
     }
   }
 
+  // 法术等级：
+  const spellcastingLevel = computed(() => {
+    const levelExpr = sheet.value.spells.level.trim()
+    if (levelExpr === '') return 0
+    let level = Math.floor(evalCustomFormula(levelExpr))
+    if (level < 0) level = 0
+    if (level > 20) level = 20
+    return level
+  })
+  const pactSpellcastingLevel = computed(() => {
+    const levelExpr = sheet.value.spells.pact_level.trim()
+    if (levelExpr === '') return 0
+    let level = Math.floor(evalCustomFormula(levelExpr))
+    if (level < 0) level = 0
+    if (level > 20) level = 20
+    return level
+  })
+
+  const spellSlotsTotal = computed(() => {
+    const spellSlotsTable: Record<number, Record<number, number>> = {
+      0: {},
+      1: { 1: 2 },
+      2: { 1: 3 },
+      3: { 1: 4, 2: 2 },
+      4: { 1: 4, 2: 3 },
+      5: { 1: 4, 2: 3, 3: 2 },
+      6: { 1: 4, 2: 3, 3: 3 },
+      7: { 1: 4, 2: 3, 3: 3, 4: 1 },
+      8: { 1: 4, 2: 3, 3: 3, 4: 2 },
+      9: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 1 },
+      10: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2 },
+      11: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1 },
+      12: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1 },
+      13: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1 },
+      14: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1 },
+      15: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1, 8: 1 },
+      16: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1, 8: 1 },
+      17: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 2, 6: 1, 7: 1, 8: 1, 9: 1 },
+      18: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 3, 6: 1, 7: 1, 8: 1, 9: 1 },
+      19: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 3, 6: 2, 7: 1, 8: 1, 9: 1 },
+      20: { 1: 4, 2: 3, 3: 3, 4: 3, 5: 3, 6: 2, 7: 2, 8: 1, 9: 1 },
+    }
+    // 返回对应等级的法术位表，没有的补0
+    const slotsAtLevel = spellSlotsTable[spellcastingLevel.value] ?? {}
+    const result: Record<number, number> = {}
+    for (let i = 1; i <= 9; i++) {
+      result[i] = slotsAtLevel[i] || 0
+    }
+    return result
+  })
+
+  const pactSpellSlotsTotal = computed(() => {
+    const spellSlotsTable: Record<number, Record<number, number>> = {
+      0: {},
+      1: { 1: 1 },
+      2: { 1: 2 },
+      3: { 2: 2 },
+      4: { 2: 2 },
+      5: { 3: 2 },
+      6: { 3: 2 },
+      7: { 4: 2 },
+      8: { 4: 2 },
+      9: { 5: 2 },
+      10: { 5: 2 },
+      11: { 5: 3 },
+      12: { 5: 3 },
+      13: { 5: 3 },
+      14: { 5: 3 },
+      15: { 5: 3 },
+      16: { 5: 3 },
+      17: { 5: 4 },
+      18: { 5: 4 },
+      19: { 5: 4 },
+      20: { 5: 4 },
+    }
+    // 返回对应等级的法术位表，没有的补0
+    const slotsAtLevel = spellSlotsTable[pactSpellcastingLevel.value] ?? {}
+    const result: Record<number, number> = {}
+    for (let i = 1; i <= 9; i++) {
+      result[i] = slotsAtLevel[i] || 0
+    }
+    return result
+  })
+
+  // 法术视图：
+  const getSpellSlotsView = (is_pact: boolean) => {
+    return computed(() => {
+      const slots = is_pact ? sheet.value.spells.pact_slots : sheet.value.spells.slots
+      const totalSlots = is_pact ? pactSpellSlotsTotal.value : spellSlotsTotal.value
+      const view: Record<
+        SpellLevel,
+        { total: number; used: number; remaining: number; setUsed: (x: number) => void }
+      > = {
+        1: { total: 0, used: 0, remaining: 0, setUsed: () => {} },
+        2: { total: 0, used: 0, remaining: 0, setUsed: () => {} },
+        3: { total: 0, used: 0, remaining: 0, setUsed: () => {} },
+        4: { total: 0, used: 0, remaining: 0, setUsed: () => {} },
+        5: { total: 0, used: 0, remaining: 0, setUsed: () => {} },
+        6: { total: 0, used: 0, remaining: 0, setUsed: () => {} },
+        7: { total: 0, used: 0, remaining: 0, setUsed: () => {} },
+        8: { total: 0, used: 0, remaining: 0, setUsed: () => {} },
+        9: { total: 0, used: 0, remaining: 0, setUsed: () => {} },
+      }
+
+      type SpellLevel = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+      for (let i = 1 as SpellLevel; i <= 9; i++) {
+        const slotData: SpellSlotDnd5 = slots[i]
+        const total = totalSlots[i] || 0
+        const used = Math.min(slotData.used, total)
+        const remaining = total - used
+        const setUsed = (x: number) => {
+          let targetVal = x < 0 ? 0 : x
+          if (targetVal > total) targetVal = total
+          slotData.used = targetVal
+        }
+        view[i] = { total, used, remaining, setUsed }
+      }
+
+      return view
+    })
+  }
+
+  const spellSlotsView = getSpellSlotsView(false)
+  const pactSpellSlotsView = getSpellSlotsView(true)
+
   return {
     costomMacroReplace,
     totalLevel,
@@ -525,7 +662,8 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
     removeAttack,
     passivePerception,
     initiativeTotal,
-    evalCostomFamula,
+    evalCostomFamula: evalCustomFormula,
+    evalExtraModify,
     classFeaturesView,
     raceFeaturesView,
     featFeaturesView,
@@ -533,5 +671,9 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
     attunedCount,
     longRest,
     shortRest,
+    spellcastingLevel,
+    pactSpellcastingLevel,
+    spellSlotsView,
+    pactSpellSlotsView,
   }
 }

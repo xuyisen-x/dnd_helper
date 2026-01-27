@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import { useDnd5Logic, formatWithSign } from '@/composables/rules/useDnd5Logic'
-import EditPopover from './EditPopover.vue'
+import EditPopover from '../Common/EditPopover.vue'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import RollConfigPopover from '../Common/RollConfigPopover.vue'
 import { useDiceBox } from '@/composables/useDiceBox'
@@ -127,12 +127,12 @@ const openConfig = () => {
             >{{ formatWithSign(initiativeTotal) }}
           </span>
 
-          <EditPopover
+          <!-- <EditPopover
             v-if="isEditingInit"
             v-model="sheet.extra_modify.initiative"
             @close="isEditingInit = false"
             @click.stop
-          />
+          /> -->
         </div>
         <div class="deco-lines"></div>
       </div>
@@ -143,12 +143,9 @@ const openConfig = () => {
         </div>
         <div class="panel-divider"></div>
         <div class="panel-content">
-          <span
-            class="big-value clickable"
-            @click="isEditingAc = true"
-            title="点击修改先攻表达式"
-            >{{ evalCostomFamula(sheet.combat.ac) }}</span
-          >
+          <span class="big-value clickable" @click="isEditingAc = true" title="点击修改AC表达式">{{
+            evalCostomFamula(sheet.combat.ac)
+          }}</span>
           <EditPopover
             v-if="isEditingAc"
             v-model="sheet.combat.ac"

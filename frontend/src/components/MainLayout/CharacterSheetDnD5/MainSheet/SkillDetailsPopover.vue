@@ -15,7 +15,7 @@ const sheet = computed({
   set: (val) => (store.data = val),
 })
 
-const { skillModifies, abilityModifies, proficiencyBonus, evalCostomFamula } = useDnd5Logic(sheet)
+const { skillModifies, abilityModifies, proficiencyBonus, evalExtraModify } = useDnd5Logic(sheet)
 
 const abilityKey = computed(() => sheet.value.skills[props.skillKey].key)
 const totalModify = computed(() => skillModifies[props.skillKey])
@@ -23,6 +23,7 @@ const abilityModify = computed(() => abilityModifies[abilityKey.value])
 const isProficient = computed(() => sheet.value.skills[props.skillKey].prof)
 const isExpert = computed(() => sheet.value.skills[props.skillKey].expert && isProficient.value)
 const extra_modify = computed(() => sheet.value.extra_modify.skill[props.skillKey])
+const extra_modify_all = computed(() => sheet.value.extra_modify.skill_all)
 </script>
 
 <template>
@@ -53,9 +54,18 @@ const extra_modify = computed(() => sheet.value.extra_modify.skill[props.skillKe
       <span class="value">{{ isExpert ? formatWithSign(proficiencyBonus) : '—' }}</span>
     </div>
 
-    <div class="detail-row" :class="{ inactive: extra_modify === '' }">
+    <div class="detail-row" :class="{ inactive: extra_modify.length === 0 }">
       <span class="label">额外调整</span>
-      <span class="value">{{ extra_modify !== '' ? evalCostomFamula(extra_modify) : '—' }}</span>
+      <span class="value">{{
+        extra_modify.length !== 0 ? evalExtraModify(extra_modify) : '—'
+      }}</span>
+    </div>
+
+    <div class="detail-row" :class="{ inactive: extra_modify_all.length === 0 }">
+      <span class="label">全局额外调整</span>
+      <span class="value">{{
+        extra_modify_all.length !== 0 ? evalExtraModify(extra_modify_all) : '—'
+      }}</span>
     </div>
   </div>
 </template>

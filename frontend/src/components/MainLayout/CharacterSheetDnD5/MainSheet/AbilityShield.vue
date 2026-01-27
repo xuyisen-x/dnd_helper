@@ -5,7 +5,6 @@ import { DND5R_ABILITY_FULL_NAMES, DND5R_SKILL_FULL_NAMES } from '@/stores/rules
 import type { Dnd5Data, SixAbilityKeysDnd5, SkillsListDnd5 } from '@/stores/rules/dnd5'
 import { useDnd5Logic, formatWithSign } from '@/composables/rules/useDnd5Logic'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
-import EditPopover from './EditPopover.vue'
 import SkillDetailsPopover from './SkillDetailsPopover.vue'
 import SaveDetailsPopover from './SaveDetailsPopover.vue'
 import OneAutoFitText from '@/components/Common/OneRowAutoFitText.vue'
@@ -201,12 +200,12 @@ const openConfig = (skillKey: string) => {
             }}</span>
           </OneAutoFitText>
 
-          <EditPopover
+          <!-- <EditPopover
             v-if="currentEditPopover === 'save'"
             v-model="sheet.extra_modify.save[props.abilityKey]"
             @close="currentEditPopover = null"
             @click.stop
-          />
+          /> -->
           <SaveDetailsPopover
             v-if="hoverTargetKey === 'save' && showDetails"
             :ability="props.abilityKey"
@@ -257,12 +256,12 @@ const openConfig = (skillKey: string) => {
           <OneAutoFitText :min-size="10" :max-size="16">
             <span class="modify-num-text"> {{ formatWithSign(skillModifies[skillKey]) }}</span>
           </OneAutoFitText>
-          <EditPopover
+          <!-- <EditPopover
             v-if="currentEditPopover === skillKey"
             v-model="sheet.extra_modify.skill[skillKey]"
             @close="currentEditPopover = null"
             @click.stop
-          />
+          /> -->
           <SkillDetailsPopover
             v-if="hoverTargetKey === skillKey && showDetails"
             :skill-key="skillKey"

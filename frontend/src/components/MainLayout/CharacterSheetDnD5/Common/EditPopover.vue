@@ -61,10 +61,9 @@ onMounted(() => {
 // 3. 关闭并提交
 const commitAndClose = () => {
   const finalString = isCurrentInputValid.value ? localValue.value : initValue
-  const clearString = finalString.replace(/\s/g, '')
 
   // 发送更新事件
-  emit('update:modelValue', clearString)
+  emit('update:modelValue', finalString)
   // 发送关闭事件
   emit('close')
 }

@@ -113,10 +113,7 @@ const commitAndClose = () => {
     return
   }
 
-  const payload: [string, string][] = localItems.value.map((item) => [
-    item.label.trim(),
-    item.expr.replace(/\s/g, ''),
-  ])
+  const payload: [string, string][] = localItems.value.map((item) => [item.label.trim(), item.expr])
 
   // 清楚payload中空的条目
   for (let i = payload.length - 1; i >= 0; i--) {

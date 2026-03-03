@@ -75,7 +75,7 @@ export const useDiceResultStore = defineStore('dice-result', () => {
 export function addDiceResult(output: OutputNode, notation: string, title: string = '自定义') {
   const { addResult } = useDiceResultStore()
 
-  addResult(output, notation.replace(/\s/g, ''), title)
+  addResult(output, notation, title)
 }
 
 export function removeDiceResult(id: number) {

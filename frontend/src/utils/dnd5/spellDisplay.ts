@@ -68,6 +68,7 @@ const sourceLabels: Record<Source, string> = {
   SCC: 'SCC',
   AAG: 'AAG',
   SO: 'SO',
+  FR: 'FR',
   MODULE: '模组',
 }
 

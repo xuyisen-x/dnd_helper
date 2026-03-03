@@ -56,6 +56,7 @@ const searchKeys = ref({
     'SCC',
     'AAG',
     'SO',
+    'FR',
     'MODULE',
   ] as Source[],
 })

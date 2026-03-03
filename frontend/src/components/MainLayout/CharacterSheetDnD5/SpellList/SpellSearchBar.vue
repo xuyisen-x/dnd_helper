@@ -65,6 +65,7 @@ const SOURCE_OPTS: Source[] = [
   'SCC',
   'AAG',
   'SO',
+  'FR',
   'MODULE',
 ]
 

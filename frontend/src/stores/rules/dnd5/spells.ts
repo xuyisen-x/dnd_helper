@@ -29,7 +29,7 @@ export const useSpellStore = defineStore('spells', () => {
 
       // 3. 本地没有，发起网络请求
       // 'https://npm.elemecdn.com/@xuyisen--x/dnd5-spells-cn@1.0.0/dnd5_spells.json'
-      const url = 'https://unpkg.com/@xuyisen--x/dnd5-spells-cn@1.0.0/dnd5_spells.json'
+      const url = 'https://unpkg.com/@xuyisen--x/dnd5-spells-cn@1.1.1/dnd5_spells.json'
       const response = await fetch(url)
 
       if (!response.ok) throw new Error('网络请求失败')

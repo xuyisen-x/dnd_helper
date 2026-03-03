@@ -35,6 +35,7 @@ export type Source =
   | 'SCC'
   | 'AAG'
   | 'SO'
+  | 'FR'
   | 'MODULE' // 模组自定义
 
 export interface SpellClassInfo {

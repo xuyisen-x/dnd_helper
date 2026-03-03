@@ -26,7 +26,7 @@ const postProcessedSpells: ComputedRef<[Spell, boolean][]> = computed(() => {
   let list: [Spell, boolean][] = props.spells.map((spell) => {
     // 如果当前规则为5E，将所有的PHB24法术，标记为false
     if (rule.value === 'dnd5e') {
-      if (spell.source === 'PHB24') {
+      if (spell.source === 'PHB24' || spell.source === 'FR') {
         return [spell, false]
       } else {
         return [spell, true]

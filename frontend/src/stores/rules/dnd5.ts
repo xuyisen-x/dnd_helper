@@ -160,7 +160,13 @@ export interface SpellTableDnd5 {
   ability: 'int' | 'wis' | 'cha' | '' // 施法属性
   extra_attack_bonus: [string, string][] // 额外攻击加值，[标签, 表达式]
   extra_dc: [string, string][] // 额外豁免DC，[标签, 表达式]
-  spells: [SpellTypeDnd5, boolean][] // 法术列表，boolean表示该法术是否已准备
+  spells: {
+    spell: SpellTypeDnd5 // 具体的法术
+    prepared: boolean // 是否准备
+    freeUsage: string // 免费的使用次数
+    afterLongRest: string // 长休后恢复的免费使用此时
+    afterShortRest: string // 短休后恢复的免费使用次数
+  }[]
 }
 
 // ==========================================

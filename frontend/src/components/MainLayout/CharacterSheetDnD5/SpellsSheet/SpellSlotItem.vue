@@ -47,6 +47,7 @@ const emit = defineEmits<{
 .slot-markers {
   display: flex;
   flex-wrap: wrap;
+  flex-direction: row-reverse;
   gap: 6px;
   align-items: center;
 }

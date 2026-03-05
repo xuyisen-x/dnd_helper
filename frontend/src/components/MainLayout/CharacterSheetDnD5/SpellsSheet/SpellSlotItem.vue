@@ -23,7 +23,7 @@ const emit = defineEmits<{
           active: used < i,
           shadow: used >= i,
         }"
-        @click="emit('click-marker', i)"
+        @click="emit('click-marker', i - 1)"
       ></div>
       <div v-if="total === 0" class="slot-empty">—</div>
     </div>

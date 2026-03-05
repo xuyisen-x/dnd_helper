@@ -37,7 +37,7 @@ const toggleSpellSlotUsed = (level: SpellLevel, index: number) => {
   const slot = slotsView.value[level]
   if (!slot || slot.total === 0) return
   const currentVal = slot.used
-  const nextVal = currentVal === index ? index - 1 : index
+  const nextVal = currentVal === index ? index + 1 : index
   slot.setUsed(nextVal)
 }
 
@@ -45,7 +45,7 @@ const togglePactSpellSlotUsed = (index: number) => {
   const slot = pactSlot.value[0]
   if (!slot || slot.total === 0) return
   const currentVal = slot.used
-  const nextVal = currentVal === index ? index - 1 : index
+  const nextVal = currentVal === index ? index + 1 : index
   slot.setUsed(nextVal)
 }
 

@@ -328,7 +328,6 @@ export interface Dnd5Data {
     pact_slots: SpellSlotsDnd5
     pact_level: string // 契约法术等级表达式
     list: SpellTableDnd5[]
-    ability: 'int' | 'wis' | 'cha' | ''
   }
 
   // --- 额外加成 ---
@@ -521,7 +520,6 @@ export function createEmptyDnd5Data(): Dnd5Data {
       },
       pact_level: '0',
       list: [],
-      ability: '',
     },
     extra_modify: {
       save: { str: [], dex: [], con: [], int: [], wis: [], cha: [] },

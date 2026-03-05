@@ -118,7 +118,7 @@ const completedRollNotation = computed(() => {
 
   const diceExpression = (() => {
     // 如果骰子表达式为空，使用自定义输入，去除头尾空格后，去除头部多余的加号
-    const trimmedCustomFormula = customFormula.value.replace(/\s+/g, '')
+    const trimmedCustomFormula = customFormula.value.trim()
     if (temp === '') {
       return trimmedCustomFormula.replace(/^\+/, '')
     } else if (trimmedCustomFormula === '') {

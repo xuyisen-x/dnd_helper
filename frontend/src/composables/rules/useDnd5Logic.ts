@@ -35,7 +35,7 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
   >
 
   const costomMacroReplace = (input: string) => {
-    const regex = /@(att\.\S+|(?:ras|str|dex|con|int|wis|cha|pb|lv\d+)\b)/gi
+    const regex = /@(att\.\S+|lv\.\S+|(?:ras|str|dex|con|int|wis|cha|pb|lv\d+)\b)/gi
     return input.replace(regex, (match, key) => {
       const lowerKey = key.toLowerCase()
 
@@ -62,6 +62,10 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
         } else {
           value = 0
         }
+      } else if (lowerKey.startsWith('lv.')) {
+        const className = lowerKey.slice(3)
+        const cls = sheet.value.basic.classes.find((c) => c.name.trim() === className)
+        value = cls ? cls.level : `@${lowerKey}` // 如果没有该职业，返回原表达式
       }
       return String(value)
     })

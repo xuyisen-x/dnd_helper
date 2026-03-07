@@ -4,6 +4,7 @@ import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import { showToast } from '@/stores/toast'
 import { isUsingMouse } from '@/composables/useGlobalState'
+import { confirmationBox } from '@/composables/useConfirmationBox'
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -55,8 +56,9 @@ const handleFileChange = (event: Event) => {
 }
 
 // 移除头像 (可选功能：右键移除？或者加个小按钮？这里演示右键移除)
-const removeAvatar = () => {
-  if (confirm('确定要移除立绘吗？')) {
+const removeAvatar = async () => {
+  const confirmed = await confirmationBox('移除立绘', `确定要移除立绘吗？此操作无法撤销。`)
+  if (confirmed) {
     sheet.value.portraitBase64 = ''
   }
 }

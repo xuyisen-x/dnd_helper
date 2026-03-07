@@ -156,6 +156,7 @@ export type SpellTypeDnd5 = Spell | string // 支持自定义法术或者直接�
 
 // 法术表类型
 export interface SpellTableDnd5 {
+  id: string // 唯一编号，nanoid生成
   name: string // 法术表名称
   ability: 'int' | 'wis' | 'cha' | '' // 施法属性
   extra_attack_bonus: [string, string][] // 额外攻击加值，[标签, 表达式]

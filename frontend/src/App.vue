@@ -47,3 +47,22 @@ onUnmounted(() => {
   <ConfirmationDialog />
   <router-view />
 </template>
+
+<style>
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--dnd-ink-secondary);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+body.has-mouse ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--dnd-dragon-red);
+}
+</style>

@@ -44,7 +44,8 @@
           "Spiky eclipse icon"、"Claw hammer icon"、"Energy arrow icon"、"Crossed air flows
           icon"、"Frozen orb icon"、"Lightning helix icon"、"Sonic boom icon"、"Poison bottle
           icon"、"Foam icon"、"Bleeding Eye icon"、"Ringed beam icon"、"Sun radiations
-          icon"、"Flaming sheet icon"、"Interdiction icon"、"Spiky explosion icon"等图标由
+          icon"、"Flaming sheet icon"、"Interdiction icon"、"Spiky explosion icon"、"Croissants
+          pupil icon"、"Crowned heart icon"、"Brain icon"等图标由
           <a href="https://lorcblog.blogspot.com/">Lorc</a>
           创作，基于
           <a href="https://creativecommons.org/licenses/by/3.0/">CC BY 3.0</a>

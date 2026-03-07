@@ -113,24 +113,6 @@ const getDieTitle = (die: DieDetailSummary) => {
 </template>
 
 <style scoped>
-/* --- 滚动条美化 --- */
-::-webkit-scrollbar {
-  height: 6px;
-  width: 6px;
-}
-::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-  border-radius: 3px;
-}
-::-webkit-scrollbar-thumb {
-  background: var(--dnd-ink-secondary);
-  border-radius: 3px;
-  opacity: 0.5;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: var(--dnd-dragon-red);
-}
-
 .value-display-container {
   width: 100%;
   height: 60px;

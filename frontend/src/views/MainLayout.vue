@@ -74,7 +74,6 @@
 
   /* 形状：上方圆角，像文件夹标签 */
   border-radius: 8px 8px 0 0;
-  margin-bottom: -1px; /* 稍微下沉，盖住分割线 */
   border: 1px solid transparent;
 
   transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
@@ -100,7 +99,6 @@ body.has-mouse .nav-link:hover {
 
   font-weight: bold;
   opacity: 1;
-  transform: translateY(1px); /* 微调位置 */
 }
 
 .icon {
@@ -123,24 +121,6 @@ body.has-mouse .nav-link:hover {
   margin: 0 auto;
   padding: 20px;
   min-height: 100%;
-}
-
-/* --- 滚动条美化 (Webkit) --- */
-.main-content::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-.main-content::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.05);
-}
-.main-content::-webkit-scrollbar-thumb {
-  background-color: var(--dnd-ink-secondary);
-  border-radius: 4px;
-  border: 2px solid transparent;
-  background-clip: content-box;
-}
-body.has-mouse .main-content::-webkit-scrollbar-thumb:hover {
-  background-color: var(--dnd-dragon-red);
 }
 
 /* --- 页面切换过渡动画 --- */

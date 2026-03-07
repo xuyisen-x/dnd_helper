@@ -97,7 +97,6 @@ const isEditingPactLevel = ref(false)
           @click.stop
         />
       </div>
-      <div class="deco-lines"></div>
     </div>
     <div class="stat-panel">
       <div class="panel-header">
@@ -119,7 +118,6 @@ const isEditingPactLevel = ref(false)
           @click.stop
         />
       </div>
-      <div class="deco-lines"></div>
     </div>
   </div>
 </template>

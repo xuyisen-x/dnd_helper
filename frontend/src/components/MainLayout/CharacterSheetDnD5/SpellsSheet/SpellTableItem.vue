@@ -4,6 +4,12 @@ import { computed, ref } from 'vue'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import EditArrayPopover from '../Common/EditArrayPopover.vue'
 import AbilityIcon from '@/components/Icons/AbilityIcon.vue'
+import DiceIcon from '@/components/Icons/DiceIcon.vue'
+import RollConfigPopover from '../Common/RollConfigPopover.vue'
+import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
+import { isUsingMouse } from '@/composables/useGlobalState'
+import { useDiceBox } from '@/composables/useDiceBox'
+import { addDiceResult } from '@/stores/dice-result'
 
 const props = defineProps<{
   id: string | null
@@ -15,12 +21,44 @@ const sheet = computed({
   set: (val) => (store.data = val),
 })
 
+const { getSpellAttackBonus, getSpellDC } = useDnd5Logic(sheet)
+
 const currentList = computed(() => {
   return sheet.value.spells.list.find((list) => list.id === props.id)
 })
 
 const isEditingDC = ref(false)
 const isEditingAttackBonus = ref(false)
+
+const spellAttackBonus = computed(() => {
+  if (props.id === null) return 0
+  return getSpellAttackBonus(props.id)
+})
+
+const spellDC = computed(() => {
+  if (props.id === null) return 0
+  return getSpellDC(props.id)
+})
+
+const { parseAndRoll } = useDiceBox()
+
+const rollSpellAttack = async () => {
+  // 首先得到加值
+  const modify = spellAttackBonus.value
+  // // 构造掷骰字符串
+  const rollString = `1d20${modify >= 0 ? '+' : ''}${modify}`
+  const title = `法术攻击掷骰`
+  const result = await parseAndRoll(rollString)
+
+  if (result !== null) {
+    addDiceResult(result, rollString, title)
+  }
+}
+
+const isConfigOpen = ref(false)
+const openConfig = () => {
+  isConfigOpen.value = true
+}
 </script>
 
 <template>
@@ -76,6 +114,28 @@ const isEditingAttackBonus = ref(false)
         <div class="stat-panel">
           <div class="panel-header">
             <span class="label">法术攻击加值</span>
+            <div
+              class="dice-container"
+              @click="rollSpellAttack"
+              @contextmenu.prevent.stop="
+                () => {
+                  if (isUsingMouse) openConfig()
+                }
+              "
+              v-longpress="
+                () => {
+                  if (!isUsingMouse) openConfig()
+                }
+              "
+            >
+              <DiceIcon class="clickable" title="roll!!!" />
+              <RollConfigPopover
+                v-if="isConfigOpen"
+                title="法术攻击掷骰"
+                :baseModifier="spellAttackBonus"
+                @close="isConfigOpen = false"
+              />
+            </div>
           </div>
           <div class="panel-divider"></div>
           <div class="panel-content">
@@ -83,7 +143,7 @@ const isEditingAttackBonus = ref(false)
               class="big-value clickable"
               title="点击修改法术攻击加值"
               @click="isEditingAttackBonus = true"
-              >0</span
+              >{{ spellAttackBonus }}</span
             >
             <EditArrayPopover
               v-if="isEditingAttackBonus"
@@ -103,7 +163,7 @@ const isEditingAttackBonus = ref(false)
               class="big-value clickable"
               title="点击修改法术豁免DC加值"
               @click="isEditingDC = true"
-              >0</span
+              >{{ spellDC }}</span
             >
             <EditArrayPopover
               v-if="isEditingDC"
@@ -144,7 +204,7 @@ const isEditingAttackBonus = ref(false)
 }
 .header-grid {
   display: grid;
-  grid-template-columns: 1fr 240px 120px 120px;
+  grid-template-columns: 1fr 240px 180px 180px;
   gap: 10px;
   margin: 5px 10px;
   height: 110px;
@@ -239,5 +299,11 @@ const isEditingAttackBonus = ref(false)
 .icon-label.active {
   color: var(--dnd-ink-primary);
   transform: scale(1.1);
+}
+.dice-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

@@ -4,6 +4,7 @@ import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import { useDiceBox } from '@/composables/useDiceBox'
+import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import { addDiceResult } from '@/stores/dice-result'
 import RollConfigPopover from '../Common/RollConfigPopover.vue'
 import { isUsingMouse } from '@/composables/useGlobalState'
@@ -19,14 +20,36 @@ const sheet = computed({
   set: (val) => (store.data = val),
 })
 
-const attacksView = computed(() => {
+const { getSpellAttackBonus } = useDnd5Logic(sheet)
+
+interface NormalAttackView {
+  id: string
+  name: string
+  bonus: string
+  formula: string
+  type: 'normal'
+}
+
+interface SpellAttackView {
+  id: string
+  name: string
+  bonus: string
+  formula: string
+  type: 'spell'
+  shortName: string
+}
+
+type AttackView = NormalAttackView | SpellAttackView
+
+const attacksView = computed((): AttackView[] => {
   const results = []
   results.push({
     id: nanoid(),
     name: '无加值',
     bonus: '0',
     formula: '1d20',
-  })
+    type: 'normal',
+  } as NormalAttackView)
   let counter = 1
   for (const attack of sheet.value.attacks) {
     if (!attack.bonus) continue
@@ -41,16 +64,38 @@ const attacksView = computed(() => {
       name: name,
       bonus: foldedBonus,
       formula: foldedFormula,
-    })
+      type: 'normal',
+    } as NormalAttackView)
+  }
+  for (const spellList of sheet.value.spells.list) {
+    const bonus = getSpellAttackBonus(spellList.id)
+    const rawNotation = `1d20${bonus >= 0 ? '+' : ''}${bonus}`
+    const [validFormula, foldedFormula] = foldAndCheckNumber(rawNotation)
+    if (!validFormula) continue
+    const shortName = spellList.name ? `${spellList.name}` : `未命名${counter++}`
+    const name = `法术攻击: ${shortName}`
+    results.push({
+      id: spellList.id,
+      name: name,
+      bonus: String(bonus),
+      formula: foldedFormula,
+      type: 'spell',
+      shortName: shortName,
+    } as SpellAttackView)
   }
   return results
 })
 
-const rollAttack = async (name: string, formula: string) => {
+const getAttackTitle = (attack: AttackView) => {
+  if (attack.type === 'normal') return `攻击检定: ${attack.name}`
+  else return `法术攻击检定: ${attack.shortName}`
+}
+
+const rollAttack = async (title: string, formula: string) => {
   // 不需要再验证了，前面已经验证过了
   const result = await parseAndRoll(formula)
   if (result !== null) {
-    addDiceResult(result, formula, `攻击检定: ${name}`)
+    addDiceResult(result, formula, title)
   }
 }
 
@@ -114,7 +159,7 @@ onBeforeUnmount(() => {
         <!-- 投掷按钮 -->
         <div
           class="roll-btn"
-          @click="rollAttack(attack.name, attack.formula)"
+          @click="rollAttack(getAttackTitle(attack), attack.formula)"
           style="position: relative"
           @contextmenu.prevent.stop="
             (e) => {
@@ -131,7 +176,7 @@ onBeforeUnmount(() => {
           <teleport to="body">
             <RollConfigPopover
               v-if="showAttackRollConfig === attack.id"
-              :title="'攻击检定:' + attack.name"
+              :title="getAttackTitle(attack)"
               :baseModifier="attack.bonus"
               :style="attackPopoverStyle"
               :enable-elven-accuracy="true"

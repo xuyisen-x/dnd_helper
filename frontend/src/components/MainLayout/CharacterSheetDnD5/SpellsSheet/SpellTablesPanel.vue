@@ -117,8 +117,8 @@ const onDragEnd = () => {
         :class="{
           active: list.id === selectedListId,
           'is-dragging': draggedIndex === index,
-          'is-dragover-left': dragOverIndex === index && draggedIndex! < index,
-          'is-dragover-right': dragOverIndex === index && draggedIndex! > index,
+          'is-dragover-left': dragOverIndex === index && draggedIndex! > index,
+          'is-dragover-right': dragOverIndex === index && draggedIndex! < index,
         }"
         @click="selectedListId = list.id"
         draggable="true"

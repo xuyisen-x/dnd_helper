@@ -665,6 +665,27 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
   const spellSlotsView = getSpellSlotsView(false)
   const pactSpellSlotsView = getSpellSlotsView(true)
 
+  // 法术攻击加值和豁免DC的计算
+  const getSpellAttackBonus = (list_id: string) => {
+    const list = sheet.value.spells.list.find((l) => l.id === list_id)
+    if (!list) return 0
+    if (!list.ability) return 0
+    return (
+      abilityModifies[list.ability] +
+      proficiencyBonus.value +
+      evalExtraModify(list.extra_attack_bonus)
+    )
+  }
+
+  const getSpellDC = (list_id: string) => {
+    const list = sheet.value.spells.list.find((l) => l.id === list_id)
+    if (!list) return 0
+    if (!list.ability) return 0
+    return (
+      8 + abilityModifies[list.ability] + proficiencyBonus.value + evalExtraModify(list.extra_dc)
+    )
+  }
+
   return {
     costomMacroReplace,
     totalLevel,
@@ -692,5 +713,7 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
     pactSpellcastingLevel,
     spellSlotsView,
     pactSpellSlotsView,
+    getSpellAttackBonus,
+    getSpellDC,
   }
 }

@@ -70,6 +70,7 @@ const sourceLabels: Record<Source, string> = {
   SO: 'SO',
   FR: 'FR',
   MODULE: '模组',
+  CUSTOM: '自定义',
 }
 
 export const getLevelLabel = (level: number) => levelLabels[level] ?? `${level}环`

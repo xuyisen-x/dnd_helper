@@ -37,6 +37,7 @@ export type Source =
   | 'SO'
   | 'FR'
   | 'MODULE' // 模组自定义
+  | 'CUSTOM' // 用户自定义
 
 export interface SpellClassInfo {
   class: Klass

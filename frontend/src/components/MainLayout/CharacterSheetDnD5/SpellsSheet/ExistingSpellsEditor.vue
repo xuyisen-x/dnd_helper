@@ -28,10 +28,6 @@ const toggleFilter = () => {
 
 const emit = defineEmits(['close'])
 
-const closeDialog = () => {
-  emit('close')
-}
-
 const props = defineProps<{
   id: string
 }>()
@@ -206,7 +202,7 @@ const saveEditDialog = () => {
 </script>
 
 <template>
-  <div class="add-spell-dialog-mask" @click.self="closeDialog">
+  <div class="add-spell-dialog-mask" @click.self="closeEditDialog">
     <div class="add-spell-feature-dialog" @click="handleDialogClick">
       <div class="curtain-layer" ref="curtainLayerRef">
         <div class="curtain-content" :class="{ 'is-open': isFilterExpanded }">

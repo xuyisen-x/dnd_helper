@@ -7,6 +7,7 @@ import AbilityIcon from '@/components/Icons/AbilityIcon.vue'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import RollConfigPopover from '../Common/RollConfigPopover.vue'
 import ExistingSpellsEditor from './ExistingSpellsEditor.vue'
+import CustomSpellEditor from './CustomSpellEditor.vue'
 import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import { isUsingMouse } from '@/composables/useGlobalState'
 import { useDiceBox } from '@/composables/useDiceBox'
@@ -62,13 +63,14 @@ const openConfig = () => {
 }
 
 const addingExistingSpell = ref(false)
+const addingCustomSpell = ref(false)
 
 const addExistingSpell = () => {
   addingExistingSpell.value = true
 }
 
 const addCustomSpell = () => {
-  console.log('TODO: 添加自定义法术')
+  addingCustomSpell.value = true
 }
 </script>
 
@@ -225,6 +227,11 @@ const addCustomSpell = () => {
       :id="props.id!"
       v-if="addingExistingSpell"
       @close="addingExistingSpell = false"
+    />
+    <CustomSpellEditor
+      :id="props.id!"
+      v-else-if="addingCustomSpell"
+      @close="addingCustomSpell = false"
     />
   </Teleport>
 </template>

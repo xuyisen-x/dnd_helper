@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import type { Spell } from '@/types/dnd5-spells'
 import { nanoid } from 'nanoid'
-import TipTapEditor from '@/components/Common/TipTapEditor.vue'
+
+const TipTapEditor = defineAsyncComponent(() => import('@/components/Common/TipTapEditor.vue'))
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -576,5 +577,7 @@ body.has-mouse .level-item.checked:hover {
   min-height: 0;
   border: 2px solid var(--dnd-ink-secondary);
   border-radius: 4px;
+  padding: 10px;
+  overflow-y: auto;
 }
 </style>

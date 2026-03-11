@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue' // 1. 引入 nextTick
+import { computed, nextTick, onMounted, ref, watch, defineAsyncComponent } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
+
+const TipTapEditor = defineAsyncComponent(() => import('@/components/Common/TipTapEditor.vue'))
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -28,18 +30,6 @@ onMounted(async () => {
   await nextTick()
   adjustLanguageHeight()
 })
-
-const handleTab = async (e: KeyboardEvent) => {
-  const target = e.target as HTMLTextAreaElement
-  const start = target.selectionStart
-  const end = target.selectionEnd
-  const value = target.value
-
-  const indent = '    '
-  sheet.value.background.story = value.substring(0, start) + indent + value.substring(end)
-  await nextTick()
-  target.setSelectionRange(start + indent.length, start + indent.length)
-}
 </script>
 
 <template>
@@ -51,12 +41,12 @@ const handleTab = async (e: KeyboardEvent) => {
     <div class="panel-divider"></div>
 
     <div class="panel-body">
-      <textarea
-        v-model="sheet.background.story"
-        class="bare-textarea"
-        placeholder="在此输入角色的背景故事、个性特点、理想、纽带和缺点等信息..."
-        @keydown.tab.prevent="handleTab"
-      ></textarea>
+      <div class="editor-wrapper">
+        <TipTapEditor
+          v-model="sheet.background.story"
+          placeholder="在此输入角色的背景故事、个性特点、理想、纽带和缺点等信息"
+        />
+      </div>
       <fieldset class="input-border">
         <legend class="language-title">语言</legend>
         <textarea
@@ -85,6 +75,7 @@ const handleTab = async (e: KeyboardEvent) => {
   overflow: hidden;
   height: 100%;
   box-sizing: border-box;
+  min-height: 0;
 }
 
 .panel-header {
@@ -114,27 +105,11 @@ const handleTab = async (e: KeyboardEvent) => {
 
 .panel-body {
   flex: 1;
+  min-height: 0;
   padding: 10px 15px;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-}
-
-.bare-textarea {
-  flex: 1;
-  background: transparent;
-  border: none;
-  width: 100%;
-  height: 100%;
-  outline: none;
-  padding: 2px 4px;
-  color: var(--dnd-ink-primary);
-  font-family: inherit;
-  font-size: 1rem;
-  font-weight: normal;
-  transition: background-color 0.2s;
-  resize: none;
-  overflow-y: auto;
 }
 
 .language-textarea {
@@ -168,5 +143,11 @@ const handleTab = async (e: KeyboardEvent) => {
   padding: 0 5px;
   font-weight: bold;
   color: var(--dnd-ink-primary);
+}
+
+.editor-wrapper {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 </style>

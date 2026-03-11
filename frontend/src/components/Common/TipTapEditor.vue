@@ -52,25 +52,17 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="tiptap-wrapper">
-    <div class="tiptap-wrapper-inner">
-      <EditorContent :editor="editor" />
-    </div>
+    <EditorContent :editor="editor" />
   </div>
 </template>
 
 <style scoped>
 .tiptap-wrapper {
-  padding: 10px;
-  height: 100%;
-  cursor: text;
-  overflow-y: auto;
-}
-
-.tiptap-wrapper-inner {
   min-height: 100%;
+  cursor: text;
 }
 
-.tiptap-wrapper-inner:focus-within {
+.tiptap-wrapper:focus-within {
   background-color: rgba(255, 255, 255, 0.2);
 }
 

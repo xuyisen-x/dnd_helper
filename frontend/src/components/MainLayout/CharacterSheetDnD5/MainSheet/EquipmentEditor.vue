@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data, EquipmentDnd5 } from '@/stores/rules/dnd5'
-import { computed, ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import { useDiceBox } from '@/composables/useDiceBox'
 import { confirmationBox } from '@/composables/useConfirmationBox'
+const TipTapEditor = defineAsyncComponent(() => import('@/components/Common/TipTapEditor.vue'))
 
 interface Props {
   index: number
@@ -127,76 +128,112 @@ const longRestInfo = computed(() => {
       <div class="dialog-header">编辑物品</div>
 
       <div class="dialog-body">
-        <label class="dialog-field">
-          <span>物品名称</span>
-          <input v-model="editDraft.name" type="text" placeholder="长剑" />
-        </label>
-
-        <div class="dialog-row">
-          <label class="dialog-field flex-1">
-            <span>数量</span>
+        <div class="feature-dialog-left">
+          <div class="labeled-input">
+            <div class="input-label">名称：</div>
             <input
+              class="text-input"
+              type="text"
+              v-model="editDraft.name"
+              placeholder="请输入名称"
+            />
+          </div>
+          <div class="labeled-input">
+            <div class="input-label">数量：</div>
+            <input
+              class="text-input"
               :value="editDraft.quantity"
               @input="onQuantityInput"
               type="text"
               min="0"
               placeholder="1"
             />
-          </label>
+          </div>
 
-          <label class="dialog-field flex-none checkbox-field">
-            <span>同调</span>
-            <input v-model="editDraft.attunement" type="checkbox" class="checkbox-input" />
-          </label>
-        </div>
+          <!-- <div class="dialog-row">
+            <label class="dialog-field flex-none checkbox-field">
+              <span>同调</span>
+              <input v-model="editDraft.attunement" type="checkbox" class="checkbox-input" />
+            </label>
+          </div> -->
 
-        <label class="dialog-field">
-          <span>充能上限 / 使用限制</span>
-          <input v-model="editDraft.chargesLimit" type="text" placeholder="@pb" />
+          <div class="filter-chip" @click="editDraft.attunement = !editDraft.attunement">
+            <div class="check-icon" :class="{ checked: editDraft.attunement }">
+              <svg v-if="editDraft.attunement" viewBox="0 0 24 24" class="svg-icon">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <span class="input-label">同调</span>
+          </div>
+
+          <div class="labeled-input">
+            <div class="input-label">充能上限 / 使用限制：</div>
+            <input
+              class="text-input"
+              v-model="editDraft.chargesLimit"
+              type="text"
+              placeholder="请输入充能上限或使用限制公式"
+            />
+          </div>
+
           <div class="extra-info-container">
             <div>{{ limitInfo[0] ? '折叠结果：' : '错误信息：' }}</div>
             <div class="extra-info" :class="{ warning: !limitInfo[0] }">
               {{ limitInfo[1] }}
             </div>
           </div>
-        </label>
 
-        <label class="dialog-field">
-          <span>当前充能 / 剩余次数</span>
-          <input :value="editDraft.chargesCurrent" @input="onChargesInput" type="text" min="0" />
-        </label>
+          <div class="labeled-input">
+            <div class="input-label">当前充能 / 剩余次数：</div>
+            <input
+              class="text-input"
+              :value="editDraft.chargesCurrent"
+              @input="onChargesInput"
+              type="text"
+              min="0"
+            />
+          </div>
 
-        <label class="dialog-field">
-          <span>短休恢复</span>
-          <input v-model="editDraft.afterShortRest" type="text" placeholder="1d6+1" />
+          <div class="labeled-input">
+            <div class="input-label">短休恢复：</div>
+            <input
+              class="text-input"
+              v-model="editDraft.afterShortRest"
+              type="text"
+              placeholder="请输入短休恢复公式"
+            />
+          </div>
+
           <div class="extra-info-container">
             <div>{{ shortRestInfo[0] ? '折叠结果：' : '错误信息：' }}</div>
             <div class="extra-info" :class="{ warning: !shortRestInfo[0] }">
               {{ shortRestInfo[1] }}
             </div>
           </div>
-        </label>
 
-        <label class="dialog-field">
-          <span>长休恢复</span>
-          <input v-model="editDraft.afterLongRest" type="text" placeholder="1d4" />
+          <div class="labeled-input">
+            <div class="input-label">长休恢复：</div>
+            <input
+              class="text-input"
+              v-model="editDraft.afterLongRest"
+              type="text"
+              placeholder="请输入长休恢复公式"
+            />
+          </div>
+
           <div class="extra-info-container">
             <div>{{ longRestInfo[0] ? '折叠结果：' : '错误信息：' }}</div>
             <div class="extra-info" :class="{ warning: !longRestInfo[0] }">
               {{ longRestInfo[1] }}
             </div>
           </div>
-        </label>
-
-        <label class="dialog-field">
-          <span>物品描述</span>
-          <textarea
-            class="detail-area"
-            v-model="editDraft.description"
-            rows="5"
-            placeholder="填写物品的功能、外貌或背景故事..."
-          ></textarea>
-        </label>
+        </div>
+        <div class="feature-dialog-right">
+          <div class="input-label">详细描述：</div>
+          <div class="editor-wrapper">
+            <TipTapEditor v-model="editDraft.description" placeholder="请输入特性描述" />
+          </div>
+        </div>
       </div>
 
       <div class="dialog-actions">
@@ -217,7 +254,6 @@ const longRestInfo = computed(() => {
 </template>
 
 <style scoped>
-/* 按钮样式 */
 .btn-primary {
   background-color: var(--dnd-dragon-red);
   color: white;
@@ -250,22 +286,6 @@ body.has-mouse .btn-ghost:hover {
   background-color: rgba(0, 0, 0, 0.04);
 }
 
-body.has-mouse .btn-danger:hover {
-  background-color: var(--dnd-dragon-red);
-  color: white;
-}
-
-.btn-disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-  background-color: var(--dnd-ink-secondary);
-}
-
-body.has-mouse .btn-disabled:hover {
-  background-color: var(--dnd-ink-secondary);
-}
-
-/* 弹窗布局 */
 .feature-dialog-mask {
   position: fixed;
   inset: 0;
@@ -281,92 +301,54 @@ body.has-mouse .btn-disabled:hover {
   border: 2px solid var(--dnd-ink-secondary);
   border-radius: 12px;
   padding: 16px 20px;
-  width: min(520px, 90vw);
+  width: min(1000px, 90vw);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
-  /* Flexbox 布局实现固定头部底部，中间滚动 */
-  max-height: 90vh;
-  display: flex;
-  flex-direction: column;
+  max-height: 90vh; /* 限制最大高度为视口高度的 90% */
+  display: flex; /* 启用 Flex 布局 */
+  flex-direction: column; /* 垂直排列子元素 */
+  font-family: 'Georgia', serif;
 }
 
 .dialog-header {
   font-weight: 700;
   color: var(--dnd-ink-primary);
-  font-size: 1rem;
+  font-size: 1.2rem;
   margin-bottom: 12px;
-  flex-shrink: 0;
 }
 
 .dialog-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+}
+
+.feature-dialog-left {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  /* 滚动逻辑 */
   overflow-y: auto;
   flex: 1;
   min-height: 0;
-  padding-right: 4px; /* 避免滚动条紧贴 */
 }
 
-/* 字段样式 */
-.dialog-field {
+.feature-dialog-right {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 0.85rem;
-  color: var(--dnd-ink-secondary);
-  font-family: 'Georgia', serif;
-}
-
-.dialog-row {
-  display: flex;
-  gap: 12px;
-  align-items: flex-end; /* 底部对齐 */
-}
-
-.flex-1 {
+  gap: 10px;
+  overflow-y: auto;
   flex: 1;
-}
-.flex-none {
-  flex: none;
+  min-height: 0;
 }
 
-.dialog-field input,
-.dialog-field textarea {
-  border: 1px solid var(--dnd-ink-primary);
-  border-radius: 6px;
-  padding: 6px 8px;
-  background: rgba(255, 255, 255, 0.6);
-  font-family: sans-serif;
-  font-size: 0.9rem;
-  color: var(--dnd-ink-primary);
+.dialog-actions {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 10px;
+  margin-top: 12px;
 }
 
-.dialog-field input:focus,
-.dialog-field textarea:focus {
-  outline: none;
-  border-color: var(--dnd-dragon-red);
-}
-
-.detail-area {
-  resize: vertical;
-}
-
-/* Checkbox 特殊样式 */
-.checkbox-field {
-  align-items: center;
-  justify-content: center;
-  padding-bottom: 8px; /* 稍微调整对齐 */
-}
-
-.checkbox-input {
-  width: 20px;
-  height: 20px;
-  cursor: pointer;
-  accent-color: var(--dnd-dragon-red);
-}
-
-/* 额外信息/报错样式 */
 .extra-info-container {
   display: flex;
   justify-content: start;
@@ -374,10 +356,6 @@ body.has-mouse .btn-disabled:hover {
   gap: 8px;
   font-size: 0.85rem;
   color: var(--dnd-ink-secondary);
-}
-
-.extra-info-container > div:first-child {
-  white-space: nowrap;
 }
 
 .extra-info {
@@ -394,11 +372,83 @@ body.has-mouse .btn-disabled:hover {
   color: var(--dnd-dragon-red);
 }
 
-.dialog-actions {
+.btn-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--dnd-ink-secondary); /* 变成灰色 */
+}
+
+body.has-mouse .btn-disabled:hover {
+  background-color: var(--dnd-ink-secondary);
+}
+
+.labeled-input {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: auto 1fr;
   gap: 10px;
-  margin-top: 12px;
-  flex-shrink: 0;
+}
+
+.input-label {
+  font-size: 1rem;
+  font-weight: bold;
+  font-family: 'Georgia', serif;
+  color: var(--dnd-ink-primary);
+  display: flex;
+  align-items: center; /* 核心：垂直居中 */
+  min-width: 80px;
+}
+
+.text-input {
+  color: var(--dnd-ink-secondary);
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  font-size: 1rem;
+}
+
+.text-input:focus {
+  border-bottom: 1px solid var(--dnd-dragon-red);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.editor-wrapper {
+  flex: 1;
+  min-height: 0;
+  border: 2px solid var(--dnd-ink-secondary);
+  border-radius: 4px;
+  padding: 10px;
+  overflow-y: auto;
+}
+
+.check-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 20%;
+  border: 2px solid var(--dnd-stone-text);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.check-icon.checked {
+  background-color: var(--dnd-dragon-red);
+  border-color: var(--dnd-dragon-red);
+}
+.filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  margin-left: 10px;
+}
+
+.svg-icon {
+  stroke: var(--dnd-mithral-text);
+  fill: none;
+  stroke-width: 4;
 }
 </style>

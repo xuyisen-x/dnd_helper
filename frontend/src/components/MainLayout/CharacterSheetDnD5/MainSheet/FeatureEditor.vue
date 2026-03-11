@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data, FeatureDnd5 } from '@/stores/rules/dnd5'
-import { computed, ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import { useDiceBox } from '@/composables/useDiceBox'
 import { confirmationBox } from '@/composables/useConfirmationBox'
+const TipTapEditor = defineAsyncComponent(() => import('@/components/Common/TipTapEditor.vue'))
 
 interface Props {
   featureKey: 'class_features' | 'race_features' | 'feat'
@@ -94,61 +95,78 @@ const longRestInfo = computed(() => {
     <div class="feature-dialog">
       <div class="dialog-header">编辑特性</div>
       <div class="dialog-body">
-        <label class="dialog-field">
-          <span>名称</span>
-          <input v-model="editDraft.name" type="text" placeholder="狂暴" />
-        </label>
-        <label class="dialog-field">
-          <span>使用限制</span>
-          <input
-            v-model="editDraft.usageLimit"
-            type="text"
-            placeholder="len(filter<=@lv1([0, 0, 3, 6, 12, 17]))"
-          />
+        <div class="feature-dialog-left">
+          <div class="labeled-input">
+            <div class="input-label">名称：</div>
+            <input
+              class="text-input"
+              type="text"
+              v-model="editDraft.name"
+              placeholder="请输入名称"
+            />
+          </div>
+          <div class="labeled-input">
+            <div class="input-label">使用限制：</div>
+            <input
+              class="text-input"
+              type="text"
+              v-model="editDraft.usageLimit"
+              placeholder="请输入使用限制"
+            />
+          </div>
           <div class="extra-info-container">
             <div>{{ limitInfo[0] ? '折叠结果：' : '错误信息：' }}</div>
             <div class="extra-info" :class="{ warning: !limitInfo[0] }">
               {{ limitInfo[1] }}
             </div>
           </div>
-        </label>
-        <label class="dialog-field">
-          <span>剩余使用次数</span>
-          <input :value="editDraft.usageCount" @input="onCountInput" type="text" min="0" />
-        </label>
-        <label class="dialog-field">
-          <span>短休恢复</span>
-          <input v-model="editDraft.afterShortRest" type="text" placeholder="1" />
+          <div class="labeled-input">
+            <div class="input-label">剩余使用次数：</div>
+            <input
+              class="text-input"
+              :value="editDraft.usageCount"
+              @input="onCountInput"
+              type="text"
+              min="0"
+            />
+          </div>
+          <div class="labeled-input">
+            <div class="input-label">短休恢复：</div>
+            <input
+              class="text-input"
+              v-model="editDraft.afterShortRest"
+              type="text"
+              placeholder="请输入短休恢复表达式"
+            />
+          </div>
           <div class="extra-info-container">
             <div>{{ shortRestInfo[0] ? '折叠结果：' : '错误信息：' }}</div>
             <div class="extra-info" :class="{ warning: !shortRestInfo[0] }">
               {{ shortRestInfo[1] }}
             </div>
           </div>
-        </label>
-        <label class="dialog-field">
-          <span>长休恢复</span>
-          <input
-            v-model="editDraft.afterLongRest"
-            type="text"
-            placeholder="len(filter<=@lv1([0, 0, 3, 6, 12, 17]))"
-          />
+          <div class="labeled-input">
+            <div class="input-label">长休恢复：</div>
+            <input
+              class="text-input"
+              v-model="editDraft.afterLongRest"
+              type="text"
+              placeholder="请输入长休恢复表达式"
+            />
+          </div>
           <div class="extra-info-container">
             <div>{{ longRestInfo[0] ? '折叠结果：' : '错误信息：' }}</div>
             <div class="extra-info" :class="{ warning: !longRestInfo[0] }">
               {{ longRestInfo[1] }}
             </div>
           </div>
-        </label>
-        <label class="dialog-field">
-          <span>特性描述</span>
-          <textarea
-            class="detail-area"
-            v-model="editDraft.description"
-            rows="4"
-            placeholder="填写特性描述"
-          ></textarea>
-        </label>
+        </div>
+        <div class="feature-dialog-right">
+          <div class="input-label">详细描述：</div>
+          <div class="editor-wrapper">
+            <TipTapEditor v-model="editDraft.description" placeholder="请输入特性描述" />
+          </div>
+        </div>
       </div>
       <div class="dialog-actions">
         <button class="btn-primary" @click="deleteFeature">删除</button>
@@ -215,54 +233,45 @@ body.has-mouse .btn-ghost:hover {
   border: 2px solid var(--dnd-ink-secondary);
   border-radius: 12px;
   padding: 16px 20px;
-  width: min(520px, 90vw);
+  width: min(1000px, 90vw);
   box-shadow: 0 12px 24px rgba(0, 0, 0, 0.2);
   max-height: 90vh; /* 限制最大高度为视口高度的 90% */
   display: flex; /* 启用 Flex 布局 */
   flex-direction: column; /* 垂直排列子元素 */
+  font-family: 'Georgia', serif;
 }
 
 .dialog-header {
   font-weight: 700;
   color: var(--dnd-ink-primary);
-  font-size: 1rem;
+  font-size: 1.2rem;
   margin-bottom: 12px;
 }
 
 .dialog-body {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  flex: 1;
+  min-height: 0;
+}
+
+.feature-dialog-left {
   display: flex;
   flex-direction: column;
   gap: 10px;
   overflow-y: auto;
   flex: 1;
   min-height: 0;
-  padding-right: 4px;
 }
 
-.dialog-field {
+.feature-dialog-right {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 0.85rem;
-  color: var(--dnd-ink-secondary);
-  font-family: 'Georgia', serif;
-}
-
-.dialog-field input,
-.dialog-field textarea {
-  border: 1px solid var(--dnd-ink-primary);
-  border-radius: 6px;
-  padding: 6px 8px;
-  background: rgba(255, 255, 255, 0.6);
-  font-family: sans-serif;
-  font-size: 0.9rem;
-  color: var(--dnd-ink-primary);
-}
-
-.dialog-field input:focus,
-.dialog-field textarea:focus {
-  outline: none;
-  border-color: var(--dnd-dragon-red);
+  gap: 10px;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
 }
 
 .dialog-actions {
@@ -270,10 +279,6 @@ body.has-mouse .btn-ghost:hover {
   grid-template-columns: auto 1fr auto auto;
   gap: 10px;
   margin-top: 12px;
-}
-
-.detail-area {
-  resize: vertical;
 }
 
 .extra-info-container {
@@ -307,5 +312,45 @@ body.has-mouse .btn-ghost:hover {
 
 body.has-mouse .btn-disabled:hover {
   background-color: var(--dnd-ink-secondary);
+}
+
+.labeled-input {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+}
+
+.input-label {
+  font-size: 1rem;
+  font-weight: bold;
+  font-family: 'Georgia', serif;
+  color: var(--dnd-ink-primary);
+  display: flex;
+  align-items: center; /* 核心：垂直居中 */
+  width: 120px;
+}
+
+.text-input {
+  color: var(--dnd-ink-secondary);
+  background: transparent;
+  border: none;
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  font-size: 1rem;
+}
+
+.text-input:focus {
+  border-bottom: 1px solid var(--dnd-dragon-red);
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.editor-wrapper {
+  flex: 1;
+  min-height: 0;
+  border: 2px solid var(--dnd-ink-secondary);
+  border-radius: 4px;
+  padding: 10px;
+  overflow-y: auto;
 }
 </style>

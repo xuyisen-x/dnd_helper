@@ -6,6 +6,7 @@ import EditArrayPopover from '../Common/EditArrayPopover.vue'
 import AbilityIcon from '@/components/Icons/AbilityIcon.vue'
 import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import RollConfigPopover from '../Common/RollConfigPopover.vue'
+import ExistingSpellsEditor from './ExistingSpellsEditor.vue'
 import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import { isUsingMouse } from '@/composables/useGlobalState'
 import { useDiceBox } from '@/composables/useDiceBox'
@@ -59,13 +60,23 @@ const isConfigOpen = ref(false)
 const openConfig = () => {
   isConfigOpen.value = true
 }
+
+const addingExistingSpell = ref(false)
+
+const addExistingSpell = () => {
+  addingExistingSpell.value = true
+}
+
+const addCustomSpell = () => {
+  console.log('TODO: 添加自定义法术')
+}
 </script>
 
 <template>
   <div class="details-panel">
     <div v-if="sheet.spells.list.length === 0" class="empty-tip">点击 "+" 创建一个新的法术列表</div>
     <div v-else-if="currentList === undefined" class="empty-tip">请选择一个法术列表</div>
-    <div v-else>
+    <div v-else class="main-content">
       <div class="header-grid">
         <div class="name-box">
           <input
@@ -174,8 +185,48 @@ const openConfig = () => {
           </div>
         </div>
       </div>
+      <div class="divider"></div>
+      <div class="btn-group">
+        <div class="add-spell-btn" @click="addExistingSpell">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+            <path
+              fill="currentColor"
+              d="M7.833 18c1.4 0 2.62.819 3.195 2.028a1 1 0 0 1-1.806.86A1.54 1.54 0 0 0 7.833 20H3a1 1 0 1 1 0-2zM21 18a1 1 0 1 1 0 2h-4.833c-.567 0-1.135.357-1.389.889a1 1 0 0 1-1.806-.86A3.58 3.58 0 0 1 16.167 18z"
+            />
+            <path
+              fill="currentColor"
+              fill-rule="evenodd"
+              d="M8.889 3.006a4.33 4.33 0 0 1 3.11 1.564A4.33 4.33 0 0 1 15.333 3H22a1 1 0 0 1 1 1v12.001a1 1 0 0 1-1 1L15.333 17c-.658 0-1.085.162-1.372.354a1.93 1.93 0 0 0-.65.76A3.1 3.1 0 0 0 13 19.33v.009l-.005.097a1 1 0 0 1-1.99 0L11 19.334v-.005l-.004-.068a3.1 3.1 0 0 0-.305-1.151a1.9 1.9 0 0 0-.64-.76c-.28-.19-.698-.35-1.343-.35H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h6.667zM11 5v12.334h2V5z"
+              clip-rule="evenodd"
+            />
+          </svg>
+          添加已有法术
+        </div>
+        <div class="add-spell-btn" @click="addCustomSpell">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+            <g
+              fill="none"
+              stroke="currentColor"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+            >
+              <path d="M3 21h4L20 8a1.5 1.5 0 0 0-4-4L3 17zM14.5 5.5l4 4" />
+              <path d="M12 8L7 3L3 7l5 5M7 8L5.5 9.5M16 12l5 5l-4 4l-5-5m4 1l-1.5 1.5" />
+            </g>
+          </svg>
+          添加自定义法术
+        </div>
+      </div>
     </div>
   </div>
+  <Teleport to="body">
+    <ExistingSpellsEditor
+      :id="props.id!"
+      v-if="addingExistingSpell"
+      @close="addingExistingSpell = false"
+    />
+  </Teleport>
 </template>
 
 <style scoped>
@@ -184,6 +235,7 @@ const openConfig = () => {
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   min-height: 90px;
+  padding: 10px;
 }
 .empty-tip {
   text-align: center;
@@ -206,7 +258,6 @@ const openConfig = () => {
   display: grid;
   grid-template-columns: 1fr 240px 180px 180px;
   gap: 10px;
-  margin: 5px 10px;
   height: 110px;
   align-items: center; /* 添加这一行实现纵向居中 */
 }
@@ -219,7 +270,6 @@ const openConfig = () => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   min-height: 65px;
 }
-
 .panel-content {
   flex: 1;
   display: flex;
@@ -229,7 +279,6 @@ const openConfig = () => {
   position: relative;
   z-index: 1;
 }
-
 .panel-header {
   display: flex;
   align-items: center;
@@ -239,21 +288,18 @@ const openConfig = () => {
   background-color: rgba(0, 0, 0, 0.03);
   position: relative;
 }
-
 .label {
   font-weight: bold;
   color: var(--dnd-ink-primary);
   font-size: 1rem;
   letter-spacing: 1px;
 }
-
 .big-value {
   font-family: 'Georgia', serif;
   font-size: 2.4rem; /* 核心数据大一点 */
   color: var(--dnd-ink-primary);
   line-height: 1;
 }
-
 .panel-divider {
   height: 2px;
   background-color: var(--dnd-ink-primary);
@@ -305,5 +351,48 @@ const openConfig = () => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+.divider {
+  height: 2px;
+  background-color: var(--dnd-ink-secondary);
+  width: 100%;
+  margin: 10px 0;
+  opacity: 0.5;
+}
+.main-content {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.btn-group {
+  display: flex;
+  gap: 10px;
+  justify-content: right;
+}
+.add-spell-btn {
+  width: 180px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+
+  padding: 6px 0;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  /* 防止文字被选中 */
+  user-select: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+
+  background-color: rgba(255, 255, 255, 0.4);
+  border: 1px solid var(--dnd-ink-secondary);
+  color: var(--dnd-ink-primary);
+}
+body.has-mouse .add-spell-btn:hover {
+  background-color: rgba(255, 255, 255, 0.7);
+  color: var(--dnd-ink-primary);
 }
 </style>

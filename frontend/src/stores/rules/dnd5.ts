@@ -164,6 +164,8 @@ export interface SpellTableDnd5 {
   spells: {
     spell: SpellTypeDnd5 // 具体的法术
     prepared: boolean // 是否准备
+    dontCount: boolean // 不计入已经准备的法术数量
+    notes: string // 备注
     freeUsage: string // 免费的使用次数
     afterLongRest: string // 长休后恢复的免费使用此时
     afterShortRest: string // 短休后恢复的免费使用次数

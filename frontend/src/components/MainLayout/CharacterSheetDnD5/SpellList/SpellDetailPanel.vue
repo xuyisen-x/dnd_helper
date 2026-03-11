@@ -14,7 +14,7 @@ const props = defineProps<{
 </script>
 
 <template>
-  <div class="detail-panel">
+  <div class="detail-panel-inner">
     <div v-if="!props.spell" class="detail-empty">请选择一个法术查看详情</div>
     <div v-else class="detail-content">
       <header class="detail-header">
@@ -64,14 +64,14 @@ const props = defineProps<{
 </template>
 
 <style scoped>
-.detail-panel {
+.detail-panel-inner {
   border-radius: 14px;
   padding: 16px 18px;
   border: 2px solid var(--dnd-ink-secondary);
-  min-height: 420px;
   min-width: 0;
   overflow-x: auto;
-  max-height: 700px;
+  align-self: start;
+  max-height: 100%;
   overflow-y: auto;
 }
 
@@ -79,6 +79,7 @@ const props = defineProps<{
   text-align: center;
   color: var(--dnd-ink-secondary);
   padding: 80px 0;
+  height: 260px;
 }
 
 .detail-header h2 {

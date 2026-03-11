@@ -166,7 +166,7 @@ const filteredSpells = computed(() => {
   display: grid;
   grid-template-columns: 2fr 1fr;
   gap: 20px;
-  align-items: start;
+  height: 700px;
 }
 
 .list-panel {
@@ -192,5 +192,7 @@ const filteredSpells = computed(() => {
   position: sticky;
   top: 20px;
   min-width: 0;
+  min-height: 0;
+  height: 100%;
 }
 </style>

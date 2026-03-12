@@ -8,10 +8,13 @@ import DiceIcon from '@/components/Icons/DiceIcon.vue'
 import RollConfigPopover from '../Common/RollConfigPopover.vue'
 import ExistingSpellsEditor from './ExistingSpellsEditor.vue'
 import CustomSpellEditor from './CustomSpellEditor.vue'
+import SpellDetailPanel from '../SpellList/SpellDetailPanel.vue'
+import SpellListsPanel from './SpellListsPanel.vue'
 import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import { isUsingMouse } from '@/composables/useGlobalState'
 import { useDiceBox } from '@/composables/useDiceBox'
 import { addDiceResult } from '@/stores/dice-result'
+import type { Spell } from '@/types/dnd5-spells'
 
 const props = defineProps<{
   id: string | null
@@ -72,6 +75,8 @@ const addExistingSpell = () => {
 const addCustomSpell = () => {
   addingCustomSpell.value = true
 }
+
+const selectedSpell = ref<null | Spell>(null)
 </script>
 
 <template>
@@ -188,36 +193,44 @@ const addCustomSpell = () => {
         </div>
       </div>
       <div class="divider"></div>
-      <div class="btn-group">
-        <div class="add-spell-btn" @click="addExistingSpell">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-            <path
-              fill="currentColor"
-              d="M7.833 18c1.4 0 2.62.819 3.195 2.028a1 1 0 0 1-1.806.86A1.54 1.54 0 0 0 7.833 20H3a1 1 0 1 1 0-2zM21 18a1 1 0 1 1 0 2h-4.833c-.567 0-1.135.357-1.389.889a1 1 0 0 1-1.806-.86A3.58 3.58 0 0 1 16.167 18z"
-            />
-            <path
-              fill="currentColor"
-              fill-rule="evenodd"
-              d="M8.889 3.006a4.33 4.33 0 0 1 3.11 1.564A4.33 4.33 0 0 1 15.333 3H22a1 1 0 0 1 1 1v12.001a1 1 0 0 1-1 1L15.333 17c-.658 0-1.085.162-1.372.354a1.93 1.93 0 0 0-.65.76A3.1 3.1 0 0 0 13 19.33v.009l-.005.097a1 1 0 0 1-1.99 0L11 19.334v-.005l-.004-.068a3.1 3.1 0 0 0-.305-1.151a1.9 1.9 0 0 0-.64-.76c-.28-.19-.698-.35-1.343-.35H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h6.667zM11 5v12.334h2V5z"
-              clip-rule="evenodd"
-            />
-          </svg>
-          添加已有法术
-        </div>
-        <div class="add-spell-btn" @click="addCustomSpell">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
-            <g
-              fill="none"
-              stroke="currentColor"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-            >
-              <path d="M3 21h4L20 8a1.5 1.5 0 0 0-4-4L3 17zM14.5 5.5l4 4" />
-              <path d="M12 8L7 3L3 7l5 5M7 8L5.5 9.5M16 12l5 5l-4 4l-5-5m4 1l-1.5 1.5" />
-            </g>
-          </svg>
-          添加自定义法术
+      <div class="list-and-detail">
+        <SpellListsPanel :id="props.id!" @select="selectedSpell = $event"></SpellListsPanel>
+        <div class="btn-and-detail">
+          <div class="btn-group">
+            <div class="add-spell-btn" @click="addExistingSpell">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                <path
+                  fill="currentColor"
+                  d="M7.833 18c1.4 0 2.62.819 3.195 2.028a1 1 0 0 1-1.806.86A1.54 1.54 0 0 0 7.833 20H3a1 1 0 1 1 0-2zM21 18a1 1 0 1 1 0 2h-4.833c-.567 0-1.135.357-1.389.889a1 1 0 0 1-1.806-.86A3.58 3.58 0 0 1 16.167 18z"
+                />
+                <path
+                  fill="currentColor"
+                  fill-rule="evenodd"
+                  d="M8.889 3.006a4.33 4.33 0 0 1 3.11 1.564A4.33 4.33 0 0 1 15.333 3H22a1 1 0 0 1 1 1v12.001a1 1 0 0 1-1 1L15.333 17c-.658 0-1.085.162-1.372.354a1.93 1.93 0 0 0-.65.76A3.1 3.1 0 0 0 13 19.33v.009l-.005.097a1 1 0 0 1-1.99 0L11 19.334v-.005l-.004-.068a3.1 3.1 0 0 0-.305-1.151a1.9 1.9 0 0 0-.64-.76c-.28-.19-.698-.35-1.343-.35H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h6.667zM11 5v12.334h2V5z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+              添加已有法术
+            </div>
+            <div class="add-spell-btn" @click="addCustomSpell">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
+                <g
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                >
+                  <path d="M3 21h4L20 8a1.5 1.5 0 0 0-4-4L3 17zM14.5 5.5l4 4" />
+                  <path d="M12 8L7 3L3 7l5 5M7 8L5.5 9.5M16 12l5 5l-4 4l-5-5m4 1l-1.5 1.5" />
+                </g>
+              </svg>
+              添加自定义法术
+            </div>
+          </div>
+          <div class="detail-wrapper">
+            <SpellDetailPanel :spell="selectedSpell" />
+          </div>
         </div>
       </div>
     </div>
@@ -401,5 +414,28 @@ const addCustomSpell = () => {
 body.has-mouse .add-spell-btn:hover {
   background-color: rgba(255, 255, 255, 0.7);
   color: var(--dnd-ink-primary);
+}
+
+.btn-and-detail {
+  min-height: 0;
+  align-self: self-start;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 700px;
+}
+
+.list-and-detail {
+  max-height: 700px;
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 20px;
+}
+
+.detail-wrapper {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 </style>

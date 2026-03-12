@@ -70,7 +70,6 @@ const props = defineProps<{
   border: 2px solid var(--dnd-ink-secondary);
   min-width: 0;
   overflow-x: auto;
-  align-self: start;
   max-height: 100%;
   overflow-y: auto;
 }

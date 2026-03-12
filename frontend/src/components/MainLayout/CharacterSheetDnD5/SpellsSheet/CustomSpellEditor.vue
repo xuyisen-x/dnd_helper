@@ -304,7 +304,7 @@ const toggleMaterial = () => {
               <input
                 class="material-input"
                 type="text"
-                v-model="newSpell.range"
+                v-model="newSpell.duration"
                 placeholder="请输入持续时间"
               />
             </div>

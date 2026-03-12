@@ -27,7 +27,6 @@ const handleFileChange = (event: Event) => {
   if (!file) return
 
   if (!file.type.startsWith('image/')) {
-    console.error('请选择图片文件')
     return
   }
 

@@ -318,13 +318,11 @@ const rollDeathSave = async () => {
           @click.stop="rollDeathSave"
           @contextmenu.prevent.stop="
             () => {
-              console.log(isUsingMouse)
               if (isUsingMouse) showConfig = true
             }
           "
           v-longpress="
             () => {
-              console.log(isUsingMouse)
               if (!isUsingMouse) showConfig = true
             }
           "

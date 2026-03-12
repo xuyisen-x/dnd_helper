@@ -29,9 +29,7 @@ onUnmounted(() => {
   <div class="feature-description-popover" ref="popoverRef">
     <div class="arrow"></div>
     <div class="popover-title">{{ props.title }}</div>
-    <div class="popover-body">
-      {{ props.details || '暂无描述。' }}
-    </div>
+    <div class="popover-body" v-html="props.details || '<p>暂无描述。</p>'"></div>
   </div>
 </template>
 

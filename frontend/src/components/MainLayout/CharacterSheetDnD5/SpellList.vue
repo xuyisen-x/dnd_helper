@@ -189,8 +189,6 @@ const filteredSpells = computed(() => {
 }
 
 .detail-panel {
-  position: sticky;
-  top: 20px;
   min-width: 0;
   min-height: 0;
   height: 100%;

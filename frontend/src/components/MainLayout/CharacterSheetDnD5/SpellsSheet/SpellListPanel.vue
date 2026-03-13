@@ -84,8 +84,8 @@ const toggleAdd = (id: string) => {
         <div
           class="check-icon"
           :class="{
-            checked: props.addingSpellIds.has(spell.id),
             disabled: props.addededSpellIds.has(spell.id),
+            checked: !props.addededSpellIds.has(spell.id) && props.addingSpellIds.has(spell.id),
           }"
         >
           <svg

@@ -8,6 +8,14 @@ import { useSpellStore } from '@/stores/rules/dnd5/spells'
 import { getLevelLabel, getSchoolLabel } from '@/utils/dnd5/spellDisplay.ts'
 import EditIcon from '@/components/Icons/EditIcon.vue'
 import GearIcon from '@/components/Icons/GearIcon.vue'
+import OtherInfoDialog from './OtherInfoDialog.vue'
+import BinIcon from '@/components/Icons/BinIcon.vue'
+import AddIcon from '@/components/Icons/AddIcon.vue'
+import MinusIcon from '@/components/Icons/MinusIcon.vue'
+import { confirmationBox } from '@/composables/useConfirmationBox'
+import { useDiceBox } from '@/composables/useDiceBox'
+
+const { foldAndCheckConstantsInteger } = useDiceBox()
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -21,6 +29,10 @@ const { spellsMap, isLoading, error } = storeToRefs(spellStore)
 const props = defineProps<{
   id: string
   selectedSpellId: string | undefined
+}>()
+
+const emit = defineEmits<{
+  (e: 'select', spell: Spell): void
 }>()
 
 const isValidSpell = (spellDnD5: SpellTypeDnd5): boolean => {
@@ -50,6 +62,16 @@ const currentSpells = computed(() => {
   filteredSpells = filteredSpells.filter((s) => isValidSpell(s.item.spell))
   let result = filteredSpells.map((s) => {
     const [spellData, isCustom] = getSpells(s.item.spell)
+    const freeUsageNumber = (() => {
+      const folded = foldAndCheckConstantsInteger(s.item.freeUsage)
+      return folded[0] ? folded[1] : null
+    })()
+    const containedFreeUsageNumberView = (() => {
+      if (freeUsageNumber === null) return 0
+      if (s.item.containedFreeUsage < 0) return 0
+      if (s.item.containedFreeUsage > freeUsageNumber!) return freeUsageNumber!
+      return s.item.containedFreeUsage
+    })()
     return {
       index: s.index,
       id: spellData.id,
@@ -61,12 +83,6 @@ const currentSpells = computed(() => {
       set prepared(val: boolean) {
         s.item.prepared = val
       },
-      get dontCount() {
-        return s.item.dontCount
-      },
-      set dontCount(val: boolean) {
-        s.item.dontCount = val
-      },
       get notes() {
         return s.item.notes
       },
@@ -74,17 +90,26 @@ const currentSpells = computed(() => {
         s.item.notes = val
       },
       other: {
-        get freeUsage() {
-          return s.item.freeUsage
+        containedFreeUsage: s.item.containedFreeUsage,
+        freeUsage: s.item.freeUsage,
+        afterLongRest: s.item.afterLongRest,
+        afterShortRest: s.item.afterShortRest,
+        dontCount: s.item.dontCount,
+        freeUsageNumber: freeUsageNumber,
+        containedFreeUsageNumberView: containedFreeUsageNumberView,
+        showAdd: freeUsageNumber !== null && containedFreeUsageNumberView < freeUsageNumber!,
+        showMinus: freeUsageNumber !== null && containedFreeUsageNumberView > 0,
+        addOne: () => {
+          if (freeUsageNumber === null) return
+          s.item.containedFreeUsage =
+            containedFreeUsageNumberView < freeUsageNumber
+              ? containedFreeUsageNumberView + 1
+              : containedFreeUsageNumberView
         },
-        set freeUsage(val: string) {
-          s.item.freeUsage = val
-        },
-        get containedFreeUsage() {
-          return s.item.containedFreeUsage
-        },
-        set containedFreeUsage(val: number) {
-          s.item.containedFreeUsage = val
+        minusOne: () => {
+          if (freeUsageNumber === null) return
+          s.item.containedFreeUsage =
+            containedFreeUsageNumberView > 0 ? containedFreeUsageNumberView - 1 : 0
         },
       },
     }
@@ -94,10 +119,6 @@ const currentSpells = computed(() => {
   }
   return result
 })
-
-const emit = defineEmits<{
-  (e: 'select', spell: Spell): void
-}>()
 
 // 拖拽相关
 const draggingIndex = ref<number | null>(null)
@@ -127,6 +148,49 @@ const handleDrop = (index: number) => {
     spellList.splice(index, 0, moved)
   }
   handleDragEnd()
+}
+
+const editIndex = ref<number | null>(null)
+
+const deleteSpell = async (index: number) => {
+  editIndex.value = null
+  const spellList = sheet.value.spells.list.find((s) => s.id === props.id)!.spells
+  const spell = getSpells(spellList[index]!.spell)[0]
+  const confirmed = await confirmationBox(
+    '删除法术',
+    `确定要删除法术「${spell.name}」吗？此操作不可撤销。`,
+  )
+  if (!confirmed) return
+  spellList.splice(index, 1)
+}
+
+const saveSpellOtherInfo = (
+  index: number,
+  data: {
+    freeUsage: string
+    containedFreeUsage: number
+    afterLongRest: string
+    afterShortRest: string
+    dontCount: boolean
+  },
+) => {
+  const spellList = sheet.value.spells.list.find((s) => s.id === props.id)!.spells
+  const spellItem = spellList[index]!
+  spellItem.freeUsage = data.freeUsage
+  spellItem.containedFreeUsage = data.containedFreeUsage
+  spellItem.afterLongRest = data.afterLongRest
+  spellItem.afterShortRest = data.afterShortRest
+  spellItem.dontCount = data.dontCount
+  editIndex.value = null
+}
+
+const preparedCount = computed(() => {
+  return currentSpells.value.filter((s) => s.spell.level !== 0 && !s.other.dontCount && s.prepared)
+    .length
+})
+
+const isNullorLessThanZero = (val: number | null): boolean => {
+  return val === null || val <= 0
 }
 </script>
 
@@ -166,6 +230,7 @@ const handleDrop = (index: number) => {
       <div class="tab-item" :class="{ active: selectedTab === 9 }" @click="selectedTab = 9">
         <div>{{ selectedTab === 9 ? '九环' : '九' }}</div>
       </div>
+      <div class="prepare-count">已准备数量：{{ preparedCount }}</div>
     </div>
     <div class="main-content">
       <div v-if="isLoading" class="status">正在加载法术数据...</div>
@@ -181,6 +246,7 @@ const handleDrop = (index: number) => {
           <div class="col-header center">成分</div>
           <div class="col-header center">仪式</div>
           <div class="col-header center">专注</div>
+          <div class="col-header center">免费次数</div>
           <div class="col-header">备注</div>
           <div></div>
         </div>
@@ -203,9 +269,29 @@ const handleDrop = (index: number) => {
           <div class="col-drag">
             <div class="drag-handle" title="拖动排序">⠿</div>
           </div>
-          <div class="filter-chip" @click.stop="spell.prepared = !spell.prepared">
-            <div class="check-icon" :class="{ checked: spell.prepared }">
-              <svg v-if="spell.prepared" viewBox="0 0 24 24" class="svg-icon">
+          <div
+            class="filter-chip"
+            @click.stop="
+              () => {
+                if (spell.spell.level === 0) return
+                if (spell.other.dontCount) return
+                spell.prepared = !spell.prepared
+              }
+            "
+          >
+            <div
+              class="check-icon"
+              :class="{
+                disabled: spell.spell.level === 0,
+                'dont-count': spell.spell.level !== 0 && spell.other.dontCount,
+                checked: spell.spell.level !== 0 && !spell.other.dontCount && spell.prepared,
+              }"
+            >
+              <svg
+                v-if="spell.spell.level === 0 || spell.prepared || spell.other.dontCount"
+                viewBox="0 0 24 24"
+                class="svg-icon"
+              >
                 <polyline points="20 6 9 17 4 12"></polyline>
               </svg>
             </div>
@@ -223,6 +309,33 @@ const handleDrop = (index: number) => {
           </div>
           <div class="col center">{{ spell.spell.is_ritual ? '√' : '×' }}</div>
           <div class="col center">{{ spell.spell.need_concentration ? '√' : '×' }}</div>
+          <div v-if="isNullorLessThanZero(spell.other.freeUsageNumber)"></div>
+          <div class="col center" v-else>
+            <div class="usage-meta">
+              <span>
+                {{ spell.other.containedFreeUsageNumberView }} /
+                {{ spell.other.freeUsageNumber }}</span
+              >
+            </div>
+            <div class="usage-actions">
+              <div
+                class="btn-icon"
+                @click.stop="spell.other.addOne()"
+                :class="{
+                  'disable-button': !spell.other.showAdd,
+                }"
+              >
+                <add-icon class="clickable" title="+1" />
+              </div>
+              <div
+                class="btn-icon"
+                @click.stop="spell.other.minusOne()"
+                :class="{ 'disable-button': !spell.other.showMinus }"
+              >
+                <minus-icon class="clickable" title="-1" />
+              </div>
+            </div>
+          </div>
           <div class="col" @click.stop>
             <input type="text" v-model="spell.notes" class="bare-input" placeholder="请输入备注" />
           </div>
@@ -230,10 +343,31 @@ const handleDrop = (index: number) => {
             <div class="btn-icon" @click.stop v-if="spell.isCustom">
               <gear-icon class="clickable" title="编辑法术内容本身" />
             </div>
-            <div class="btn-icon" @click.stop>
+            <div
+              class="btn-icon"
+              @click.stop="editIndex = spell.index"
+              v-if="spell.spell.level !== 0"
+            >
               <edit-icon class="clickable" title="编辑其他法术特性" />
             </div>
+            <div class="btn-icon" @click.stop="deleteSpell(spell.index)" v-else>
+              <bin-icon class="clickable" title="删除法术" />
+            </div>
           </div>
+          <teleport to="body">
+            <OtherInfoDialog
+              v-if="editIndex === spell.index"
+              :after-long-rest="spell.other.afterLongRest"
+              :after-short-rest="spell.other.afterShortRest"
+              :free-usage="spell.other.freeUsage"
+              :contained-free-usage="spell.other.containedFreeUsage"
+              :dont-count="spell.other.dontCount"
+              :name="spell.spell.name"
+              @close="editIndex = null"
+              @delete="deleteSpell(spell.index)"
+              @save="(data) => saveSpellOtherInfo(spell.index, data)"
+            />
+          </teleport>
         </div>
       </div>
     </div>
@@ -318,7 +452,7 @@ body.has-mouse .tab-item:hover {
 
 .grid-layout {
   display: grid;
-  grid-template-columns: 15px 40px 1fr 80px 32px 47px 33px 33px 1fr 50px;
+  grid-template-columns: 15px 40px 1.5fr 80px 32px 47px 33px 33px 1fr 1.5fr 50px;
   gap: 10px;
 }
 
@@ -362,6 +496,16 @@ body.has-mouse .spell-item:hover {
 .check-icon.checked {
   background-color: var(--dnd-dragon-red);
   border-color: var(--dnd-dragon-red);
+}
+.check-icon.disabled {
+  background-color: var(--dnd-stone-text);
+  border-color: var(--dnd-stone-text);
+  cursor: not-allowed;
+}
+.check-icon.dont-count {
+  background-color: var(--dnd-magic-blue);
+  border-color: var(--dnd-magic-blue);
+  cursor: not-allowed;
 }
 .filter-chip {
   display: flex;
@@ -484,5 +628,35 @@ body.has-mouse .spell-item:hover {
   gap: 8px;
   flex-direction: row;
   justify-content: flex-end;
+}
+
+.prepare-count {
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--dnd-ink-primary);
+  display: flex;
+  align-items: center;
+  justify-content: right;
+  flex: 1;
+}
+
+.hidden-button {
+  visibility: hidden;
+}
+
+.usage-actions {
+  display: flex;
+  flex-direction: column;
+}
+
+.usage-meta {
+  display: flex;
+  align-items: center;
+  margin-right: 2px;
+}
+
+.disable-button {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 </style>

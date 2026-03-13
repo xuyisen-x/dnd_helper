@@ -194,7 +194,11 @@ const selectedSpell = ref<null | Spell>(null)
       </div>
       <div class="divider"></div>
       <div class="list-and-detail">
-        <SpellListsPanel :id="props.id!" @select="selectedSpell = $event"></SpellListsPanel>
+        <SpellListsPanel
+          :id="props.id!"
+          :selected-spell-id="selectedSpell?.id"
+          @select="selectedSpell = $event"
+        ></SpellListsPanel>
         <div class="btn-and-detail">
           <div class="btn-group">
             <div class="add-spell-btn" @click="addExistingSpell">
@@ -418,6 +422,7 @@ body.has-mouse .add-spell-btn:hover {
 
 .btn-and-detail {
   min-height: 0;
+  min-width: 0;
   align-self: self-start;
   display: flex;
   flex-direction: column;

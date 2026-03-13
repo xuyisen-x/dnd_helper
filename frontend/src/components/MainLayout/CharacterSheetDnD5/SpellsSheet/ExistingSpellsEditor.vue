@@ -190,6 +190,7 @@ const saveEditDialog = () => {
         dontCount: false,
         notes: '',
         freeUsage: '',
+        containedFreeUsage: 0,
         afterLongRest: '',
         afterShortRest: '',
       })

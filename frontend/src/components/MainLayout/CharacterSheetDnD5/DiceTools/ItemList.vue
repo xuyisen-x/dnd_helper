@@ -86,20 +86,15 @@ const computedDamage = computed(() => {
         'drag-target': dragOverIndex === index && draggingIndex !== null,
         selected: attack.count + attack.criticalCount > 0,
       }"
+      draggable="true"
+      @dragstart="handleDragStart(index)"
+      @dragend="handleDragEnd"
       @dragover.prevent="handleDragOver(index)"
       @drop.prevent="handleDrop(index)"
     >
       <!-- 排序图标 -->
       <div class="col-drag">
-        <div
-          class="drag-handle"
-          title="拖动排序"
-          draggable="true"
-          @dragstart="handleDragStart(index)"
-          @dragend="handleDragEnd"
-        >
-          ⠿
-        </div>
+        <div class="drag-handle" title="拖动排序">⠿</div>
       </div>
       <!-- 计数器，实际上是一个input -->
       <div class="text-center">

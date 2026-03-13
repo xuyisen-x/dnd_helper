@@ -176,19 +176,14 @@ onBeforeUnmount(() => {
             dragging: draggingIndex === index,
             'drag-target': dragOverIndex === index && draggingIndex !== null,
           }"
+          draggable="true"
+          @dragstart="handleDragStart(index)"
+          @dragend="handleDragEnd"
           @dragover.prevent="handleDragOver(index)"
           @drop.prevent="handleDrop(index)"
         >
           <div class="col-drag">
-            <div
-              class="drag-handle"
-              title="拖动排序"
-              draggable="true"
-              @dragstart="handleDragStart(index)"
-              @dragend="handleDragEnd"
-            >
-              ⠿
-            </div>
+            <div class="drag-handle" title="拖动排序">⠿</div>
           </div>
           <div class="input-wrap col-name">
             <input type="text" v-model="attack.name" class="bare-input" placeholder="长剑" />

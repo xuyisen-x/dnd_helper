@@ -167,6 +167,7 @@ export interface SpellTableDnd5 {
     dontCount: boolean // 不计入已经准备的法术数量
     notes: string // 备注
     freeUsage: string // 免费的使用次数
+    containedFreeUsage: number // 剩余的使用次数
     afterLongRest: string // 长休后恢复的免费使用此时
     afterShortRest: string // 短休后恢复的免费使用次数
   }[]
@@ -365,7 +366,8 @@ export interface Dnd5Data {
       performance: [string, string][]
       persuasion: [string, string][]
     }
-    skill_all: [string, string][] // 全技能增加，比如万事通
+    skill_all: [string, string][]
+    jack_of_all_trades: boolean // 是否有万事通
     initiative: [string, string][]
   }
 
@@ -395,6 +397,9 @@ export interface Dnd5Data {
     target_susceptibilities: DamageSusceptibilitiesDnd5
     items: DiceToolItemDnd5[]
   }
+
+  // 状态：
+  conditions: string[]
 }
 
 // ==========================================
@@ -549,6 +554,7 @@ export function createEmptyDnd5Data(): Dnd5Data {
       },
       skill_all: [],
       initiative: [],
+      jack_of_all_trades: false,
     },
     portraitBase64: '',
     background: {
@@ -584,5 +590,6 @@ export function createEmptyDnd5Data(): Dnd5Data {
       },
       items: [],
     },
+    conditions: [],
   }
 }

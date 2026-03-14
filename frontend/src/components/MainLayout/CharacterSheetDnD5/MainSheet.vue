@@ -14,6 +14,8 @@ import RaceFeaturesPanel from './MainSheet/RaceFeaturesPanel.vue'
 import FeatPanel from './MainSheet/FeatPanel.vue'
 import EquipmentPanel from './MainSheet/EquipmentPanel.vue'
 import CoinPanel from './MainSheet/CoinPanel.vue'
+import ExtraModify from './MainSheet/ExtraModify.vue'
+import PlaceHolder from './MainSheet/PlaceHolder.vue'
 </script>
 
 <template>
@@ -25,12 +27,14 @@ import CoinPanel from './MainSheet/CoinPanel.vue'
           <AbilityShield ability-key="str" />
           <AbilityShield ability-key="dex" />
           <AbilityShield ability-key="con" />
+          <ExtraModify />
           <InspirationShield />
         </div>
         <div class="ability-column">
           <AbilityShield ability-key="int" />
           <AbilityShield ability-key="wis" />
           <AbilityShield ability-key="cha" />
+          <PlaceHolder />
         </div>
       </div>
 

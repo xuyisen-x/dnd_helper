@@ -124,7 +124,7 @@ const handleDrop = (index: number) => {
   flex-direction: column;
   gap: 8px;
   overflow-y: auto;
-  max-height: 281px;
+  max-height: 385px;
 }
 
 /* Grid 定义：根据内容重要性分配宽度比例 */

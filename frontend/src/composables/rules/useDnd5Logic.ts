@@ -164,6 +164,9 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
       abilityModifies[ability] + // 能力调整值
       (skill.prof ? proficiencyBonus.value : 0) + // 如果熟练该技能加上熟练加值
       (skill.prof && skill.expert ? proficiencyBonus.value : 0) + // 如果精通该技能再加一次熟练加值
+      (sheet.value.extra_modify.jack_of_all_trades && !skill.prof
+        ? Math.floor(proficiencyBonus.value / 2)
+        : 0) + // 万事通加值（不熟练的技能加半个熟练加值，向下取整）
       extraSkillModifies[skillKey] + // 加上用户自定义的额外调整值
       extraSkillAllModify.value // 全技能额外调整值
     )
@@ -745,5 +748,7 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
     pactSpellSlotsView,
     getSpellAttackBonus,
     getSpellDC,
+    extraSaveAllModify,
+    extraSkillAllModify,
   }
 }

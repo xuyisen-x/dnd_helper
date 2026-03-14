@@ -110,7 +110,7 @@ body.has-mouse .nav-link:hover {
 .main-content {
   background-color: var(--dnd-parchment-bg); /* 羊皮纸背景 */
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: visible;
   position: relative;
 
   /* 这里的 padding 是为了让内容不贴边 */

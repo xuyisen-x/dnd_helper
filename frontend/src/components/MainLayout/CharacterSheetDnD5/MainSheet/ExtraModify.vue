@@ -79,7 +79,7 @@ const openSaveConfig = ref<boolean>(false)
   flex-direction: column;
 
   border: 2px solid var(--dnd-ink-secondary);
-  border-radius: 10px 10px 50px 50px; /* 底部圆角更大，像个U型盾 */
+  border-radius: 10px 10px 30px 30px; /* 底部圆角更大，像个U型盾 */
   background-color: var(--color-background);
   position: relative;
   font-family: 'Georgia', serif;

@@ -5,18 +5,16 @@ import MainSheet from './CharacterSheetDnD5/MainSheet.vue'
 import SpellsSheet from './CharacterSheetDnD5/SpellsSheet.vue'
 import DiceTools from './CharacterSheetDnD5/DiceTools.vue'
 import SpellList from './CharacterSheetDnD5/SpellList.vue'
-import GlossaryList from './CharacterSheetDnD5/GlossaryList.vue'
 import ShortRestDialog from './CharacterSheetDnD5/ShortRestDialog.vue'
 import { useSpellStore } from '@/stores/rules/dnd5/spells'
 
 // --- Tabs 逻辑 ---
-const currentTab = ref<'main' | 'spells' | 'dice' | 'spell_list' | 'glossary'>('main')
+const currentTab = ref<'main' | 'spells' | 'dice' | 'spell_list'>('main')
 const tabs = {
   main: MainSheet,
   spells: SpellsSheet,
   dice: DiceTools,
   spell_list: SpellList,
-  glossary: GlossaryList,
 }
 const currentComponent = computed(() => tabs[currentTab.value])
 
@@ -95,9 +93,6 @@ onUnmounted(() => {
         伤害计算器
       </button>
       <div class="blank"></div>
-      <button :class="{ active: currentTab === 'glossary' }" @click="currentTab = 'glossary'">
-        术语速查表
-      </button>
       <button :class="{ active: currentTab === 'spell_list' }" @click="currentTab = 'spell_list'">
         法术速查表
       </button>

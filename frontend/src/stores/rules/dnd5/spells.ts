@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, markRaw, ref } from 'vue'
 
 import type { Spell } from '@/types/dnd5-spells'
+import type { SpellTypeDnd5 } from '../dnd5'
 
 const STORAGE_KEY = 'dnd5_spells_cache_v1'
 
@@ -64,5 +65,13 @@ export const useSpellStore = defineStore('spells', () => {
     localStorage.removeItem(STORAGE_KEY)
   }
 
-  return { spellsMap, spells, isLoading, error, fetchSpells, clearCache }
+  const getSpell = (spellDnD5: SpellTypeDnd5): [Spell, boolean] => {
+    if (typeof spellDnD5 === 'string') {
+      return [spellsMap.value[spellDnD5]!, false]
+    } else {
+      return [spellDnD5, true]
+    }
+  }
+
+  return { spellsMap, spells, isLoading, error, fetchSpells, clearCache, getSpell }
 })

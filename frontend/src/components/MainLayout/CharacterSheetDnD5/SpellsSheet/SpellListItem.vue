@@ -11,6 +11,7 @@ import OtherInfoDialog from './OtherInfoDialog.vue'
 import BinIcon from '@/components/Icons/BinIcon.vue'
 import AddIcon from '@/components/Icons/AddIcon.vue'
 import MinusIcon from '@/components/Icons/MinusIcon.vue'
+import CustomSpellEditor from './CustomSpellEditor.vue'
 import { confirmationBox } from '@/composables/useConfirmationBox'
 import { useDiceBox } from '@/composables/useDiceBox'
 
@@ -88,6 +89,7 @@ const showMinus = computed(() => {
 })
 
 const isEditing = ref<boolean>(false)
+const isEditingCustom = ref<boolean>(false)
 
 const deleteSpell = async () => {
   isEditing.value = false
@@ -120,6 +122,13 @@ const saveSpellOtherInfo = (data: {
 
 const isNullorLessThanZero = (val: number | null): boolean => {
   return val === null || val <= 0
+}
+
+const closeCustomEditor = () => {
+  if (props.selected) {
+    emit('select', spellData.value)
+  }
+  isEditingCustom.value = false
 }
 </script>
 
@@ -205,7 +214,7 @@ const isNullorLessThanZero = (val: number | null): boolean => {
       <input type="text" v-model="spellItem.notes" class="bare-input" placeholder="请输入备注" />
     </div>
     <div class="col btn-group">
-      <div class="btn-icon" @click.stop v-if="isCustom">
+      <div class="btn-icon" @click.stop="isEditingCustom = true" v-if="isCustom">
         <gear-icon class="clickable" title="编辑法术内容本身" />
       </div>
       <div class="btn-icon" @click.stop="isEditing = true" v-if="spellData.level !== 0">
@@ -227,6 +236,14 @@ const isNullorLessThanZero = (val: number | null): boolean => {
         @close="isEditing = false"
         @delete="deleteSpell()"
         @save="saveSpellOtherInfo"
+      />
+    </teleport>
+    <teleport to="body">
+      <CustomSpellEditor
+        v-if="isEditingCustom"
+        :list-idx="props.listIdx"
+        :target-spell-idx="props.index"
+        @close="closeCustomEditor()"
       />
     </teleport>
   </div>

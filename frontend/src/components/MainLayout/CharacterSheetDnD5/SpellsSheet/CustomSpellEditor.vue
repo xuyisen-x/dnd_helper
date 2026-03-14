@@ -1,11 +1,21 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from 'vue'
+import { computed, defineAsyncComponent, ref, toRaw } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import type { Spell } from '@/types/dnd5-spells'
 import { nanoid } from 'nanoid'
 
 const TipTapEditor = defineAsyncComponent(() => import('@/components/Common/TipTapEditor.vue'))
+
+const props = withDefaults(
+  defineProps<{
+    listIdx: number
+    targetSpellIdx?: number | null
+  }>(),
+  {
+    targetSpellIdx: null,
+  },
+)
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -14,60 +24,75 @@ const sheet = computed({
 })
 const emit = defineEmits(['close'])
 
-const newSpell = ref<Spell>({
-  id: nanoid(),
-  name: '', // done
-  english_name: '', // done
-  level: 0, //done
-  school: 'abjuration', //done
-  class_list: [], // don't care
-  is_ritual: false, // done
-  casting_time: '', // done
-  range: '', // done
-  need_verbal: false, // done
-  need_somatic: false, // done
-  material: null, // done
-  need_concentration: false, // done
-  duration: '', // done
-  description: '',
-  source: 'CUSTOM', // don't care
-  is_legacy: false, // don't care
-})
+const defaultSpell = () => {
+  return {
+    id: nanoid(),
+    name: '', // done
+    english_name: '', // done
+    level: 0, //done
+    school: 'abjuration', //done
+    class_list: [], // don't care
+    is_ritual: false, // done
+    casting_time: '', // done
+    range: '', // done
+    need_verbal: false, // done
+    need_somatic: false, // done
+    material: null, // done
+    need_concentration: false, // done
+    duration: '', // done
+    description: '',
+    source: 'CUSTOM', // don't care
+    is_legacy: false, // don't care
+  } as Spell
+}
+
+const draftedSpell = (() => {
+  if (props.targetSpellIdx === null) return ref<Spell>(defaultSpell())
+  const targetSpell = sheet.value.spells.list[props.listIdx]?.spells[props.targetSpellIdx]?.spell
+  if (targetSpell === undefined) return ref<Spell>(defaultSpell())
+  if (typeof targetSpell === 'string') {
+    // unreachable
+    return ref<Spell>(defaultSpell())
+  }
+  return ref<Spell>(structuredClone(toRaw(targetSpell)))
+})()
 
 const closeDialog = () => {
   emit('close')
 }
-
-const props = defineProps<{
-  id: string
-}>()
 
 const closeEditDialog = () => {
   emit('close')
 }
 
 const saveEditDialog = () => {
-  const targetSpellList = sheet.value.spells.list.find((list) => list.id === props.id)
+  const targetSpellList = sheet.value.spells.list[props.listIdx]
+  const targetSpellItem =
+    props.targetSpellIdx !== null ? targetSpellList?.spells[props.targetSpellIdx] : null
   if (targetSpellList !== undefined) {
-    targetSpellList.spells.push({
-      spell: newSpell.value,
-      prepared: false,
-      dontCount: false,
-      notes: '',
-      freeUsage: '',
-      containedFreeUsage: 0,
-      afterLongRest: '',
-      afterShortRest: '',
-    })
+    if (!targetSpellItem) {
+      targetSpellList.spells.push({
+        spell: draftedSpell.value,
+        prepared: false,
+        dontCount: false,
+        notes: '',
+        freeUsage: '',
+        containedFreeUsage: 0,
+        afterLongRest: '',
+        afterShortRest: '',
+      })
+    } else {
+      targetSpellItem.spell = draftedSpell.value
+    }
   }
   emit('close')
 }
 
 const toggleMaterial = () => {
-  if (newSpell.value.material === null) {
-    newSpell.value.material = ''
+  if (draftedSpell.value.material === null) {
+    draftedSpell.value.material = ''
   } else {
-    newSpell.value.material = null
+    draftedSpell.value.material = null
   }
 }
 </script>
@@ -79,13 +104,13 @@ const toggleMaterial = () => {
         <input
           class="spell-name"
           type="text"
-          v-model="newSpell.name"
+          v-model="draftedSpell.name"
           placeholder="请输入法术名称"
         />
         <input
           class="english"
           type="text"
-          v-model="newSpell.english_name"
+          v-model="draftedSpell.english_name"
           placeholder="请输入法术英文名称"
         />
       </div>
@@ -95,71 +120,71 @@ const toggleMaterial = () => {
           <div class="level-selector">
             <div
               class="level-item"
-              :class="{ checked: newSpell.level === 0 }"
-              @click="newSpell.level = 0"
+              :class="{ checked: draftedSpell.level === 0 }"
+              @click="draftedSpell.level = 0"
             >
               戏法
             </div>
             <div
               class="level-item"
-              :class="{ checked: newSpell.level === 1 }"
-              @click="newSpell.level = 1"
+              :class="{ checked: draftedSpell.level === 1 }"
+              @click="draftedSpell.level = 1"
             >
               一环
             </div>
             <div
               class="level-item"
-              :class="{ checked: newSpell.level === 2 }"
-              @click="newSpell.level = 2"
+              :class="{ checked: draftedSpell.level === 2 }"
+              @click="draftedSpell.level = 2"
             >
               二环
             </div>
             <div
               class="level-item"
-              :class="{ checked: newSpell.level === 3 }"
-              @click="newSpell.level = 3"
+              :class="{ checked: draftedSpell.level === 3 }"
+              @click="draftedSpell.level = 3"
             >
               三环
             </div>
             <div
               class="level-item"
-              :class="{ checked: newSpell.level === 4 }"
-              @click="newSpell.level = 4"
+              :class="{ checked: draftedSpell.level === 4 }"
+              @click="draftedSpell.level = 4"
             >
               四环
             </div>
             <div
               class="level-item"
-              :class="{ checked: newSpell.level === 5 }"
-              @click="newSpell.level = 5"
+              :class="{ checked: draftedSpell.level === 5 }"
+              @click="draftedSpell.level = 5"
             >
               五环
             </div>
             <div
               class="level-item"
-              :class="{ checked: newSpell.level === 6 }"
-              @click="newSpell.level = 6"
+              :class="{ checked: draftedSpell.level === 6 }"
+              @click="draftedSpell.level = 6"
             >
               六环
             </div>
             <div
               class="level-item"
-              :class="{ checked: newSpell.level === 7 }"
-              @click="newSpell.level = 7"
+              :class="{ checked: draftedSpell.level === 7 }"
+              @click="draftedSpell.level = 7"
             >
               七环
             </div>
             <div
               class="level-item"
-              :class="{ checked: newSpell.level === 8 }"
-              @click="newSpell.level = 8"
+              :class="{ checked: draftedSpell.level === 8 }"
+              @click="draftedSpell.level = 8"
             >
               八环
             </div>
             <div
               class="level-item"
-              :class="{ checked: newSpell.level === 9 }"
-              @click="newSpell.level = 9"
+              :class="{ checked: draftedSpell.level === 9 }"
+              @click="draftedSpell.level = 9"
             >
               九环
             </div>
@@ -168,92 +193,95 @@ const toggleMaterial = () => {
           <div class="school-selector">
             <div
               class="school-item"
-              :class="{ checked: newSpell.school === 'abjuration' }"
-              @click="newSpell.school = 'abjuration'"
+              :class="{ checked: draftedSpell.school === 'abjuration' }"
+              @click="draftedSpell.school = 'abjuration'"
             >
               防护
             </div>
             <div
               class="school-item"
-              :class="{ checked: newSpell.school === 'conjuration' }"
-              @click="newSpell.school = 'conjuration'"
+              :class="{ checked: draftedSpell.school === 'conjuration' }"
+              @click="draftedSpell.school = 'conjuration'"
             >
               咒法
             </div>
             <div
               class="school-item"
-              :class="{ checked: newSpell.school === 'divination' }"
-              @click="newSpell.school = 'divination'"
+              :class="{ checked: draftedSpell.school === 'divination' }"
+              @click="draftedSpell.school = 'divination'"
             >
               预言
             </div>
             <div
               class="school-item"
-              :class="{ checked: newSpell.school === 'enchantment' }"
-              @click="newSpell.school = 'enchantment'"
+              :class="{ checked: draftedSpell.school === 'enchantment' }"
+              @click="draftedSpell.school = 'enchantment'"
             >
               惑控
             </div>
             <div
               class="school-item"
-              :class="{ checked: newSpell.school === 'evocation' }"
-              @click="newSpell.school = 'evocation'"
+              :class="{ checked: draftedSpell.school === 'evocation' }"
+              @click="draftedSpell.school = 'evocation'"
             >
               塑能
             </div>
             <div
               class="school-item"
-              :class="{ checked: newSpell.school === 'illusion' }"
-              @click="newSpell.school = 'illusion'"
+              :class="{ checked: draftedSpell.school === 'illusion' }"
+              @click="draftedSpell.school = 'illusion'"
             >
               幻术
             </div>
             <div
               class="school-item"
-              :class="{ checked: newSpell.school === 'necromancy' }"
-              @click="newSpell.school = 'necromancy'"
+              :class="{ checked: draftedSpell.school === 'necromancy' }"
+              @click="draftedSpell.school = 'necromancy'"
             >
               死灵
             </div>
             <div
               class="school-item"
-              :class="{ checked: newSpell.school === 'transmutation' }"
-              @click="newSpell.school = 'transmutation'"
+              :class="{ checked: draftedSpell.school === 'transmutation' }"
+              @click="draftedSpell.school = 'transmutation'"
             >
               变化
             </div>
           </div>
           <div class="label">法术成分</div>
           <div class="components-group">
-            <div class="filter-chip" @click="newSpell.need_verbal = !newSpell.need_verbal">
-              <div class="check-icon" :class="{ checked: newSpell.need_verbal }">
-                <svg v-if="newSpell.need_verbal" viewBox="0 0 24 24" class="svg-icon">
+            <div class="filter-chip" @click="draftedSpell.need_verbal = !draftedSpell.need_verbal">
+              <div class="check-icon" :class="{ checked: draftedSpell.need_verbal }">
+                <svg v-if="draftedSpell.need_verbal" viewBox="0 0 24 24" class="svg-icon">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
               </div>
               <span class="choice-label">言语成分</span>
             </div>
-            <div class="filter-chip" @click="newSpell.need_somatic = !newSpell.need_somatic">
-              <div class="check-icon" :class="{ checked: newSpell.need_somatic }">
-                <svg v-if="newSpell.need_somatic" viewBox="0 0 24 24" class="svg-icon">
+            <div
+              class="filter-chip"
+              @click="draftedSpell.need_somatic = !draftedSpell.need_somatic"
+            >
+              <div class="check-icon" :class="{ checked: draftedSpell.need_somatic }">
+                <svg v-if="draftedSpell.need_somatic" viewBox="0 0 24 24" class="svg-icon">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
               </div>
               <span class="choice-label">姿势成分</span>
             </div>
             <div class="filter-chip" @click="toggleMaterial()">
-              <div class="check-icon" :class="{ checked: newSpell.material !== null }">
-                <svg v-if="newSpell.material !== null" viewBox="0 0 24 24" class="svg-icon">
+              <div class="check-icon" :class="{ checked: draftedSpell.material !== null }">
+                <svg v-if="draftedSpell.material !== null" viewBox="0 0 24 24" class="svg-icon">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
               </div>
               <span class="choice-label">材料成分</span>
             </div>
-            <div v-if="newSpell.material !== null">
+            <div v-if="draftedSpell.material !== null">
               <input
                 class="material-input"
                 type="text"
-                v-model="newSpell.material"
+                v-model="draftedSpell.material"
                 placeholder="请输入材料成分"
               />
             </div>
@@ -264,18 +292,18 @@ const toggleMaterial = () => {
             <div class="choice-group">
               <div
                 class="filter-chip"
-                @click="newSpell.need_concentration = !newSpell.need_concentration"
+                @click="draftedSpell.need_concentration = !draftedSpell.need_concentration"
               >
-                <div class="check-icon" :class="{ checked: newSpell.need_concentration }">
-                  <svg v-if="newSpell.need_concentration" viewBox="0 0 24 24" class="svg-icon">
+                <div class="check-icon" :class="{ checked: draftedSpell.need_concentration }">
+                  <svg v-if="draftedSpell.need_concentration" viewBox="0 0 24 24" class="svg-icon">
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
                 </div>
                 <span class="choice-label">需要专注</span>
               </div>
-              <div class="filter-chip" @click="newSpell.is_ritual = !newSpell.is_ritual">
-                <div class="check-icon" :class="{ checked: newSpell.is_ritual }">
-                  <svg v-if="newSpell.is_ritual" viewBox="0 0 24 24" class="svg-icon">
+              <div class="filter-chip" @click="draftedSpell.is_ritual = !draftedSpell.is_ritual">
+                <div class="check-icon" :class="{ checked: draftedSpell.is_ritual }">
+                  <svg v-if="draftedSpell.is_ritual" viewBox="0 0 24 24" class="svg-icon">
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
                 </div>
@@ -287,7 +315,7 @@ const toggleMaterial = () => {
               <input
                 class="material-input"
                 type="text"
-                v-model="newSpell.casting_time"
+                v-model="draftedSpell.casting_time"
                 placeholder="请输入施法时间"
               />
             </div>
@@ -296,7 +324,7 @@ const toggleMaterial = () => {
               <input
                 class="material-input"
                 type="text"
-                v-model="newSpell.range"
+                v-model="draftedSpell.range"
                 placeholder="请输入施法范围"
               />
             </div>
@@ -305,7 +333,7 @@ const toggleMaterial = () => {
               <input
                 class="material-input"
                 type="text"
-                v-model="newSpell.duration"
+                v-model="draftedSpell.duration"
                 placeholder="请输入持续时间"
               />
             </div>
@@ -314,7 +342,7 @@ const toggleMaterial = () => {
         <div class="description-panel">
           <div class="label">法术描述</div>
           <div class="editor-wrapper">
-            <TipTapEditor v-model="newSpell.description" placeholder="请输入法术描述" />
+            <TipTapEditor v-model="draftedSpell.description" placeholder="请输入法术描述" />
           </div>
         </div>
       </div>

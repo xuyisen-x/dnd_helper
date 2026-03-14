@@ -29,12 +29,12 @@ const toggleFilter = () => {
 const emit = defineEmits(['close'])
 
 const props = defineProps<{
-  id: string
+  listIdx: number
 }>()
 
 const currentSpellList = computed(() => {
   // 注意！这里的list最好只用于只读功能
-  const spellList = sheet.value.spells.list.find((list) => list.id === props.id)
+  const spellList = sheet.value.spells.list[props.listIdx]
   return spellList ? spellList.spells : []
 })
 
@@ -178,7 +178,7 @@ const closeEditDialog = () => {
 }
 
 const saveEditDialog = () => {
-  const targetSpellList = sheet.value.spells.list.find((list) => list.id === props.id)
+  const targetSpellList = sheet.value.spells.list[props.listIdx]
   if (targetSpellList !== undefined) {
     for (const spellId of addingSpellIds.value) {
       if (addededSpellIds.value.has(spellId)) {

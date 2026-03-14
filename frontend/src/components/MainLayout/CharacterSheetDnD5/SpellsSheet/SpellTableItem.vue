@@ -245,12 +245,12 @@ const selectedSpell = ref<null | Spell>(null)
   </div>
   <Teleport to="body">
     <ExistingSpellsEditor
-      :id="props.id!"
+      :list-idx="currentListIndex"
       v-if="addingExistingSpell"
       @close="addingExistingSpell = false"
     />
     <CustomSpellEditor
-      :id="props.id!"
+      :list-idx="currentListIndex"
       v-else-if="addingCustomSpell"
       @close="addingCustomSpell = false"
     />

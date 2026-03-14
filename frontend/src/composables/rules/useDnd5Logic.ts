@@ -388,17 +388,27 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
       ...sheet.value.features.race_features,
       ...sheet.value.features.feat,
       ...sheet.value.equipment,
+      ...sheet.value.spells.list.flatMap((spellList) => spellList.spells),
     ]
     for (const [index, feature] of allFeatures.entries()) {
       // 1. 检查是否有 afterLongRest 字段
       if (!feature.afterLongRest || feature.afterLongRest.trim() === '') continue
       // 2. 检查是否定义了上限
       const limit = calculateLimit(
-        'usageLimit' in feature ? feature.usageLimit : feature.chargesLimit,
+        'usageLimit' in feature
+          ? feature.usageLimit
+          : 'chargesLimit' in feature
+            ? feature.chargesLimit
+            : feature.freeUsage,
       )
       if (limit === Infinity) continue // 无上限的不处理
       // 3. 重置使用次数/充能到上限
-      const current = 'usageCount' in feature ? feature.usageCount : feature.chargesCurrent
+      const current =
+        'usageCount' in feature
+          ? feature.usageCount
+          : 'chargesCurrent' in feature
+            ? feature.chargesCurrent
+            : feature.containedFreeUsage
       if (current >= limit) continue // 已经满的跳过
       // 4. 检查 afterLongRest 是否为常数
       const [isConstant, value] = foldAndCheckConstantsInteger(feature.afterLongRest)
@@ -406,8 +416,10 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
       if (isConstant) {
         if ('usageCount' in feature) {
           feature.usageCount = Math.min(value + current, limit)
-        } else {
+        } else if ('chargesCurrent' in feature) {
           feature.chargesCurrent = Math.min(value + current, limit)
+        } else {
+          feature.containedFreeUsage = Math.min(value + current, limit)
         }
         continue
       }
@@ -442,9 +454,12 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
       if ('usageCount' in item) {
         const current = item.usageCount
         item.usageCount = Math.min(current + rolledValue, limit)
-      } else {
+      } else if ('chargesCurrent' in item) {
         const current = item.chargesCurrent
         item.chargesCurrent = Math.min(current + rolledValue, limit)
+      } else {
+        const current = item.containedFreeUsage
+        item.containedFreeUsage = Math.min(current + rolledValue, limit)
       }
     }
   }
@@ -479,17 +494,27 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
       ...sheet.value.features.race_features,
       ...sheet.value.features.feat,
       ...sheet.value.equipment,
+      ...sheet.value.spells.list.flatMap((spellList) => spellList.spells),
     ]
     for (const [index, feature] of allFeatures.entries()) {
       // 1. 检查是否有 afterShortRest 字段
       if (!feature.afterShortRest || feature.afterShortRest.trim() === '') continue
       // 2. 检查是否定义了上限
       const limit = calculateLimit(
-        'usageLimit' in feature ? feature.usageLimit : feature.chargesLimit,
+        'usageLimit' in feature
+          ? feature.usageLimit
+          : 'chargesLimit' in feature
+            ? feature.chargesLimit
+            : feature.freeUsage,
       )
       if (limit === Infinity) continue // 无上限的不处理
       // 3. 重置使用次数/充能到上限
-      const current = 'usageCount' in feature ? feature.usageCount : feature.chargesCurrent
+      const current =
+        'usageCount' in feature
+          ? feature.usageCount
+          : 'chargesCurrent' in feature
+            ? feature.chargesCurrent
+            : feature.containedFreeUsage
       if (current >= limit) continue // 已经满的跳过
       // 4. 检查 afterShortRest 是否为常数
       const [isConstant, value] = foldAndCheckConstantsInteger(feature.afterShortRest)
@@ -497,8 +522,10 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
       if (isConstant) {
         if ('usageCount' in feature) {
           feature.usageCount = Math.min(value + current, limit)
-        } else {
+        } else if ('chargesCurrent' in feature) {
           feature.chargesCurrent = Math.min(value + current, limit)
+        } else {
+          feature.containedFreeUsage = Math.min(value + current, limit)
         }
         continue
       }
@@ -533,9 +560,12 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
       if ('usageCount' in item) {
         const current = item.usageCount
         item.usageCount = Math.min(current + rolledValue, limit)
-      } else {
+      } else if ('chargesCurrent' in item) {
         const current = item.chargesCurrent
         item.chargesCurrent = Math.min(current + rolledValue, limit)
+      } else {
+        const current = item.containedFreeUsage
+        item.containedFreeUsage = Math.min(current + rolledValue, limit)
       }
     }
   }

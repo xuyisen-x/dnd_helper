@@ -25,7 +25,7 @@ const sheet = computed({
 const { getSpell } = useSpellStore()
 
 const props = defineProps<{
-  listId: string
+  listIdx: number
   index: number
   draggingIndex: number | null
   dragOverIndex: number | null
@@ -42,7 +42,7 @@ const emit = defineEmits<{
 
 // 1. 直接获取当前这一行法术的【响应式引用】
 const spellItem = computed(() => {
-  return sheet.value.spells.list.find((s) => s.id === props.listId)!.spells[props.index]!
+  return sheet.value.spells.list[props.listIdx]!.spells[props.index]!
 })
 
 // 2. 将基础数据拆分为纯净的小 computed
@@ -91,7 +91,7 @@ const isEditing = ref<boolean>(false)
 
 const deleteSpell = async () => {
   isEditing.value = false
-  const spellList = sheet.value.spells.list.find((s) => s.id === props.listId)!.spells
+  const spellList = sheet.value.spells.list[props.listIdx]!.spells
   const spell = getSpell(spellList[props.index]!.spell)[0]
   const confirmed = await confirmationBox(
     '删除法术',
@@ -109,7 +109,7 @@ const saveSpellOtherInfo = (data: {
   dontCount: boolean
 }) => {
   isEditing.value = false
-  const spellList = sheet.value.spells.list.find((s) => s.id === props.listId)!.spells
+  const spellList = sheet.value.spells.list[props.listIdx]!.spells
   const spellItem = spellList[props.index]!
   spellItem.freeUsage = data.freeUsage
   spellItem.containedFreeUsage = data.containedFreeUsage

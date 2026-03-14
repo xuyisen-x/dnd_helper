@@ -18,7 +18,7 @@ const { spellsMap, isLoading, error } = storeToRefs(spellStore)
 const { getSpell } = spellStore
 
 const props = defineProps<{
-  id: string
+  idx: number
   selectedSpellId: string | undefined
 }>()
 
@@ -36,12 +36,10 @@ const isValidSpell = (spellDnD5: SpellTypeDnd5): boolean => {
 const selectedTab = ref<number>(-1)
 
 const currentSpells = computed(() => {
-  let filteredSpells = sheet.value.spells.list
-    .find((s) => s.id === props.id)!
-    .spells.map((item, idx) => ({
-      item: item,
-      index: idx,
-    }))
+  let filteredSpells = sheet.value.spells.list[props.idx]!.spells.map((item, idx) => ({
+    item: item,
+    index: idx,
+  }))
   filteredSpells = filteredSpells.filter((s) => isValidSpell(s.item.spell))
   let result = filteredSpells.map((s) => {
     const spellData = getSpell(s.item.spell)[0]
@@ -79,7 +77,7 @@ const handleDrop = (index: number) => {
   if (draggingIndex.value === null) return
   const from = draggingIndex.value
   if (from === index) return handleDragEnd()
-  const spellList = sheet.value.spells.list.find((s) => s.id === props.id)!.spells
+  const spellList = sheet.value.spells.list[props.idx]!.spells
   const [moved] = spellList.splice(from, 1)
   if (moved) {
     spellList.splice(index, 0, moved)
@@ -88,7 +86,7 @@ const handleDrop = (index: number) => {
 }
 
 const preparedCount = computed(() => {
-  const list = sheet.value.spells.list.find((s) => s.id === props.id)?.spells
+  const list = sheet.value.spells.list[props.idx]?.spells
   if (!list) return 0
   return list.filter((s) => s.prepared && getSpell(s.spell)[0].level !== 0 && !s.dontCount).length
 })
@@ -153,7 +151,7 @@ const preparedCount = computed(() => {
         <SpellListItem
           v-for="spellInfo in currentSpells"
           :key="spellInfo.id"
-          :list-id="props.id"
+          :list-idx="props.idx"
           :index="spellInfo.index"
           :dragging-index="draggingIndex"
           :drag-over-index="dragOverIndex"

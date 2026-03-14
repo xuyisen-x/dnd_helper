@@ -28,8 +28,12 @@ const sheet = computed({
 
 const { getSpellAttackBonus, getSpellDC } = useDnd5Logic(sheet)
 
+const currentListIndex = computed(() => {
+  return sheet.value.spells.list.findIndex((list) => list.id === props.id)
+})
+
 const currentList = computed(() => {
-  return sheet.value.spells.list.find((list) => list.id === props.id)
+  return sheet.value.spells.list[currentListIndex.value]
 })
 
 const isEditingDC = ref(false)
@@ -195,7 +199,7 @@ const selectedSpell = ref<null | Spell>(null)
       <div class="divider"></div>
       <div class="list-and-detail">
         <SpellListsPanel
-          :id="props.id!"
+          :idx="currentListIndex"
           :selected-spell-id="selectedSpell?.id"
           @select="selectedSpell = $event"
         ></SpellListsPanel>

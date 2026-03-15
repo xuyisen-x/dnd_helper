@@ -399,7 +399,7 @@ export interface Dnd5Data {
   }
 
   // 状态：
-  conditions: string[]
+  conditions: [string, boolean][]
 }
 
 // ==========================================

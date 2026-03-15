@@ -5,6 +5,7 @@ import type { Dnd5Data } from '@/stores/rules/dnd5'
 import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import ClassManager from './ClassManager.vue'
 import RuleToggleButton from '../Common/RuleToggleButton.vue'
+import ConditionsPanel from './ConditionsPanel.vue'
 import { confirmationBox } from '@/composables/useConfirmationBox'
 import { useShortRestDialog } from '@/composables/dnd5/useShortRestDialog'
 
@@ -85,6 +86,7 @@ const longRestCliked = async () => {
             >长休
           </div>
         </div>
+        <ConditionsPanel />
       </div>
 
       <div class="side-grid">
@@ -125,10 +127,13 @@ const longRestCliked = async () => {
 
 <style scoped>
 .sheet-header {
-  margin-bottom: 20px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
   display: flex;
   flex-direction: column;
   gap: 10px;
+
+  border-bottom: 2px solid var(--dnd-ink-secondary);
 }
 
 /* --- 上半部分布局 --- */
@@ -154,8 +159,7 @@ const longRestCliked = async () => {
 .main-grid {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  margin-bottom: 10px;
+  gap: 10px;
 }
 
 .side-grid {

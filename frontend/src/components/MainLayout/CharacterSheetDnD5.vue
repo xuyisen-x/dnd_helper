@@ -6,15 +6,17 @@ import SpellsSheet from './CharacterSheetDnD5/SpellsSheet.vue'
 import DiceTools from './CharacterSheetDnD5/DiceTools.vue'
 import SpellList from './CharacterSheetDnD5/SpellList.vue'
 import ShortRestDialog from './CharacterSheetDnD5/ShortRestDialog.vue'
+import StorySheet from './CharacterSheetDnD5/StorySheet.vue'
 import { useSpellStore } from '@/stores/rules/dnd5/spells'
 
 // --- Tabs 逻辑 ---
-const currentTab = ref<'main' | 'spells' | 'dice' | 'spell_list'>('main')
+const currentTab = ref<'main' | 'spells' | 'dice' | 'spell_list' | 'story'>('main')
 const tabs = {
   main: MainSheet,
   spells: SpellsSheet,
   dice: DiceTools,
   spell_list: SpellList,
+  story: StorySheet,
 }
 const currentComponent = computed(() => tabs[currentTab.value])
 
@@ -92,6 +94,9 @@ onUnmounted(() => {
       <button :class="{ active: currentTab === 'dice' }" @click="currentTab = 'dice'">
         伤害计算器
       </button>
+      <button :class="{ active: currentTab === 'story' }" @click="currentTab = 'story'">
+        冒险故事
+      </button>
       <div class="blank"></div>
       <button :class="{ active: currentTab === 'spell_list' }" @click="currentTab = 'spell_list'">
         法术速查表
@@ -100,7 +105,7 @@ onUnmounted(() => {
 
     <div class="scale-wrapper" :style="wrapperStyle">
       <div class="dnd-sheet" ref="sheetRef" :style="{ transform: `scale(${scaleRatio})` }">
-        <SheetHeader v-if="['main', 'spells', 'dice'].includes(currentTab)" />
+        <SheetHeader v-if="['main', 'spells', 'dice', 'story'].includes(currentTab)" />
         <KeepAlive> <component :is="currentComponent" /> </KeepAlive>
       </div>
     </div>
@@ -214,5 +219,25 @@ body.has-mouse .dnd-sheet :deep(.clickable:hover) {
 }
 body.has-mouse .dnd-sheet :deep(.clickable:active) {
   transform: scale(0.95);
+}
+
+.delete-record-btn {
+  background: transparent;
+  border: none;
+  color: var(--dnd-ink-secondary); /* 默认淡色，不抢眼 */
+  font-weight: bold;
+  font-size: 1.2rem;
+  line-height: 1;
+  padding: 0 4px;
+  margin-left: 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.2s;
+}
+
+body.has-mouse .delete-record-btn:hover {
+  color: var(--dnd-dragon-red);
+  opacity: 0.6;
 }
 </style>

@@ -409,6 +409,8 @@ export interface Dnd5Data {
     id: string
     title: string
     content: string
+    createdAt: string // 创建时间
+    editedAt: string // 最后编辑时间
   }[]
 }
 

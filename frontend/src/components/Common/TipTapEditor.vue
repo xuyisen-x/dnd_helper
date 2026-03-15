@@ -39,7 +39,7 @@ watch(
     const isSame = editor.value?.getHTML() === newValue
     if (!isSame && editor.value) {
       // false 表示不要触发新的更新事件
-      editor.value.commands.setContent(newValue)
+      editor.value.commands.setContent(newValue, { emitUpdate: false })
     }
   },
 )

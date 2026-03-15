@@ -182,10 +182,15 @@ const deleteMacro = (index: number) => {
   activeCharacterStore.getCustomMacroList()?.splice(index, 1)
 }
 
-const handleMacroNameInput = (e: Event, index: number) => {
+const handleMacroNameChange = (e: Event, index: number) => {
   const target = e.target as HTMLInputElement
   target.value = target.value.replace(/[^a-zA-Z]/g, '')
   activeCharacterStore.getCustomMacroList()![index]![0] = target.value
+}
+
+const handleMacroNameInput = (e: Event) => {
+  const target = e.target as HTMLInputElement
+  target.value = target.value.replace(/[^a-zA-Z]/g, '')
 }
 </script>
 
@@ -251,11 +256,12 @@ const handleMacroNameInput = (e: Event, index: number) => {
             <div class="macro-entry2">
               <input
                 :value="macro[0]"
-                @input="(e) => handleMacroNameInput(e, index)"
+                @change="(e) => handleMacroNameChange(e, index)"
+                @input="handleMacroNameInput"
                 placeholder="宏名称"
                 class="macro-input"
               />
-              <input v-model="macro[1]" placeholder="骰子表达式" class="macro-input" />
+              <input v-model.lazy="macro[1]" placeholder="骰子表达式" class="macro-input" />
             </div>
             <span class="delete-record-btn" @click.stop="deleteMacro(index)" title="删除此宏">
               ×

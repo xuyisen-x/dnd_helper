@@ -5,6 +5,9 @@ import DiceIcon from '../Icons/DiceIcon.vue'
 import MutiDiceIcon from '../Icons/MutiDiceIcon.vue'
 import { onClickOutside } from '@vueuse/core'
 import { addDiceResult } from '@/stores/dice-result'
+import { useActiveCharacterStore } from '@/stores/active-character'
+
+const activeCharacterStore = useActiveCharacterStore()
 
 const { parseAndRoll, showAnimation, checkNotationValidAndFold } = useDiceBox()
 
@@ -163,6 +166,27 @@ onClickOutside(containnerRef, () => {
     clearState()
   }
 })
+
+// 用于切换最近投掷和自定义宏的标签页，暂时只做了最近投掷的展示
+const activeTab = ref<'history' | 'macros'>('history')
+
+const customMacroList = computed(() => {
+  return activeCharacterStore.getCustomMacroList()
+})
+
+const addMacro = () => {
+  activeCharacterStore.getCustomMacroList()?.push(['', ''])
+}
+
+const deleteMacro = (index: number) => {
+  activeCharacterStore.getCustomMacroList()?.splice(index, 1)
+}
+
+const handleMacroNameInput = (e: Event, index: number) => {
+  const target = e.target as HTMLInputElement
+  target.value = target.value.replace(/[^a-zA-Z]/g, '')
+  activeCharacterStore.getCustomMacroList()![index]![0] = target.value
+}
 </script>
 
 <template>
@@ -191,14 +215,58 @@ onClickOutside(containnerRef, () => {
           </div>
         </div>
       </div>
-      <div class="history-list" v-if="isPanelOpen && rollHistory.length > 0">
-        <div class="history-title">最近投掷</div>
-        <div v-for="(record, index) in rollHistory" :key="index" class="history-entry">
-          <span class="history-item" @click="rollDiceText(record)">{{ record }}</span>
+      <div class="history-or-macro-list" v-if="isPanelOpen">
+        <div class="tab-headers">
+          <div
+            class="tab-header"
+            :class="{ active: activeTab === 'history' }"
+            @click="activeTab = 'history'"
+          >
+            最近投掷
+          </div>
+          <div
+            class="tab-header"
+            :class="{ active: activeTab === 'macros' }"
+            @click="activeTab = 'macros'"
+          >
+            自定义宏
+          </div>
+        </div>
+        <div v-if="activeTab === 'history'" class="item-wrapper">
+          <div v-for="(record, index) in rollHistory" :key="index" class="history-entry">
+            <span class="history-item" @click="rollDiceText(record)">{{ record }}</span>
 
-          <span class="delete-record-btn" @click.stop="removeHistoryItem(index)" title="删除此记录">
-            ×
-          </span>
+            <span
+              class="delete-record-btn"
+              @click.stop="removeHistoryItem(index)"
+              title="删除此记录"
+            >
+              ×
+            </span>
+          </div>
+        </div>
+        <div v-if="activeTab === 'macros' && customMacroList" class="item-wrapper">
+          <div v-if="customMacroList.length === 0" class="empty-tip">点击下方按钮添加</div>
+          <div v-for="(macro, index) in customMacroList" :key="index" class="macro-entry">
+            <div class="macro-entry2">
+              <input
+                :value="macro[0]"
+                @input="(e) => handleMacroNameInput(e, index)"
+                placeholder="宏名称"
+                class="macro-input"
+              />
+              <input v-model="macro[1]" placeholder="骰子表达式" class="macro-input" />
+            </div>
+            <span class="delete-record-btn" @click.stop="deleteMacro(index)" title="删除此宏">
+              ×
+            </span>
+          </div>
+          <div class="macro-footer">
+            <button class="btn-add" @click="addMacro">+ 添加自定义宏</button>
+          </div>
+        </div>
+        <div v-if="activeTab === 'macros' && !customMacroList" class="item-wrapper">
+          <div>当前规则不支持自定义宏</div>
         </div>
       </div>
     </div>
@@ -543,13 +611,12 @@ body.has-mouse .roll-btn-icon:hover {
 }
 
 /* --- 历史记录容器 --- */
-.history-list {
+.history-or-macro-list {
   /* 布局与尺寸 */
   width: 300px;
   /* 限制高度，超过则滚动，防止占满屏幕 */
   height: 300px;
   max-height: 300px;
-  overflow-y: auto;
 
   /* 间距 */
   margin-bottom: 10px; /* 与下方骰子面板的距离 */
@@ -564,18 +631,37 @@ body.has-mouse .roll-btn-icon:hover {
   /* 内部布局 */
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
 
-/* --- 标题 --- */
-.history-title {
+.item-wrapper {
+  padding-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 1; /* 占满剩余空间，推动底部输入框和按钮往下 */
+  min-height: 0; /* 解决 flex:1 时内容过多导致的布局问题 */
+  overflow-y: auto; /* 内容过多时滚动 */
+}
+
+.tab-headers {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--dnd-ink-secondary);
+}
+
+.tab-header {
   font-size: 1rem;
   font-weight: bold;
   color: var(--dnd-ink-secondary);
-  border-bottom: 1px solid var(--dnd-ink-secondary);
-  opacity: 0.7;
+  border-bottom: 2px solid transparent;
   padding-bottom: 4px;
-  margin-bottom: 4px;
+  cursor: pointer;
+  padding: 0 10px;
+  border-radius: 5px 5px 0 0;
+}
+.tab-header.active {
+  background: var(--dnd-parchment-bg);
+  color: var(--dnd-dragon-red);
 }
 
 /* --- 单条记录 --- */
@@ -630,6 +716,25 @@ body.has-mouse .delete-record-btn:hover {
   justify-content: center;
 }
 
+.macro-entry {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.macro-entry2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background-color: rgba(255, 255, 255, 0.3);
+  padding: 4px 0px;
+  border-radius: 4px;
+}
+
 /* --- 悬停效果 --- */
 body.has-mouse .history-item:hover {
   /* 悬停时变成主题红，文字变白 */
@@ -660,5 +765,53 @@ body.has-mouse .history-item:hover {
   100% {
     transform: scale(1);
   }
+}
+
+.macro-footer {
+  display: flex;
+  justify-content: center;
+  padding-top: 4px;
+}
+
+.btn-add {
+  background: transparent;
+  border: 1px dashed var(--dnd-ink-secondary);
+  color: var(--dnd-ink-secondary);
+  padding: 6px 15px;
+  border-radius: 15px;
+  cursor: pointer;
+  font-size: 0.7rem;
+  transition: all 0.2s;
+}
+
+body.has-mouse .btn-add:hover {
+  border-style: solid;
+  color: var(--dnd-ink-primary);
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.empty-tip {
+  text-align: center;
+  color: var(--dnd-ink-secondary);
+  font-style: italic;
+  padding: 8px 0 4px;
+  opacity: 0.7;
+}
+
+.macro-input {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--dnd-ink-secondary, #75604e);
+  color: var(--dnd-ink-primary, #2b2118);
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  font-size: 1rem;
+  font-family: 'Courier New', Courier, monospace;
+  font-weight: 600;
+}
+.macro-input:focus {
+  border-bottom-color: var(--dnd-dragon-red, #8a1c1c);
+  background-color: rgba(255, 255, 255, 0.2);
 }
 </style>

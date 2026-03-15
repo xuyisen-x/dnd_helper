@@ -400,6 +400,16 @@ export interface Dnd5Data {
 
   // 状态：
   conditions: [string, boolean][]
+
+  // 自定义骰子宏
+  customDiceMacros: [string, string][]
+
+  // 角色故事
+  story: {
+    id: string
+    title: string
+    content: string
+  }[]
 }
 
 // ==========================================
@@ -591,5 +601,7 @@ export function createEmptyDnd5Data(): Dnd5Data {
       items: [],
     },
     conditions: [],
+    customDiceMacros: [],
+    story: [],
   }
 }

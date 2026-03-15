@@ -54,7 +54,7 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
 
   const ProficiencyBonusMacroModule: MacroModule = {
     lexicalRule: 'pb\\b',
-    match: (token) => /^pb$/i.test(token),
+    match: (token) => token === 'pb',
     resolve: () => proficiencyBonus.value,
   }
 
@@ -87,7 +87,7 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
 
   const rollAbilitySocreMacroModule: MacroModule = {
     lexicalRule: 'ras\\b',
-    match: (token) => /^ras$/.test(token),
+    match: (token) => token === 'ras',
     resolve: () => 'sortd([4d6kh3]**6)',
   }
 
@@ -159,6 +159,17 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
       attackMacroModule,
       damageMacroModule,
       spellAttackMacroModule,
+      ...sheet.value.customDiceMacros
+        .filter(([target, replacement]) => {
+          return target.trim() !== '' && replacement.trim() !== ''
+        })
+        .map(([target, replacement]) => {
+          return {
+            lexicalRule: `${target}\\b`,
+            match: (token) => token === target,
+            resolve: () => replacement,
+          } as MacroModule
+        }),
     ]
   })
 

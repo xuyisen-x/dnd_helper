@@ -38,5 +38,13 @@ export const useActiveCharacterStore = defineStore('active-character', () => {
     }
   }
 
-  return { rule, data, exportData, importData, getCharacterName }
+  const getCustomMacroList = () => {
+    if (rule.value === 'dnd5r' || rule.value === 'dnd5e') {
+      return (data.value as Dnd5Data).customDiceMacros
+    } else {
+      return undefined
+    }
+  }
+
+  return { rule, data, exportData, importData, getCharacterName, getCustomMacroList }
 })

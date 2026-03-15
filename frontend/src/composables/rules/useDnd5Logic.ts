@@ -29,45 +29,157 @@ export function formatWithSign(num: number): string {
   return num > 0 ? `+${num}` : `${num}`
 }
 
+export interface MacroModule {
+  lexicalRule: string
+  match: (token: string) => boolean
+  resolve: (token?: string) => string | number | null | undefined
+}
+
 export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
   const SKILL_KEYS: Array<keyof Dnd5Data['skills']> = Object.keys(sheet.value.skills) as Array<
     keyof Dnd5Data['skills']
   >
 
-  const costomMacroReplace = (input: string) => {
-    const regex = /@(att\.\S+|lv\.\S+|(?:ras|str|dex|con|int|wis|cha|pb|lv\d+)\b)/gi
-    return input.replace(regex, (match, key) => {
-      const lowerKey = key.toLowerCase()
+  // 宏替换处理模块
 
-      let value: number | string | undefined = undefined
-      if (lowerKey === 'pb') {
-        value = proficiencyBonus.value
-      } else if (['str', 'dex', 'con', 'int', 'wis', 'cha'].includes(lowerKey)) {
-        value = abilityModifies[lowerKey as SixAbilityKeysDnd5]
-      } else if (/^lv\d+$/.test(lowerKey)) {
-        const index = parseInt(lowerKey.slice(2))
-        if (index === 0) {
-          // lv0 对应总等级
-          value = totalLevel.value
-        } else {
-          const tmp = sheet.value.basic.classes[index - 1]?.level
-          value = tmp !== undefined ? tmp : `@${lowerKey}` // 如果没有该职业，返回原表达式
-        }
-      } else if (lowerKey === 'ras') {
-        value = 'sortd([4d6kh3]**6)' // 这里返回一个骰子表达式字符串，表示属性点随机方法
-      } else if (lowerKey.startsWith('att.')) {
-        const attName = lowerKey.slice(4)
-        if (attunedItems.value.includes(attName)) {
-          value = 1
-        } else {
-          value = 0
-        }
-      } else if (lowerKey.startsWith('lv.')) {
-        const className = lowerKey.slice(3)
-        const cls = sheet.value.basic.classes.find((c) => c.name.trim() === className)
-        value = cls ? cls.level : `@${lowerKey}` // 如果没有该职业，返回原表达式
+  const AbilityMacroModule: MacroModule = {
+    lexicalRule: '(?:str|dex|con|int|wis|cha)\\b',
+    match: (token) => /^(str|dex|con|int|wis|cha)$/.test(token),
+    resolve: (match) => {
+      if (!match) return null
+      const key = match as SixAbilityKeysDnd5
+      return abilityModifies[key]
+    },
+  }
+
+  const ProficiencyBonusMacroModule: MacroModule = {
+    lexicalRule: 'pb\\b',
+    match: (token) => /^pb$/i.test(token),
+    resolve: () => proficiencyBonus.value,
+  }
+
+  const levelMacroModule1: MacroModule = {
+    lexicalRule: 'lv\\d+\\b',
+    match: (token) => /^lv\d+$/.test(token),
+    resolve: (match) => {
+      if (!match) return null
+      const index = parseInt(match.slice(2))
+      if (index === 0) {
+        // lv0 对应总等级
+        return totalLevel.value
+      } else {
+        const tmp = sheet.value.basic.classes[index - 1]?.level
+        return tmp
       }
-      return String(value)
+    },
+  }
+
+  const levelMacroModule2: MacroModule = {
+    lexicalRule: 'lv\\.\\S+',
+    match: (token) => /^lv\.\S+$/.test(token),
+    resolve: (match) => {
+      if (!match) return null
+      const className = match.slice(3)
+      const cls = sheet.value.basic.classes.find((c) => c.name.trim() === className)
+      return cls?.level
+    },
+  }
+
+  const rollAbilitySocreMacroModule: MacroModule = {
+    lexicalRule: 'ras\\b',
+    match: (token) => /^ras$/.test(token),
+    resolve: () => 'sortd([4d6kh3]**6)',
+  }
+
+  const attunementMacroModule: MacroModule = {
+    lexicalRule: 'att\\.\\S+',
+    match: (token) => /^att\.\S+$/.test(token),
+    resolve: (match) => {
+      if (!match) return null
+      const attName = match.slice(4)
+      return attunedItems.value.has(attName) ? 1 : 0
+    },
+  }
+
+  const conditionMacroModule: MacroModule = {
+    lexicalRule: 'cond\\.\\S+',
+    match: (token) => /^cond\.\S+$/.test(token),
+    resolve: (match) => {
+      if (!match) return null
+      const condName = match.slice(5)
+      return activedConditions.value.has(condName) ? 1 : 0
+    },
+  }
+
+  const attackMacroModule: MacroModule = {
+    lexicalRule: 'atkb\\.\\S+',
+    match: (token) => /^atkb\.\S+$/.test(token),
+    resolve: (match) => {
+      if (!match) return null
+      const attackName = match.slice(5)
+      const cls = sheet.value.attacks.find((atk) => atk.name.trim() === attackName)
+      return cls?.bonus
+    },
+  }
+
+  const damageMacroModule: MacroModule = {
+    lexicalRule: 'atkd\\.\\S+',
+    match: (token) => /^atkd\.\S+$/.test(token),
+    resolve: (match) => {
+      if (!match) return null
+      const attackName = match.slice(5)
+      const cls = sheet.value.attacks.find((atk) => atk.name.trim() === attackName)
+      return cls?.damage
+    },
+  }
+
+  const spellAttackMacroModule: MacroModule = {
+    lexicalRule: 'atks\\.\\S+',
+    match: (token) => /^atks\.\S+$/.test(token),
+    resolve: (match) => {
+      if (!match) return null
+      const spellListName = match.slice(5)
+      const spellListId = sheet.value.spells.list.find(
+        (list) => list.name.trim() === spellListName,
+      )?.id
+      const bonus = spellListId ? getSpellAttackBonus(spellListId) : null
+      return bonus
+    },
+  }
+
+  const MacroModules = computed(() => {
+    return [
+      AbilityMacroModule,
+      ProficiencyBonusMacroModule,
+      levelMacroModule1,
+      levelMacroModule2,
+      rollAbilitySocreMacroModule,
+      attunementMacroModule,
+      conditionMacroModule,
+      attackMacroModule,
+      damageMacroModule,
+      spellAttackMacroModule,
+    ]
+  })
+
+  const MasterMacroRegex = computed(() => {
+    const combinedRules = MacroModules.value.map((m) => m.lexicalRule).join('|')
+    return new RegExp(`@(${combinedRules})`, 'g')
+  })
+
+  const costomMacroReplace = (input: string) => {
+    // const regex = /@(att\.\S+|lv\.\S+|(?:ras|str|dex|con|int|wis|cha|pb|lv\d+)\b)/gi
+    return input.replace(MasterMacroRegex.value, (originalMatch, token) => {
+      // 找到对应的模块处理它
+      for (const mod of MacroModules.value) {
+        if (mod.match(token)) {
+          const result = mod.resolve(token)
+          if (result !== null && result !== undefined) {
+            return String(result)
+          }
+        }
+      }
+      return originalMatch
     })
   }
 
@@ -313,7 +425,13 @@ export function useDnd5Logic(sheet: Ref<Dnd5Data>) {
   })
 
   const attunedItems = computed(() => {
-    return equipmentView.value.filter((equip) => equip.attunement).map((equip) => equip.name)
+    return new Set(
+      equipmentView.value.filter((equip) => equip.attunement).map((equip) => equip.name),
+    )
+  })
+
+  const activedConditions = computed(() => {
+    return new Set(sheet.value.conditions.filter(([, active]) => active).map(([name]) => name))
   })
 
   // 长休逻辑

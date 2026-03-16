@@ -125,11 +125,6 @@ fn new_window(app: tauri::AppHandle) {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let builder = tauri::Builder::default()
-        .plugin(
-            tauri_plugin_log::Builder::default()
-                .level(log::LevelFilter::Info)
-                .build(),
-        )
         .manage(WindowFiles(Mutex::new(HashMap::new())))
         .manage(DirtyWindows(Mutex::new(HashSet::new())))
         .manage(AppWindows(Mutex::new(HashSet::new())))

@@ -40,6 +40,7 @@ const addAttack = () => {
       :animation="150"
       handle=".drag-handle"
       ghost-class="ghost-item"
+      :force-fallback="true"
     >
       <SingleItem
         v-for="(attack, index) in sheet.diceTools.items"

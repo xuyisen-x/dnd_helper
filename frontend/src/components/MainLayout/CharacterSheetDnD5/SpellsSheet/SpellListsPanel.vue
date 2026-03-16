@@ -158,6 +158,7 @@ const preparedCount = computed(() => {
           :animation="150"
           handle=".drag-handle"
           ghost-class="ghost-item"
+          :force-fallback="true"
         >
           <SpellListItem
             v-for="spellInfo in currentSpells"

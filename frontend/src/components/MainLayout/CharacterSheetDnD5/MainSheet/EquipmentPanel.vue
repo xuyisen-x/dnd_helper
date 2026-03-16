@@ -45,6 +45,7 @@ const addFeature = () => {
           handle=".drag-handle"
           ghost-class="ghost-item"
           class="equipment-items"
+          :force-fallback="true"
         >
           <EquipmentItem
             v-for="(equip, index) in store.data.equipment"

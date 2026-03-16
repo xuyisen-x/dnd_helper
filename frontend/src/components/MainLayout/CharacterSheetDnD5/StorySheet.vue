@@ -54,6 +54,7 @@ const selectedEntry = computed(() => {
           :animation="150"
           handle=".drag-handle"
           ghost-class="ghost-item"
+          :force-fallback="true"
           class="drag-wrapper"
         >
           <div

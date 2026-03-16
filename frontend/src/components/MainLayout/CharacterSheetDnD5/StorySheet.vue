@@ -167,6 +167,7 @@ const selectedEntry = computed(() => {
   position: relative; /* 核心：让内部这块无限长的画板作为定位基准 */
   padding-top: 10px; /* 顶部留点空隙 */
   min-height: 100%;
+  padding-bottom: 20px; /* 让父容器自身底部留白，代替 margin */
 }
 
 /* 3. 贯穿的线：现在画在内部画板上 */

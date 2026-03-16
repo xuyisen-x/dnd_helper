@@ -13,15 +13,6 @@ import MinusIcon from '@/components/Icons/MinusIcon.vue'
 const props = defineProps<{
   featureKey: 'class_features' | 'race_features' | 'feat'
   index: number
-  draggingIndex: number | null
-  dragOverIndex: number | null
-}>()
-
-const emit = defineEmits<{
-  (e: 'drag-start', index: number): void
-  (e: 'drag-over', index: number): void
-  (e: 'drop', index: number): void
-  (e: 'drag-end'): void
 }>()
 
 const store = useActiveCharacterStore()
@@ -122,19 +113,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div
-    class="feature-item"
-    :class="{
-      dragging: draggingIndex === index,
-      'drag-target': dragOverIndex === index && draggingIndex !== null,
-    }"
-    draggable="true"
-    @dragstart="emit('drag-start', index)"
-    @dragover.prevent="emit('drag-over', index)"
-    @dragenter.prevent
-    @drop.prevent="emit('drop', index)"
-    @dragend="emit('drag-end')"
-  >
+  <div class="feature-item">
     <div class="drag-handle" title="拖动排序">⠿</div>
     <div class="feature-main">
       <div class="feature-name">{{ featureView.name || '未命名特性' }}</div>
@@ -188,19 +167,9 @@ onBeforeUnmount(() => {
   gap: 10px;
   border-bottom: 1px dashed rgba(0, 0, 0, 0.1); /* 淡淡的分割线 */
   padding: 4px 0;
-  -webkit-user-drag: element; /* WKWebView 专供：强制允许拖拽 */
   transition:
     background-color 0.2s,
     border-color 0.2s;
-}
-
-.feature-item.dragging {
-  opacity: 0.6;
-}
-
-.feature-item.drag-target {
-  border-color: var(--dnd-dragon-red);
-  background-color: rgba(138, 28, 28, 0.05);
 }
 
 .drag-handle {

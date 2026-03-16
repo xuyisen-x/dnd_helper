@@ -8,15 +8,6 @@ import NumberStepper from './NumberStepper.vue'
 
 const props = defineProps<{
   index: number
-  draggingIndex: number | null
-  dragOverIndex: number | null
-}>()
-
-const emit = defineEmits<{
-  (e: 'drag-start'): void
-  (e: 'drag-over'): void
-  (e: 'drag-end'): void
-  (e: 'drop'): void
 }>()
 
 const store = useActiveCharacterStore()
@@ -45,16 +36,8 @@ const computedDamage = computed(() => {
   <div
     class="grid-row data-row"
     :class="{
-      dragging: props.draggingIndex === index,
-      'drag-target': props.dragOverIndex === index && props.draggingIndex !== null,
       selected: attackItem.count + attackItem.criticalCount > 0,
     }"
-    draggable="true"
-    @dragstart="emit('drag-start')"
-    @dragend="emit('drag-end')"
-    @dragover.prevent="emit('drag-over')"
-    @dragenter.prevent
-    @drop.prevent="emit('drop')"
   >
     <!-- 排序图标 -->
     <div class="col-drag">
@@ -126,19 +109,9 @@ const computedDamage = computed(() => {
 .data-row {
   padding: 4px 0;
   border-bottom: 1px dashed rgba(0, 0, 0, 0.1); /* 淡淡的分割线 */
-  -webkit-user-drag: element; /* WKWebView 专供：强制允许拖拽 */
   transition:
     background-color 0.2s,
     border-color 0.2s;
-}
-
-.data-row.dragging {
-  opacity: 0.6;
-}
-
-.data-row.drag-target {
-  border-color: var(--dnd-dragon-red);
-  background-color: rgba(138, 28, 28, 0.05);
 }
 
 .input-wrap {

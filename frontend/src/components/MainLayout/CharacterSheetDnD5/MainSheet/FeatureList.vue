@@ -4,6 +4,7 @@ import type { Dnd5Data } from '@/stores/rules/dnd5'
 import FeatureItem from './FeatureItem.vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import { nanoid } from 'nanoid'
+import { VueDraggable } from 'vue-draggable-plus'
 
 interface Props {
   featureKey: 'class_features' | 'race_features' | 'feat'
@@ -12,38 +13,19 @@ interface Props {
 const props = defineProps<Props>()
 const store = useActiveCharacterStore()
 
-const targetFeatures = computed(() => {
-  const data = store.data as Dnd5Data
-  return data.features[props.featureKey]
+const targetFeatures = computed({
+  // 读取时触发
+  get: () => {
+    const data = store.data as Dnd5Data
+    return data.features[props.featureKey]
+  },
+  // 赋值时触发（例如 v-model 修改了值）
+  set: (newValue) => {
+    const data = store.data as Dnd5Data
+    // 将新值写回 store
+    data.features[props.featureKey] = newValue
+  },
 })
-
-const draggingIndex = ref<number | null>(null)
-const dragOverIndex = ref<number | null>(null)
-
-const handleDragStart = (index: number) => {
-  draggingIndex.value = index
-}
-
-const handleDragOver = (index: number) => {
-  if (draggingIndex.value === null || draggingIndex.value === index) return
-  dragOverIndex.value = index
-}
-
-const handleDragEnd = () => {
-  draggingIndex.value = null
-  dragOverIndex.value = null
-}
-
-const handleDrop = (index: number) => {
-  if (draggingIndex.value === null) return
-  const from = draggingIndex.value
-  if (from === index) return handleDragEnd()
-  const [moved] = targetFeatures.value.splice(from, 1)
-  if (moved) {
-    targetFeatures.value.splice(index, 0, moved)
-  }
-  handleDragEnd()
-}
 
 const addFeature = () => {
   targetFeatures.value.push({
@@ -60,20 +42,20 @@ const addFeature = () => {
 
 <template>
   <div class="feature-list">
-    <div class="feature-items">
+    <VueDraggable
+      v-model="targetFeatures"
+      :animation="150"
+      handle=".drag-handle"
+      ghost-class="ghost-item"
+      class="feature-items"
+    >
       <FeatureItem
         v-for="(feature, index) in targetFeatures"
         :key="feature.id"
         :featureKey="props.featureKey"
         :index="index"
-        :dragging-index="draggingIndex"
-        :drag-over-index="dragOverIndex"
-        @drag-start="handleDragStart"
-        @drag-over="handleDragOver"
-        @drag-end="handleDragEnd"
-        @drop="handleDrop"
       />
-    </div>
+    </VueDraggable>
     <div v-if="targetFeatures.length === 0" class="empty-tip">点击下方按钮添加</div>
     <div class="feature-footer">
       <button class="btn-add" @click="addFeature">+ 添加特性</button>
@@ -124,5 +106,12 @@ body.has-mouse .btn-add:hover {
   font-style: italic;
   padding: 8px 0 4px;
   opacity: 0.7;
+}
+
+.ghost-item {
+  opacity: 0.4;
+  background-color: var(--dnd-dragon-red-trans30);
+  border: 1px dashed var(--dnd-dragon-red);
+  border-radius: 4px;
 }
 </style>

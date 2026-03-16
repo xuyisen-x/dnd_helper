@@ -28,17 +28,11 @@ const { getSpell } = useSpellStore()
 const props = defineProps<{
   listIdx: number
   index: number
-  draggingIndex: number | null
-  dragOverIndex: number | null
   selected: boolean
 }>()
 
 const emit = defineEmits<{
   (e: 'select', spell: Spell): void
-  (e: 'drag-start'): void
-  (e: 'drag-over'): void
-  (e: 'drag-end'): void
-  (e: 'drop'): void
 }>()
 
 // 1. 直接获取当前这一行法术的【响应式引用】
@@ -137,16 +131,8 @@ const closeCustomEditor = () => {
     class="spell-item grid-layout"
     @click="emit('select', spellData)"
     :class="{
-      dragging: props.draggingIndex === props.index,
-      'drag-target': props.dragOverIndex === props.index && draggingIndex !== null,
       active: props.selected,
     }"
-    draggable="true"
-    @dragstart="emit('drag-start')"
-    @dragend="emit('drag-end')"
-    @dragover.prevent="emit('drag-over')"
-    @dragenter.prevent
-    @drop.prevent="emit('drop')"
   >
     <div class="col-drag">
       <div class="drag-handle" title="拖动排序">⠿</div>
@@ -261,7 +247,6 @@ const closeCustomEditor = () => {
   align-items: center;
   padding: 10px 12px;
   text-align: left;
-  -webkit-user-drag: element; /* WKWebView 专供：强制允许拖拽 */
 }
 .spell-item.active {
   border-color: var(--dnd-dragon-red);
@@ -348,15 +333,6 @@ body.has-mouse .spell-item:hover {
   user-select: none;
   color: var(--dnd-ink-secondary);
   font-size: 1rem;
-}
-
-.spell-item.dragging {
-  opacity: 0.6;
-}
-
-.spell-item.drag-target {
-  border-color: var(--dnd-dragon-red);
-  background-color: rgba(138, 28, 28, 0.05);
 }
 
 .col-header {

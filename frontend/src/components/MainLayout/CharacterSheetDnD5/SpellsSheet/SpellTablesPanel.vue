@@ -5,6 +5,7 @@ import type { Dnd5Data } from '@/stores/rules/dnd5'
 import { nanoid } from 'nanoid'
 import { confirmationBox } from '@/composables/useConfirmationBox'
 import SpellTableItem from './SpellTableItem.vue'
+import { VueDraggable } from 'vue-draggable-plus'
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -64,73 +65,35 @@ watch(
   },
   { immediate: true },
 )
-
-// 拖动排序相关
-// ====== 新增：拖拽排序逻辑 ======
-// 记录当前正在拖拽的标签索引
-const draggedIndex = ref<number | null>(null)
-// 记录当前被拖拽经过的标签索引（用于增加视觉反馈）
-const dragOverIndex = ref<number | null>(null)
-
-const onDragStart = (index: number) => {
-  draggedIndex.value = index
-}
-
-const onDragEnter = (index: number) => {
-  dragOverIndex.value = index
-}
-
-const onDrop = (dropIndex: number) => {
-  if (draggedIndex.value === null || draggedIndex.value === dropIndex) {
-    // 没有拖拽有效元素，或者原地放下，不做处理
-    dragOverIndex.value = null
-    return
-  }
-
-  // 获取源数据数组
-  const list = sheet.value.spells.list
-  // 取出被拖拽的元素
-  const [movedItem] = list.splice(draggedIndex.value, 1)
-  // 将其插入到目标位置
-  list.splice(dropIndex, 0, movedItem!)
-
-  // 清理状态
-  draggedIndex.value = null
-  dragOverIndex.value = null
-}
-
-const onDragEnd = () => {
-  // 确保拖拽意外中断时清理状态
-  draggedIndex.value = null
-  dragOverIndex.value = null
-}
 </script>
 
 <template>
   <div class="spell-table-panel">
     <div class="sheet-tabs">
       <div class="add-button tab-item" @click="addSpellList">+</div>
-      <div
-        v-for="(list, index) in sheet.spells.list"
-        class="tab-item"
-        :key="list.id"
-        :class="{
-          active: list.id === selectedListId,
-          'is-dragging': draggedIndex === index,
-          'is-dragover-left': dragOverIndex === index && draggedIndex! > index,
-          'is-dragover-right': dragOverIndex === index && draggedIndex! < index,
-        }"
-        @click="selectedListId = list.id"
-        draggable="true"
-        @dragstart="onDragStart(index)"
-        @dragenter.prevent="onDragEnter(index)"
-        @dragover.prevent
-        @drop="onDrop(index)"
-        @dragend="onDragEnd"
+      <VueDraggable
+        v-model="sheet.spells.list"
+        :animation="150"
+        handle=".drag-handle"
+        ghost-class="ghost-item"
+        class="rows-list"
       >
-        <div>{{ list.name || '未命名' }}</div>
-        <div class="btn-delete" @click.stop="removeSpellList(list.id)">×</div>
-      </div>
+        <div
+          v-for="list in sheet.spells.list"
+          class="tab-item"
+          :key="list.id"
+          :class="{
+            active: list.id === selectedListId,
+          }"
+          @click="selectedListId = list.id"
+        >
+          <div class="col-drag">
+            <div class="drag-handle" title="拖动排序">⠿</div>
+          </div>
+          <div>{{ list.name || '未命名' }}</div>
+          <div class="btn-delete" @click.stop="removeSpellList(list.id)">×</div>
+        </div>
+      </VueDraggable>
     </div>
     <SpellTableItem :id="selectedListId" />
   </div>
@@ -145,6 +108,11 @@ const onDragEnd = () => {
   margin-bottom: 0;
   overflow-x: auto;
 }
+.rows-list {
+  display: flex;
+  gap: 5px;
+}
+
 .tab-item {
   text-decoration: none;
   color: var(--dnd-ink-secondary); /* 未选中：浅墨色 */
@@ -166,7 +134,6 @@ const onDragEnd = () => {
   flex-shrink: 0; /* 禁止子元素在 flex 容器中被压缩 */
   white-space: nowrap; /* 确保里面的文字绝对不会换行 */
   user-select: none;
-  -webkit-user-drag: element; /* WKWebView 专供：强制允许拖拽 */
 }
 body.has-mouse .tab-item:hover {
   color: var(--dnd-dragon-red); /* 悬停变红 */
@@ -183,21 +150,6 @@ body.has-mouse .tab-item:hover {
 
   font-weight: bold;
   opacity: 1;
-}
-.tab-item.is-dragging {
-  opacity: 0.3;
-  transform: scale(0.95);
-}
-.tab-item.is-dragover-right {
-  border-right: 3px solid var(--dnd-dragon-red);
-  background-color: rgba(255, 255, 255, 0.5);
-}
-.tab-item.is-dragover-left {
-  border-left: 3px solid var(--dnd-dragon-red);
-  background-color: rgba(255, 255, 255, 0.5);
-}
-.tab-item[draggable='true']:active {
-  cursor: grabbing;
 }
 .btn-delete {
   background: transparent;
@@ -219,5 +171,24 @@ body.has-mouse .btn-delete:hover {
   font-size: 1.2rem;
   cursor: pointer;
   margin-right: 20px;
+}
+
+.col-drag {
+  display: flex;
+  justify-content: center;
+}
+
+.drag-handle {
+  cursor: grab;
+  user-select: none;
+  color: var(--dnd-ink-secondary);
+  font-size: 1rem;
+}
+
+.ghost-item {
+  opacity: 0.4;
+  background-color: var(--dnd-dragon-red-trans30);
+  border: 1px dashed var(--dnd-dragon-red);
+  border-radius: 4px;
 }
 </style>

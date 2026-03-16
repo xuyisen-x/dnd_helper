@@ -6,6 +6,7 @@ import type { Dnd5Data, SpellTypeDnd5 } from '@/stores/rules/dnd5'
 import { storeToRefs } from 'pinia'
 import { useSpellStore } from '@/stores/rules/dnd5/spells'
 import SpellListItem from './SpellListItem.vue'
+import { VueDraggable } from 'vue-draggable-plus'
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -35,55 +36,59 @@ const isValidSpell = (spellDnD5: SpellTypeDnd5): boolean => {
 
 const selectedTab = ref<number>(-1)
 
-const currentSpells = computed(() => {
-  let filteredSpells = sheet.value.spells.list[props.idx]!.spells.map((item, idx) => ({
-    item: item,
-    index: idx,
-  }))
-  filteredSpells = filteredSpells.filter((s) => isValidSpell(s.item.spell))
-  let result = filteredSpells.map((s) => {
-    const spellData = getSpell(s.item.spell)[0]
-    return {
-      index: s.index,
-      id: spellData.id,
-      level: spellData.level,
+// const currentSpells = computed(() => {
+//   let filteredSpells = sheet.value.spells.list[props.idx]!.spells.map((item, idx) => ({
+//     item: item,
+//     index: idx,
+//   }))
+//   filteredSpells = filteredSpells.filter((s) => isValidSpell(s.item.spell))
+//   let result = filteredSpells.map((s) => {
+//     const spellData = getSpell(s.item.spell)[0]
+//     return {
+//       index: s.index,
+//       id: spellData.id,
+//       level: spellData.level,
+//     }
+//   })
+//   if (selectedTab.value >= 0) {
+//     result = result.filter((s) => s.level === selectedTab.value)
+//   }
+//   return result
+// })
+
+const currentSpells = computed({
+  get: () => {
+    let filteredSpells = sheet.value.spells.list[props.idx]!.spells.map((item, idx) => ({
+      item: item,
+      index: idx,
+    }))
+    filteredSpells = filteredSpells.filter((s) => isValidSpell(s.item.spell))
+    let result = filteredSpells.map((s) => {
+      const spellData = getSpell(s.item.spell)[0]
+      return {
+        originalIndex: s.index,
+        id: spellData.id,
+        level: spellData.level,
+      }
+    })
+    if (selectedTab.value >= 0) {
+      result = result.filter((s) => s.level === selectedTab.value)
     }
-  })
-  if (selectedTab.value >= 0) {
-    result = result.filter((s) => s.level === selectedTab.value)
-  }
-  return result
+    return result
+  },
+  set: (newOrder) => {
+    const fullList = [...sheet.value.spells.list[props.idx]!.spells]
+    const movedItems = newOrder.map((viewItem) => fullList[viewItem.originalIndex])
+
+    // 按照 newOrder 的顺序，将这些项依次放回它们原本占据的那些“坑位”里
+    // 比如你显示了第 3, 5, 8 项，拖拽后变成了 5, 3, 8，那我们就把 5 放到 3 的位置，3 放到 5 的位置
+    const targetOriginalIndices = currentSpells.value.map((v) => v.originalIndex)
+
+    targetOriginalIndices.forEach((originalIdx, i) => {
+      sheet.value.spells.list[props.idx]!.spells[originalIdx] = movedItems[i]!
+    })
+  },
 })
-
-// 拖拽相关
-const draggingIndex = ref<number | null>(null)
-const dragOverIndex = ref<number | null>(null)
-
-const handleDragStart = (index: number) => {
-  draggingIndex.value = index
-}
-
-const handleDragOver = (index: number) => {
-  if (draggingIndex.value === null || draggingIndex.value === index) return
-  dragOverIndex.value = index
-}
-
-const handleDragEnd = () => {
-  draggingIndex.value = null
-  dragOverIndex.value = null
-}
-
-const handleDrop = (index: number) => {
-  if (draggingIndex.value === null) return
-  const from = draggingIndex.value
-  if (from === index) return handleDragEnd()
-  const spellList = sheet.value.spells.list[props.idx]!.spells
-  const [moved] = spellList.splice(from, 1)
-  if (moved) {
-    spellList.splice(index, 0, moved)
-  }
-  handleDragEnd()
-}
 
 const preparedCount = computed(() => {
   const list = sheet.value.spells.list[props.idx]?.spells
@@ -148,20 +153,21 @@ const preparedCount = computed(() => {
           <div class="col-header">备注</div>
           <div></div>
         </div>
-        <SpellListItem
-          v-for="spellInfo in currentSpells"
-          :key="spellInfo.id"
-          :list-idx="props.idx"
-          :index="spellInfo.index"
-          :dragging-index="draggingIndex"
-          :drag-over-index="dragOverIndex"
-          :selected="spellInfo.id === props.selectedSpellId"
-          @drag-start="handleDragStart(spellInfo.index)"
-          @drag-over="handleDragOver(spellInfo.index)"
-          @drag-end="handleDragEnd"
-          @drop="handleDrop(spellInfo.index)"
-          @select="emit('select', $event)"
-        />
+        <VueDraggable
+          v-model="currentSpells"
+          :animation="150"
+          handle=".drag-handle"
+          ghost-class="ghost-item"
+        >
+          <SpellListItem
+            v-for="spellInfo in currentSpells"
+            :key="spellInfo.id"
+            :list-idx="props.idx"
+            :index="spellInfo.originalIndex"
+            :selected="spellInfo.id === props.selectedSpellId"
+            @select="emit('select', $event)"
+          />
+        </VueDraggable>
       </div>
     </div>
   </div>
@@ -275,5 +281,12 @@ body.has-mouse .tab-item:hover {
   align-items: center;
   justify-content: right;
   flex: 1;
+}
+
+.ghost-item {
+  opacity: 0.4;
+  background-color: var(--dnd-dragon-red-trans30);
+  border: 1px dashed var(--dnd-dragon-red);
+  border-radius: 4px;
 }
 </style>

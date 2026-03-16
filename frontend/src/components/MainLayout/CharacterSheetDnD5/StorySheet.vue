@@ -3,6 +3,7 @@ import { computed, defineAsyncComponent, ref } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import { nanoid } from 'nanoid'
+import { VueDraggable } from 'vue-draggable-plus'
 
 const TipTapEditor = defineAsyncComponent(() => import('@/components/Common/TipTapEditor.vue'))
 
@@ -37,35 +38,6 @@ const deleteStoryEntry = (index: number) => {
   sheet.value.story.splice(index, 1)
 }
 
-// 拖拽相关
-const draggingIndex = ref<number | null>(null)
-const dragOverIndex = ref<number | null>(null)
-
-const handleDragStart = (index: number) => {
-  draggingIndex.value = index
-}
-
-const handleDragOver = (index: number) => {
-  if (draggingIndex.value === null || draggingIndex.value === index) return
-  dragOverIndex.value = index
-}
-
-const handleDragEnd = () => {
-  draggingIndex.value = null
-  dragOverIndex.value = null
-}
-
-const handleDrop = (index: number) => {
-  if (draggingIndex.value === null) return
-  const from = draggingIndex.value
-  if (from === index) return handleDragEnd()
-  const [moved] = sheet.value.story.splice(from, 1)
-  if (moved) {
-    sheet.value.story.splice(index, 0, moved)
-  }
-  handleDragEnd()
-}
-
 // 选择相关逻辑
 const selectedEntryId = ref<string | null>(null)
 const selectedEntry = computed(() => {
@@ -77,45 +49,46 @@ const selectedEntry = computed(() => {
   <div class="story-sheet">
     <div class="timeline-container">
       <div class="timeline-list">
-        <div
-          v-for="(item, index) in sheet.story"
-          :key="item.id"
-          class="timeline-item"
-          :class="{
-            dragging: draggingIndex === index,
-            'drag-target': dragOverIndex === index && draggingIndex !== null,
-            active: selectedEntryId === item.id,
-          }"
-          draggable="true"
-          @dragstart="handleDragStart(index)"
-          @dragover.prevent="handleDragOver(index)"
-          @dragenter.prevent
-          @dragend="handleDragEnd"
-          @drop="handleDrop(index)"
-          @click.stop="selectedEntryId = item.id"
+        <VueDraggable
+          v-model="sheet.story"
+          :animation="150"
+          handle=".drag-handle"
+          ghost-class="ghost-item"
+          class="drag-wrapper"
         >
-          <div>
-            <div class="timeline-dot"></div>
-            <div class="timeline-dash"></div>
-            <div class="timeline-content">
-              <input
-                v-model.lazy="item.title"
-                class="title"
-                placeholder="未命名冒险"
-                @change="item.editedAt = nowDateString()"
-              />
-              <p class="desc">创建于：{{ item.createdAt }}</p>
-              <p class="desc">编辑于：{{ item.editedAt }}</p>
+          <div
+            v-for="(item, index) in sheet.story"
+            :key="item.id"
+            class="timeline-item"
+            :class="{ active: selectedEntryId === item.id }"
+            @click.stop="selectedEntryId = item.id"
+          >
+            <div class="drag-handle" title="按住左侧边缘拖拽排序"></div>
+
+            <div>
+              <div class="timeline-dot"></div>
+              <div class="timeline-dash"></div>
+              <div class="timeline-content">
+                <input
+                  v-model.lazy="item.title"
+                  class="title"
+                  placeholder="未命名冒险"
+                  @change="item.editedAt = nowDateString()"
+                />
+                <p class="desc">创建于：{{ item.createdAt }}</p>
+                <p class="desc">编辑于：{{ item.editedAt }}</p>
+              </div>
+            </div>
+
+            <div
+              class="delete-record-btn"
+              @click.stop="deleteStoryEntry(index)"
+              title="删除此冒险记录"
+            >
+              ×
             </div>
           </div>
-          <div
-            class="delete-record-btn"
-            @click.stop="deleteStoryEntry(index)"
-            title="删除此冒险记录"
-          >
-            ×
-          </div>
-        </div>
+        </VueDraggable>
         <div class="timeline-item">
           <div class="timeline-dot"></div>
           <div class="timeline-dash"></div>
@@ -171,6 +144,35 @@ const selectedEntry = computed(() => {
   padding-bottom: 20px; /* 让父容器自身底部留白，代替 margin */
 }
 
+/* 确保拖拽容器占满宽度，不影响布局 */
+.drag-wrapper {
+  display: block;
+  width: 100%;
+}
+
+/* --- 拖拽手柄 --- */
+.drag-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 50px;
+  cursor: grab;
+  z-index: 10;
+  /* 移除了之前所有兼容原生拖拽的 -webkit-user-drag 代码，因为不再需要了 */
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+
+/* --- 拖拽时的占位符样式 (SortableJS 自动挂载) --- */
+.ghost-item {
+  opacity: 0.4;
+  background-color: var(--dnd-dragon-red-trans30);
+  border: 1px dashed var(--dnd-dragon-red);
+  border-radius: 4px;
+}
+
 /* 3. 贯穿的线：现在画在内部画板上 */
 .timeline-list::before {
   content: '';
@@ -194,16 +196,6 @@ const selectedEntry = computed(() => {
   grid-template-columns: 1fr auto; /* 左侧内容占满剩余空间，右侧按钮自适应 */
   align-items: center; /* 垂直居中对齐 */
   gap: 20px; /* 左右两列之间的水平间距 */
-  -webkit-user-drag: element; /* WKWebView 专供：强制允许拖拽 */
-}
-.timeline-item.dragging {
-  opacity: 0.6;
-}
-.timeline-item.drag-target {
-  background-color: rgba(138, 28, 28, 0.05);
-}
-.timeline-item[draggable='true']:active {
-  cursor: grabbing;
 }
 .timeline-item.active {
   background-color: var(--dnd-dragon-red-trans30);
@@ -293,5 +285,10 @@ body.has-mouse .delete-record-btn:hover {
   color: var(--dnd-ink-secondary);
   text-align: center;
   margin-top: 30px;
+}
+
+.ghost-row {
+  opacity: 0.5;
+  background: var(--dnd-dragon-red-trans30) !important;
 }
 </style>

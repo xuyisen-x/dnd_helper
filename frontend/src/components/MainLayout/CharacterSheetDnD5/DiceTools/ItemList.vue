@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { useActiveCharacterStore } from '@/stores/active-character'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { nanoid } from 'nanoid'
 import SingleItem from './SingleItem.vue'
+import { VueDraggable } from 'vue-draggable-plus'
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -21,34 +22,6 @@ const addAttack = () => {
     criticalCount: 0,
   })
 }
-
-const draggingIndex = ref<number | null>(null)
-const dragOverIndex = ref<number | null>(null)
-
-const handleDragStart = (index: number) => {
-  draggingIndex.value = index
-}
-
-const handleDragOver = (index: number) => {
-  if (draggingIndex.value === null || draggingIndex.value === index) return
-  dragOverIndex.value = index
-}
-
-const handleDragEnd = () => {
-  draggingIndex.value = null
-  dragOverIndex.value = null
-}
-
-const handleDrop = (index: number) => {
-  if (draggingIndex.value === null) return
-  const from = draggingIndex.value
-  if (from === index) return handleDragEnd()
-  const [moved] = sheet.value.diceTools.items.splice(from, 1)
-  if (moved) {
-    sheet.value.diceTools.items.splice(index, 0, moved)
-  }
-  handleDragEnd()
-}
 </script>
 
 <template>
@@ -62,17 +35,18 @@ const handleDrop = (index: number) => {
       <div class="col-header">伤害类型</div>
       <div class="col-header"></div>
     </div>
-    <SingleItem
-      v-for="(attack, index) in sheet.diceTools.items"
-      :key="attack.id"
-      :index="index"
-      :drag-over-index="dragOverIndex"
-      :dragging-index="draggingIndex"
-      @drag-start="handleDragStart(index)"
-      @drag-over="handleDragOver(index)"
-      @drag-end="handleDragEnd"
-      @drop="handleDrop(index)"
-    ></SingleItem>
+    <VueDraggable
+      v-model="sheet.diceTools.items"
+      :animation="150"
+      handle=".drag-handle"
+      ghost-class="ghost-item"
+    >
+      <SingleItem
+        v-for="(attack, index) in sheet.diceTools.items"
+        :key="attack.id"
+        :index="index"
+      ></SingleItem>
+    </VueDraggable>
     <div v-if="sheet.diceTools.items.length === 0" class="empty-tip">点击下方按钮添加攻击方式</div>
     <div class="panel-footer">
       <button class="btn-add" @click="addAttack">+ 添加伤害项</button>
@@ -124,5 +98,12 @@ body.has-mouse .btn-add:hover {
 }
 .text-center {
   text-align: center;
+}
+
+.ghost-item {
+  opacity: 0.4;
+  background-color: var(--dnd-dragon-red-trans30);
+  border: 1px dashed var(--dnd-dragon-red);
+  border-radius: 4px;
 }
 </style>

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import { type Dnd5Data } from '@/stores/rules/dnd5'
 import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import AttackItem from './AttackItem.vue'
-
+import { VueDraggable } from 'vue-draggable-plus'
 const store = useActiveCharacterStore()
 const sheet = computed({
   get: () => store.data as Dnd5Data,
@@ -12,34 +12,6 @@ const sheet = computed({
 })
 
 const { addAttack } = useDnd5Logic(sheet)
-
-const draggingIndex = ref<number | null>(null)
-const dragOverIndex = ref<number | null>(null)
-
-const handleDragStart = (index: number) => {
-  draggingIndex.value = index
-}
-
-const handleDragOver = (index: number) => {
-  if (draggingIndex.value === null || draggingIndex.value === index) return
-  dragOverIndex.value = index
-}
-
-const handleDragEnd = () => {
-  draggingIndex.value = null
-  dragOverIndex.value = null
-}
-
-const handleDrop = (index: number) => {
-  if (draggingIndex.value === null) return
-  const from = draggingIndex.value
-  if (from === index) return handleDragEnd()
-  const [moved] = sheet.value.attacks.splice(from, 1)
-  if (moved) {
-    sheet.value.attacks.splice(index, 0, moved)
-  }
-  handleDragEnd()
-}
 </script>
 
 <template>
@@ -61,20 +33,20 @@ const handleDrop = (index: number) => {
         <div class="col-header col-action"></div>
       </div>
 
-      <div class="rows-list">
+      <VueDraggable
+        v-model="sheet.attacks"
+        :animation="150"
+        handle=".drag-handle"
+        ghost-class="ghost-item"
+        class="rows-list"
+      >
         <AttackItem
           v-for="(attack, index) in sheet.attacks"
           :key="attack.id"
           :index="index"
-          :drag-over-index="dragOverIndex"
-          :dragging-index="draggingIndex"
-          @drag-start="handleDragStart(index)"
-          @drag-over="handleDragOver(index)"
-          @drag-end="handleDragEnd"
-          @drop="handleDrop(index)"
         ></AttackItem>
-        <div v-if="sheet.attacks.length === 0" class="empty-tip">点击下方按钮添加攻击方式</div>
-      </div>
+      </VueDraggable>
+      <div v-if="sheet.attacks.length === 0" class="empty-tip">点击下方按钮添加攻击方式</div>
       <div class="panel-footer">
         <button class="btn-add" @click="addAttack">+ 添加攻击</button>
       </div>
@@ -182,5 +154,12 @@ body.has-mouse .btn-add:hover {
 .col-drag {
   display: flex;
   justify-content: center;
+}
+
+.ghost-item {
+  opacity: 0.4;
+  background-color: var(--dnd-dragon-red-trans30);
+  border: 1px dashed var(--dnd-dragon-red);
+  border-radius: 4px;
 }
 </style>

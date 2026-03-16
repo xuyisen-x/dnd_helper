@@ -12,15 +12,6 @@ import { isUsingMouse } from '@/composables/useGlobalState'
 
 const props = defineProps<{
   index: number
-  draggingIndex: number | null
-  dragOverIndex: number | null
-}>()
-
-const emit = defineEmits<{
-  (e: 'drag-start'): void
-  (e: 'drag-over'): void
-  (e: 'drag-end'): void
-  (e: 'drop'): void
 }>()
 
 const showAttackRollConfig = ref<boolean>(false)
@@ -126,19 +117,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div
-    class="grid-row data-row"
-    :class="{
-      dragging: props.draggingIndex === props.index,
-      'drag-target': props.dragOverIndex === props.index && props.draggingIndex !== null,
-    }"
-    draggable="true"
-    @dragstart="emit('drag-start')"
-    @dragend="emit('drag-end')"
-    @dragover.prevent="emit('drag-over')"
-    @dragenter.prevent
-    @drop.prevent="emit('drop')"
-  >
+  <div class="grid-row data-row">
     <div class="col-drag">
       <div class="drag-handle" title="拖动排序">⠿</div>
     </div>
@@ -237,19 +216,9 @@ onBeforeUnmount(() => {
 .data-row {
   padding: 4px 0;
   border-bottom: 1px dashed rgba(0, 0, 0, 0.1); /* 淡淡的分割线 */
-  -webkit-user-drag: element; /* WKWebView 专供：强制允许拖拽 */
   transition:
     background-color 0.2s,
     border-color 0.2s;
-}
-
-.data-row.dragging {
-  opacity: 0.6;
-}
-
-.data-row.drag-target {
-  border-color: var(--dnd-dragon-red);
-  background-color: rgba(138, 28, 28, 0.05);
 }
 
 /* 输入框容器 */

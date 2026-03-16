@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import EquipmentItem from './EquipmentItem.vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
 import { useDnd5Logic } from '@/composables/rules/useDnd5Logic'
 import { nanoid } from 'nanoid'
+import { VueDraggable } from 'vue-draggable-plus'
 
 const store = useActiveCharacterStore()
 const sheet = computed({
@@ -13,41 +14,8 @@ const sheet = computed({
 })
 const { attunedCount } = useDnd5Logic(sheet)
 
-const equipments = computed(() => {
-  const data = store.data as Dnd5Data
-  return data.equipment
-})
-
-const draggingIndex = ref<number | null>(null)
-const dragOverIndex = ref<number | null>(null)
-
-const handleDragStart = (index: number) => {
-  draggingIndex.value = index
-}
-
-const handleDragOver = (index: number) => {
-  if (draggingIndex.value === null || draggingIndex.value === index) return
-  dragOverIndex.value = index
-}
-
-const handleDragEnd = () => {
-  draggingIndex.value = null
-  dragOverIndex.value = null
-}
-
-const handleDrop = (index: number) => {
-  if (draggingIndex.value === null) return
-  const from = draggingIndex.value
-  if (from === index) return handleDragEnd()
-  const [moved] = equipments.value.splice(from, 1)
-  if (moved) {
-    equipments.value.splice(index, 0, moved)
-  }
-  handleDragEnd()
-}
-
 const addFeature = () => {
-  equipments.value.push({
+  store.data.equipment.push({
     id: nanoid(),
     name: '',
     description: '',
@@ -71,20 +39,20 @@ const addFeature = () => {
 
     <div class="panel-body">
       <div class="equipment-list">
-        <div class="equipment-items">
+        <VueDraggable
+          v-model="store.data.equipment"
+          :animation="150"
+          handle=".drag-handle"
+          ghost-class="ghost-item"
+          class="equipment-items"
+        >
           <EquipmentItem
-            v-for="(equip, index) in equipments"
+            v-for="(equip, index) in store.data.equipment"
             :key="equip.id"
             :index="index"
-            :dragging-index="draggingIndex"
-            :drag-over-index="dragOverIndex"
-            @drag-start="handleDragStart"
-            @drag-over="handleDragOver"
-            @drag-end="handleDragEnd"
-            @drop="handleDrop"
           />
-        </div>
-        <div v-if="equipments.length === 0" class="empty-tip">点击下方按钮添加</div>
+        </VueDraggable>
+        <div v-if="store.data.equipment.length === 0" class="empty-tip">点击下方按钮添加</div>
         <div class="equipment-footer">
           <button class="btn-add" @click="addFeature">+ 添加特性</button>
         </div>
@@ -192,5 +160,12 @@ body.has-mouse .btn-add:hover {
   font-style: italic;
   padding: 8px 0 4px;
   opacity: 0.7;
+}
+
+.ghost-item {
+  opacity: 0.4;
+  background-color: var(--dnd-dragon-red-trans30);
+  border: 1px dashed var(--dnd-dragon-red);
+  border-radius: 4px;
 }
 </style>

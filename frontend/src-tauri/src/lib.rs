@@ -164,6 +164,7 @@ pub fn run() {
     app.run(|app_handle, event| {
         match event {
             // 🌟 时机 C：macOS 双击文件
+            #[cfg(target_os = "macos")] // <-- 加上这一行！
             tauri::RunEvent::Opened { urls } => {
                 urls.into_iter().for_each(|url| {
                     if let Ok(path) = url.to_file_path() {

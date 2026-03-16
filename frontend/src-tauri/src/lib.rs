@@ -118,7 +118,7 @@ fn mark_window_dirty(window: tauri::Window, state: tauri::State<'_, DirtyWindows
 }
 
 #[tauri::command]
-fn new_window(app: tauri::AppHandle) {
+async fn new_window(app: tauri::AppHandle) {
     create_app_window(&app, None);
 }
 
@@ -129,12 +129,16 @@ pub fn run() {
         .manage(DirtyWindows(Mutex::new(HashSet::new())))
         .manage(AppWindows(Mutex::new(HashSet::new())))
         .plugin(tauri_plugin_single_instance::init(|app_handle, args, _| {
+            let app = app_handle.clone();
+            let args = args.clone();
             // 🌟 时机 A：Windows/Linux 已运行时的二次启动
-            if args.len() > 1 && args[1].ends_with(".crst") {
-                create_app_window(app_handle, Some(args[1].clone()));
-            } else {
-                create_app_window(app_handle, None);
-            }
+            tauri::async_runtime::spawn(async move {
+                if args.len() > 1 && args[1].ends_with(".crst") {
+                    create_app_window(&app, Some(args[1].clone()));
+                } else {
+                    create_app_window(&app, None);
+                }
+            });
         }))
         .setup(|app| {
             // 🌟 时机 B：Windows/Linux 冷启动

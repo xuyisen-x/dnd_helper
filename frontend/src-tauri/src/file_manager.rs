@@ -76,7 +76,7 @@ pub async fn silent_save_to_disk(
 }
 
 #[tauri::command]
-pub fn get_initial_file(
+pub async fn get_initial_file(
     window: tauri::Window,
     state: tauri::State<'_, WindowFiles>,
 ) -> Result<Option<String>, String> {

@@ -87,30 +87,10 @@ const handleLoad = () => {
         v-if="activeCharacterStore.rule === 'dnd5r' || activeCharacterStore.rule === 'dnd5e'"
       />
     </div>
-    <div class="footnote">
-      <a href="https://beian.miit.gov.cn/" target="_blank">浙ICP备2025215728号-1</a>
-    </div>
   </div>
 </template>
 
 <style scoped>
-.footnote {
-  width: 100%;
-  text-align: center;
-  margin-top: 10px;
-
-  font-size: 0.75rem;
-  color: var(--dnd-ink-secondary);
-
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.footnote a {
-  text-decoration: none;
-}
-
 body.has-mouse .footnote a:hover {
   color: var(--dnd-dragon-red);
   text-decoration: underline;
@@ -123,7 +103,6 @@ body.has-mouse .footnote a:hover {
   flex-direction: column;
   overflow-y: auto;
   overflow-x: visible;
-  padding: 1rem 0 1rem 0;
 }
 
 .sheet-wrapper {

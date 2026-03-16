@@ -265,5 +265,7 @@ body.has-mouse .table-row:hover {
   stroke: var(--dnd-mithral-text);
   fill: none;
   stroke-width: 4;
+  width: 14px;
+  height: 14px;
 }
 </style>

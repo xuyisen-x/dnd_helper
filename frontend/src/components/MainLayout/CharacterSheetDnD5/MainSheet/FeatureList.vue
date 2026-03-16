@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import FeatureItem from './FeatureItem.vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
@@ -48,6 +48,7 @@ const addFeature = () => {
       handle=".drag-handle"
       ghost-class="ghost-item"
       class="feature-items"
+      :force-fallback="true"
     >
       <FeatureItem
         v-for="(feature, index) in targetFeatures"

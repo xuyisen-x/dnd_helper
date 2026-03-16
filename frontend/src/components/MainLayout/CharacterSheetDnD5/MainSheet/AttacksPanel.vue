@@ -39,6 +39,7 @@ const { addAttack } = useDnd5Logic(sheet)
         handle=".drag-handle"
         ghost-class="ghost-item"
         class="rows-list"
+        :force-fallback="true"
       >
         <AttackItem
           v-for="(attack, index) in sheet.attacks"

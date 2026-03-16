@@ -77,6 +77,7 @@ watch(
         handle=".drag-handle"
         ghost-class="ghost-item"
         class="rows-list"
+        :force-fallback="true"
       >
         <div
           v-for="list in sheet.spells.list"

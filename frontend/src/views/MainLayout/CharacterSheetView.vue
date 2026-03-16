@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { defineAsyncComponent } from 'vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
-import { showToast } from '@/stores/toast'
+import { useFileManager } from '@/composables/useFileManager'
+import { watch } from 'vue'
+import { invoke } from '@tauri-apps/api/core'
 
 const CharacterSheetDnD5 = defineAsyncComponent(
   () => import('@/components/MainLayout/CharacterSheetDnD5.vue'),
@@ -9,79 +11,43 @@ const CharacterSheetDnD5 = defineAsyncComponent(
 
 const activeCharacterStore = useActiveCharacterStore()
 
-const CUSTOM_EXT = '.crst' // 自定义扩展名，方便用户识别
+const { handleSave, handleLoad, enableAutoSave, lastSaveText, isBondedToFile } = useFileManager()
 
-const handleSave = () => {
-  try {
-    const dataStr = activeCharacterStore.exportData() // 获取导出的 Base64 字符串
-
-    const blob = new Blob([dataStr], { type: 'application/json' }) // 创建 Blob 对象
-
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-
-    // 获取角色名称和规则，用于生成文件名
-    const charName = activeCharacterStore.getCharacterName().replace(/[\\/:*?"<>|]/g, '_')
-    const rule = activeCharacterStore.rule
-    // 文件名格式：名字_规则_时间戳.json
-    link.download = `${charName}_${rule}_${new Date().toISOString().slice(0, 10)}${CUSTOM_EXT}`
-
-    // 触发点击并清理
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-    URL.revokeObjectURL(url)
-
-    showToast('角色卡导出成功！', 'success')
-  } catch (e) {
-    console.error(e)
-    showToast('导出失败', 'error')
-  }
+const newWindow = () => {
+  invoke('new_window').catch(console.error)
 }
 
-const handleLoad = () => {
-  // 动态创建一个文件输入框
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = CUSTOM_EXT
-
-  // 监听文件选择
-  input.onchange = (event) => {
-    const target = event.target as HTMLInputElement
-    const file = target.files?.[0]
-
-    if (!file) return
-
-    // 读取文件内容
-    const reader = new FileReader()
-    reader.onload = (e) => {
-      const result = e.target?.result
-      if (typeof result === 'string') {
-        activeCharacterStore.importData(result)
-        showToast('角色卡读取成功！', 'success')
-      } else {
-        showToast('文件内容无效', 'error')
-      }
+watch(
+  () => activeCharacterStore.$state, // 深度监听整个角色卡状态
+  () => {
+    if (!isBondedToFile.value) {
+      // 如果当前还没有绑定本地文件（即这是一个新建的空白卡）
+      invoke('mark_window_dirty').catch(console.error)
     }
-
-    reader.onerror = () => {
-      showToast('文件读取发生错误', 'error')
-    }
-
-    reader.readAsText(file)
-  }
-
-  input.click()
-}
+  },
+  {
+    deep: true,
+    once: true,
+  },
+)
 </script>
 
 <template>
   <div class="page-container">
     <div class="sheet-wrapper">
       <div class="btn-group">
+        <div class="last-save-text">上次保存：{{ lastSaveText }}</div>
+        <div class="filter-chip" @click="enableAutoSave = !enableAutoSave">
+          <div class="check-icon" :class="{ checked: enableAutoSave }">
+            <svg v-if="enableAutoSave" viewBox="0 0 24 24" class="svg-icon">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <span class="input-label">自动保存</span>
+        </div>
         <button class="dnd-btn btn-primary" @click="handleLoad">读取档案</button>
         <button class="dnd-btn btn-primary" @click="handleSave">保存角色</button>
+        <button class="dnd-btn btn-primary" @click="newWindow">新建窗口</button>
       </div>
       <CharacterSheetDnD5
         v-if="activeCharacterStore.rule === 'dnd5r' || activeCharacterStore.rule === 'dnd5e'"
@@ -148,5 +114,54 @@ body.has-mouse .footnote a:hover {
 body.has-mouse .btn-primary:hover {
   background-color: var(--dnd-gold); /* 悬停变金色 */
   color: #fff;
+}
+
+.check-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 20%;
+  border: 2px solid var(--dnd-stone-text);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.check-icon.checked {
+  background-color: var(--dnd-dragon-red);
+  border-color: var(--dnd-dragon-red);
+}
+.filter-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  user-select: none;
+  margin-left: 10px;
+}
+
+.svg-icon {
+  stroke: var(--dnd-mithral-text);
+  fill: none;
+  stroke-width: 4;
+  width: 14px;
+  height: 14px;
+}
+
+.input-label {
+  font-size: 1rem;
+  font-weight: bold;
+  font-family: 'Georgia', serif;
+  color: var(--dnd-ink-primary);
+  display: flex;
+  align-items: center; /* 核心：垂直居中 */
+}
+
+.last-save-text {
+  font-size: 0.9rem;
+  font-family: 'Georgia', serif;
+  color: var(--dnd-ink-secondary);
+  display: flex;
+  align-items: center; /* 核心：垂直居中 */
 }
 </style>

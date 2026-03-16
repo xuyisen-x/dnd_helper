@@ -6,6 +6,7 @@ import ToastContainer from './components/Common/ToastContainer.vue'
 import DiceResultContainer from './components/Common/DiceResultContainer.vue'
 import ConfirmationDialog from './components/Common/ConfirmationDialog.vue'
 import { isUsingMouse } from './composables/useGlobalState'
+import { useFileManager } from './composables/useFileManager'
 
 const enableHover = (e: PointerEvent) => {
   // 说明移动了鼠标
@@ -23,7 +24,9 @@ const disableHover = () => {
   }
 }
 
-onMounted(() => {
+const { handleInitialFile } = useFileManager()
+
+onMounted(async () => {
   if (isUsingMouse.value) {
     document.body.classList.add('has-mouse')
   }
@@ -31,6 +34,8 @@ onMounted(() => {
   window.addEventListener('pointermove', enableHover, { passive: true })
   // 触摸开始 -> 认为是触屏操作
   window.addEventListener('touchstart', disableHover, { passive: true })
+
+  await handleInitialFile()
 })
 
 onUnmounted(() => {

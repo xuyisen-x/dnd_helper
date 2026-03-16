@@ -136,6 +136,7 @@ onBeforeUnmount(() => {
     @dragstart="emit('drag-start')"
     @dragend="emit('drag-end')"
     @dragover.prevent="emit('drag-over')"
+    @dragenter.prevent
     @drop.prevent="emit('drop')"
   >
     <div class="col-drag">
@@ -236,6 +237,7 @@ onBeforeUnmount(() => {
 .data-row {
   padding: 4px 0;
   border-bottom: 1px dashed rgba(0, 0, 0, 0.1); /* 淡淡的分割线 */
+  -webkit-user-drag: element; /* WKWebView 专供：强制允许拖拽 */
   transition:
     background-color 0.2s,
     border-color 0.2s;

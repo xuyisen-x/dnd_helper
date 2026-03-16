@@ -131,6 +131,7 @@ onBeforeUnmount(() => {
     draggable="true"
     @dragstart="emit('drag-start', index)"
     @dragover.prevent="emit('drag-over', index)"
+    @dragenter.prevent
     @drop.prevent="emit('drop', index)"
     @dragend="emit('drag-end')"
   >
@@ -187,6 +188,7 @@ onBeforeUnmount(() => {
   gap: 10px;
   border-bottom: 1px dashed rgba(0, 0, 0, 0.1); /* 淡淡的分割线 */
   padding: 4px 0;
+  -webkit-user-drag: element; /* WKWebView 专供：强制允许拖拽 */
   transition:
     background-color 0.2s,
     border-color 0.2s;

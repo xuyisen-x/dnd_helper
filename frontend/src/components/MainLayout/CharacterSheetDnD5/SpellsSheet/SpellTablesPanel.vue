@@ -166,6 +166,7 @@ const onDragEnd = () => {
   flex-shrink: 0; /* 禁止子元素在 flex 容器中被压缩 */
   white-space: nowrap; /* 确保里面的文字绝对不会换行 */
   user-select: none;
+  -webkit-user-drag: element; /* WKWebView 专供：强制允许拖拽 */
 }
 body.has-mouse .tab-item:hover {
   color: var(--dnd-dragon-red); /* 悬停变红 */

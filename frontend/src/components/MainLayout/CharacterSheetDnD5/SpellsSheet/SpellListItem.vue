@@ -145,6 +145,7 @@ const closeCustomEditor = () => {
     @dragstart="emit('drag-start')"
     @dragend="emit('drag-end')"
     @dragover.prevent="emit('drag-over')"
+    @dragenter.prevent
     @drop.prevent="emit('drop')"
   >
     <div class="col-drag">
@@ -260,6 +261,7 @@ const closeCustomEditor = () => {
   align-items: center;
   padding: 10px 12px;
   text-align: left;
+  -webkit-user-drag: element; /* WKWebView 专供：强制允许拖拽 */
 }
 .spell-item.active {
   border-color: var(--dnd-dragon-red);

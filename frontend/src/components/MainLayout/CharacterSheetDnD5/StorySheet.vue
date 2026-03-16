@@ -89,6 +89,7 @@ const selectedEntry = computed(() => {
           draggable="true"
           @dragstart="handleDragStart(index)"
           @dragover.prevent="handleDragOver(index)"
+          @dragenter.prevent
           @dragend="handleDragEnd"
           @drop="handleDrop(index)"
           @click.stop="selectedEntryId = item.id"
@@ -193,6 +194,7 @@ const selectedEntry = computed(() => {
   grid-template-columns: 1fr auto; /* 左侧内容占满剩余空间，右侧按钮自适应 */
   align-items: center; /* 垂直居中对齐 */
   gap: 20px; /* 左右两列之间的水平间距 */
+  -webkit-user-drag: element; /* WKWebView 专供：强制允许拖拽 */
 }
 .timeline-item.dragging {
   opacity: 0.6;

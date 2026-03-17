@@ -78,6 +78,7 @@ watch(
         ghost-class="ghost-item"
         class="rows-list"
         :force-fallback="true"
+        direction="horizontal"
       >
         <div
           v-for="list in sheet.spells.list"
@@ -125,7 +126,6 @@ watch(
   height: 40px; /* 标签高度 */
   padding: 0 1rem;
   border-radius: 8px 8px 0 0;
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
   border: 1px solid var(--dnd-ink-primary);
   border-bottom: 1px solid var(--dnd-parchment-bg);
   background-color: var(--dnd-gold-dim);

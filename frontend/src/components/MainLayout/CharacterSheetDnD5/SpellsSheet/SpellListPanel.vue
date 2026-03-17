@@ -79,7 +79,7 @@ const toggleAdd = (id: string) => {
         <div class="col-header source">来源</div>
       </div>
     </div>
-    <div class="wrapper" v-for="[spell, valid] in postProcessedSpells" :key="spell.id">
+    <div class="wrapper-item" v-for="[spell, valid] in postProcessedSpells" :key="spell.id">
       <div class="filter-chip" @click="toggleAdd(spell.id)">
         <div
           class="check-icon"
@@ -163,6 +163,7 @@ const toggleAdd = (id: string) => {
   background: none;
   cursor: pointer;
   font-family: inherit;
+  border: 1px solid transparent; /* 提前把上下左右的 1px 位置全占好 */
   border-bottom: 1px dashed rgba(0, 0, 0, 0.1); /* 淡淡的分割线 */
 }
 
@@ -172,8 +173,10 @@ body.has-mouse .table-row:hover {
 }
 
 .table-row.active {
-  border-color: var(--dnd-dragon-red);
+  border: 1px solid transparent; /* 提前把上下左右的 1px 位置全占好 */
+  border-bottom: 1px dashed var(--dnd-dragon-red); /* 淡淡的分割线 */
   background: var(--dnd-parchment-card);
+  box-sizing: border-box;
 }
 
 .name {
@@ -230,6 +233,15 @@ body.has-mouse .table-row:hover {
   height: 100%;
   display: grid;
   grid-template-columns: 40px 1fr;
+}
+
+.wrapper-item {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  flex-shrink: 0;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 61px;
 }
 
 .check-icon {

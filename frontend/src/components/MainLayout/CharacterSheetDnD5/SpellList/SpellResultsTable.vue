@@ -133,7 +133,13 @@ const postProcessedSpells: ComputedRef<[Spell, boolean][]> = computed(() => {
   background: none;
   cursor: pointer;
   font-family: inherit;
+  border: 1px solid transparent;
   border-bottom: 1px dashed rgba(0, 0, 0, 0.1); /* 淡淡的分割线 */
+
+  flex-shrink: 0;
+
+  content-visibility: auto;
+  contain-intrinsic-size: auto 61px;
 }
 
 body.has-mouse .table-row:hover {
@@ -142,7 +148,8 @@ body.has-mouse .table-row:hover {
 }
 
 .table-row.active {
-  border-color: var(--dnd-dragon-red);
+  border: 1px solid transparent;
+  border-bottom: 1px dashed var(--dnd-dragon-red); /* 淡淡的分割线 */
   background: var(--dnd-parchment-card);
 }
 

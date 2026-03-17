@@ -116,7 +116,7 @@ const postProcessedSpells: ComputedRef<[Spell, boolean][]> = computed(() => {
 .table-header,
 .table-row {
   display: grid;
-  grid-template-columns: 1.5fr 80px 32px 1.2fr 47px 33px 33px 50px;
+  grid-template-columns: 1.5fr 80px 33px 1.2fr 47px 33px 33px 50px;
   align-items: center;
   gap: 20px;
   padding: 10px 12px;

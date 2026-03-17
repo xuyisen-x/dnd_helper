@@ -205,12 +205,16 @@ const mouseLeft = () => {
   white-space: normal;
   row-gap: 2px;
 
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
   font-size: 14px;
   line-height: 1.5;
   color: var(--dnd-ink-primary);
 
   cursor: pointer;
+}
+
+.expression-node span {
+  font-weight: bold;
 }
 
 .expression-node.mod-tight {

@@ -104,7 +104,7 @@ const showedValue = computed<ValueSummary>(() => {
 .notation {
   font-size: 0.75rem;
   color: var(--dnd-ink-secondary);
-  font-family: 'Courier New', monospace;
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
   margin-top: 2px;
 }
 

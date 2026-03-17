@@ -147,7 +147,7 @@ onBeforeUnmount(() => {
   background-color: rgba(0, 0, 0, 0.05);
   padding: 2px 4px;
   border-radius: 4px;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
 }
 
 :deep(.ProseMirror blockquote) {

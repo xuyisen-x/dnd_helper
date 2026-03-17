@@ -674,7 +674,7 @@ body.has-mouse .roll-btn-icon:hover {
 .history-item {
   font-size: 0.9rem;
   font-weight: 600;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
   color: var(--dnd-ink-primary);
 
   white-space: nowrap;
@@ -813,7 +813,7 @@ body.has-mouse .btn-add:hover {
   outline: none;
   width: 100%;
   font-size: 1rem;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
   font-weight: 600;
 }
 .macro-input:focus {

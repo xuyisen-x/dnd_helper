@@ -124,6 +124,21 @@ export function useFileManager() {
     }
   }
 
+  const handleLoadFromPath = async (path: string): Promise<boolean> => {
+    try {
+      const content = await invoke<string>('load_target_character_from_disk', { filePath: path })
+      activeCharacterStore.importData(content)
+      showToast('角色卡读取成功！', 'success')
+      isBondedToFile.value = true // 现在已经绑定到一个文件路径了
+      markSaved(content) // 读取后也视为“已保存”状态，更新时间追踪
+      return true
+    } catch (err) {
+      console.error('Rust端读取失败:', err)
+      showToast('文件读取发生错误', 'error')
+      return false
+    }
+  }
+
   const handleInitialFile = async () => {
     try {
       const result = await invoke<string | null>('get_initial_file')
@@ -155,6 +170,7 @@ export function useFileManager() {
   return {
     handleSave,
     handleLoad,
+    handleLoadFromPath,
     enableAutoSave,
     lastSaveText,
     handleQuickSave,

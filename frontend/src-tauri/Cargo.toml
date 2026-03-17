@@ -25,3 +25,5 @@ tauri = { version = "2.10.3", features = [] }
 tauri-plugin-log = "2"
 rfd = "0.17.2"
 tauri-plugin-single-instance = "2.4.0"
+tokio = "1.50.0"
+rusqlite = { version = "0.39.0", features = ["bundled"] }

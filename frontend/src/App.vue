@@ -5,6 +5,7 @@ import DiceRollerPanel from './components/Common/DiceRollerPanel.vue'
 import ToastContainer from './components/Common/ToastContainer.vue'
 import DiceResultContainer from './components/Common/DiceResultContainer.vue'
 import ConfirmationDialog from './components/Common/ConfirmationDialog.vue'
+import HistoryDrawer from './components/Common/HistoryDrawer.vue'
 import { isUsingMouse } from './composables/useGlobalState'
 import { useFileManager } from './composables/useFileManager'
 
@@ -50,6 +51,7 @@ onUnmounted(() => {
   <DiceResultContainer />
   <ToastContainer />
   <ConfirmationDialog />
+  <HistoryDrawer />
   <router-view />
 </template>
 

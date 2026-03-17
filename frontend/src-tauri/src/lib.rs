@@ -1,3 +1,4 @@
+mod database_manager;
 mod file_manager;
 
 use std::{
@@ -8,9 +9,10 @@ use std::{
     },
 };
 
+use database_manager::{get_recent_files, init_db, manual_remove_history};
 use file_manager::{
-    get_initial_file, load_character_from_disk, save_character_to_disk, silent_save_to_disk,
-    WindowFiles,
+    get_initial_file, load_character_from_disk, load_target_character_from_disk,
+    save_character_to_disk, silent_save_to_disk, WindowFiles,
 };
 use tauri::{Emitter, Manager}; // 别忘了引入宏
 
@@ -141,6 +143,8 @@ pub fn run() {
             });
         }))
         .setup(|app| {
+            // 先尝试初始化数据库，静默失败不影响主流程
+            let _ = init_db(app.handle());
             // 🌟 时机 B：Windows/Linux 冷启动
             let args: Vec<String> = std::env::args().collect();
             if args.len() > 1 && args[1].ends_with(".crst") {
@@ -155,10 +159,13 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             save_character_to_disk,
             load_character_from_disk,
+            load_target_character_from_disk,
             silent_save_to_disk,
             get_initial_file,
             mark_window_dirty,
-            new_window
+            new_window,
+            get_recent_files,
+            manual_remove_history
         ]);
 
     let app = builder

@@ -182,7 +182,7 @@ const clearResults = () => {
   padding: 6px 14px;
   font-size: 1rem;
   cursor: pointer;
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
   transition: background-color 0.2s;
 }
 

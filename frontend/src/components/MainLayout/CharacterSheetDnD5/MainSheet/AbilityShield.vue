@@ -314,7 +314,7 @@ const openConfig = (skillKey: string) => {
   background-color: var(--color-background);
   padding-bottom: 15px;
   position: relative;
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
   color: var(--dnd-ink-primary);
 }
 

@@ -83,7 +83,7 @@ const inputFontSize = computed(() => {
 }
 
 .coin-label {
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
   font-size: 1.2rem;
   color: var(--dnd-ink-secondary);
   margin-bottom: 2px;

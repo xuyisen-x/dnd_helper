@@ -306,7 +306,7 @@ body.has-mouse .btn-ghost:hover {
   max-height: 90vh; /* 限制最大高度为视口高度的 90% */
   display: flex; /* 启用 Flex 布局 */
   flex-direction: column; /* 垂直排列子元素 */
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
 }
 
 .dialog-header {
@@ -391,7 +391,7 @@ body.has-mouse .btn-disabled:hover {
 .input-label {
   font-size: 1rem;
   font-weight: bold;
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
   color: var(--dnd-ink-primary);
   display: flex;
   align-items: center; /* 核心：垂直居中 */

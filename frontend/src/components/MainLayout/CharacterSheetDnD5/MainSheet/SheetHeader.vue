@@ -153,7 +153,7 @@ const longRestCliked = async () => {
   font-size: 2rem; /* 姓名特别大 */
   font-weight: bold;
   height: 50px;
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
 }
 
 .main-grid {

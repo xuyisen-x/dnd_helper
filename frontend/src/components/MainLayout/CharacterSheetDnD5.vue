@@ -152,7 +152,7 @@ onUnmounted(() => {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
   padding: 30px;
   border-radius: 4px;
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
 
   /* 确保 padding 不会撑大 1300px */
   box-sizing: border-box;
@@ -179,6 +179,7 @@ onUnmounted(() => {
   border-radius: 5px 5px 0 0;
   color: var(--color-text-soft);
   white-space: nowrap;
+  font-size: 13px;
 }
 .sheet-tabs button.active {
   background: var(--dnd-parchment-bg);

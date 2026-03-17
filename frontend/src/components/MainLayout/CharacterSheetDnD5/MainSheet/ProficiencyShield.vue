@@ -41,7 +41,7 @@ const { proficiencyBonus } = useDnd5Logic(sheet)
   /* 调整内边距以适应单一数字的布局 */
   padding-bottom: 25px;
   position: relative;
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
   color: var(--dnd-ink-primary);
   overflow: hidden;
   margin: 0 auto;

@@ -233,7 +233,7 @@ const openConfig = () => {
 
 /* --- 字体大小 --- */
 .medium-value {
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
   font-size: 1.4rem;
   color: var(--dnd-ink-primary);
   text-align: center;
@@ -247,7 +247,7 @@ const openConfig = () => {
 }
 
 .big-value {
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
   font-size: 2.4rem; /* 核心数据大一点 */
   color: var(--dnd-ink-primary);
   line-height: 1;

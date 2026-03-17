@@ -257,7 +257,7 @@ const toggleBonusDice = (die: keyof BonusDiceState) => {
   font-size: 1rem;
   font-weight: bold;
   color: var(--dnd-dragon-red);
-  font-family: Arial, sans-serif;
+  font-family: Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
   text-align: center;
 }
 
@@ -355,7 +355,7 @@ body.has-mouse .bonus-die-btn.active:hover {
   padding: 2px;
   font-size: 0.9rem;
   outline: none;
-  font-family: Arial, sans-serif;
+  font-family: Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 
 /* 投掷按钮 */
@@ -407,7 +407,7 @@ body.has-mouse .circle-check.checked:hover {
   font-size: 0.9rem;
   color: var(--dnd-ink-primary);
   text-align: center;
-  font-family: Arial, sans-serif;
+  font-family: Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 
 .text-danger.output-row {

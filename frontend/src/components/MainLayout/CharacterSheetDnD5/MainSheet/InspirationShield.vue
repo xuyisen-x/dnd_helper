@@ -53,7 +53,7 @@ const toggleInspiration = () => {
   border-radius: 10px 10px 50px 50px; /* 底部圆角更大，像个U型盾 */
   background-color: var(--color-background);
   position: relative;
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
   color: var(--dnd-ink-primary);
   overflow: hidden;
   margin: 0 auto;

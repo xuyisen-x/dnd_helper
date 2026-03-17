@@ -39,7 +39,7 @@ const toggleRule = async () => {
   font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
 
   border: 1px solid var(--dnd-ink-secondary);
   color: var(--dnd-ink-primary);

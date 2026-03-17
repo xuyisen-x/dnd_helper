@@ -220,7 +220,7 @@ const rollHitDice = async () => {
   display: flex;
   flex-direction: column;
   gap: 14px;
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
 }
 
 .dialog-header {

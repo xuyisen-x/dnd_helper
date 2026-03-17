@@ -11,7 +11,8 @@ const CharacterSheetDnD5 = defineAsyncComponent(
 
 const activeCharacterStore = useActiveCharacterStore()
 
-const { handleSave, handleLoad, enableAutoSave, lastSaveText, isBondedToFile } = useFileManager()
+const { handleSave, handleQuickSave, handleLoad, enableAutoSave, lastSaveText, isBondedToFile } =
+  useFileManager()
 
 const newWindow = () => {
   invoke('new_window').catch(console.error)
@@ -46,7 +47,12 @@ watch(
           <span class="input-label">自动保存</span>
         </div>
         <button class="dnd-btn btn-primary" @click="handleLoad">读取档案</button>
-        <button class="dnd-btn btn-primary" @click="handleSave">保存角色</button>
+        <button class="dnd-btn btn-primary" @click="handleQuickSave" v-if="isBondedToFile">
+          保存角色
+        </button>
+        <button class="dnd-btn btn-primary" @click="handleSave">
+          {{ isBondedToFile ? '另存副本' : '保存角色' }}
+        </button>
         <button class="dnd-btn btn-primary" @click="newWindow">新建窗口</button>
       </div>
       <CharacterSheetDnD5

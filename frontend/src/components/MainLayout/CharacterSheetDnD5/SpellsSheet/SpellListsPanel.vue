@@ -252,7 +252,7 @@ body.has-mouse .tab-item:hover {
 
 .grid-layout {
   display: grid;
-  grid-template-columns: 15px 40px 1.5fr 80px 32px 47px 33px 33px 1fr 1.5fr 50px;
+  grid-template-columns: 15px 40px 1.5fr 80px 33px 47px 33px 33px 1fr 1.5fr 50px;
   gap: 10px;
 }
 

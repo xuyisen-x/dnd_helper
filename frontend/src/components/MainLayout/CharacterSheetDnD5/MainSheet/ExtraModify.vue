@@ -82,7 +82,7 @@ const openSaveConfig = ref<boolean>(false)
   border-radius: 10px 10px 30px 30px; /* 底部圆角更大，像个U型盾 */
   background-color: var(--color-background);
   position: relative;
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
   color: var(--dnd-ink-primary);
   padding: 10px 15px;
 }

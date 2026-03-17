@@ -373,7 +373,7 @@ body.has-mouse .curtain-handle:hover {
 .conclusion-label {
   font-size: 1rem;
   font-weight: bold;
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
   color: var(--dnd-ink-primary);
   display: flex;
   align-items: center; /* 核心：垂直居中 */

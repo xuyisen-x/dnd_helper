@@ -79,7 +79,7 @@ const extra_modify_all = computed(() => sheet.value.extra_modify.save_all)
   padding: 8px 12px;
   border-radius: 8px;
   z-index: 200; /* 确保它在所有元素之上 */
-  font-family: Arial, sans-serif;
+  font-family: Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
   color: var(--dnd-ink-primary);
   font-size: 0.85rem;
 }

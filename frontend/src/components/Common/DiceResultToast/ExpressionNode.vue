@@ -205,7 +205,7 @@ const mouseLeft = () => {
   white-space: normal;
   row-gap: 2px;
 
-  font-family: monospace;
+  font-family: 'Courier New', Courier, monospace;
   font-size: 14px;
   line-height: 1.5;
   color: var(--dnd-ink-primary);

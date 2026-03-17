@@ -167,7 +167,7 @@ const isEditingPactLevel = ref(false)
 }
 
 .big-value {
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
   font-size: 2.4rem; /* 核心数据大一点 */
   color: var(--dnd-ink-primary);
   line-height: 1;

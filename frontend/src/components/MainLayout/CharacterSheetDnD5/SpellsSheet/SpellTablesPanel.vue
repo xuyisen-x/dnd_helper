@@ -161,7 +161,7 @@ body.has-mouse .tab-item:hover {
   line-height: 1;
   padding: 0;
   opacity: 0.6;
-  font-family: Arial, sans-serif;
+  font-family: Helvetica, Arial, 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 body.has-mouse .btn-delete:hover {
   color: var(--dnd-dragon-red);

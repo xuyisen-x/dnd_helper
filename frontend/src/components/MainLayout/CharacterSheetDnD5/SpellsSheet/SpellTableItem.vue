@@ -280,7 +280,7 @@ const selectedSpell = ref<null | Spell>(null)
   font-size: 2rem; /* 姓名特别大 */
   font-weight: bold;
   height: 50px;
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
 }
 .header-grid {
   display: grid;
@@ -323,7 +323,7 @@ const selectedSpell = ref<null | Spell>(null)
   letter-spacing: 1px;
 }
 .big-value {
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
   font-size: 2.4rem; /* 核心数据大一点 */
   color: var(--dnd-ink-primary);
   line-height: 1;

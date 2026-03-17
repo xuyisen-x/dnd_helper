@@ -280,7 +280,7 @@ const isAllSelected = <T,>(key: 'levels' | 'schools' | 'classes' | 'sources', al
   border-radius: 10px;
   gap: 16px;
   padding: 10px;
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
   color: var(--dnd-ink-primary);
 }
 

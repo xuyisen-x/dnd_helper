@@ -83,7 +83,7 @@ body.has-mouse .btn-ghost:hover {
 .dialog-body {
   font-size: 0.9rem;
   color: var(--dnd-ink-secondary);
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
 }
 
 .dialog-message {

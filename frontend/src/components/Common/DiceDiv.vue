@@ -55,7 +55,7 @@ const showInitPage = computed(() => {
   font-size: 3rem;
   font-weight: bold;
   color: var(--dnd-ink-secondary);
-  font-family: 'Georgia', serif;
+  font-family: Georgia, 'Songti SC', 'SimSun', serif;
 }
 </style>
 

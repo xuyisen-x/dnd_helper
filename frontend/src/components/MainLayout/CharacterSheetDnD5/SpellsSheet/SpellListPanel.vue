@@ -9,6 +9,7 @@ import {
 import { useActiveCharacterStore } from '@/stores/active-character'
 import { storeToRefs } from 'pinia'
 import { computed, type ComputedRef } from 'vue'
+import { RecycleScroller } from 'vue-virtual-scroller'
 
 const store = useActiveCharacterStore()
 const { rule } = storeToRefs(store)
@@ -62,6 +63,14 @@ const toggleAdd = (id: string) => {
     emit('toggle-adding', id)
   }
 }
+
+const scrollerItems = computed(() => {
+  return postProcessedSpells.value.map(([spell, valid]) => ({
+    id: spell.id, // 提取 spell.id 作为 RecycleScroller 追踪的唯一键 (key-field)
+    spell,
+    valid,
+  }))
+})
 </script>
 
 <template>
@@ -79,46 +88,54 @@ const toggleAdd = (id: string) => {
         <div class="col-header source">来源</div>
       </div>
     </div>
-    <div class="wrapper-item" v-for="[spell, valid] in postProcessedSpells" :key="spell.id">
-      <div class="filter-chip" @click="toggleAdd(spell.id)">
-        <div
-          class="check-icon"
-          :class="{
-            disabled: props.addededSpellIds.has(spell.id),
-            checked: !props.addededSpellIds.has(spell.id) && props.addingSpellIds.has(spell.id),
-          }"
-        >
-          <svg
-            v-if="props.addingSpellIds.has(spell.id) || props.addededSpellIds.has(spell.id)"
-            viewBox="0 0 24 24"
-            class="svg-icon"
+    <RecycleScroller
+      class="spell-scroller"
+      :items="scrollerItems"
+      :item-size="62"
+      key-field="id"
+      v-slot="{ item: { spell, valid } }"
+    >
+      <div class="wrapper-item">
+        <div class="filter-chip" @click="toggleAdd(spell.id)">
+          <div
+            class="check-icon"
+            :class="{
+              disabled: props.addededSpellIds.has(spell.id),
+              checked: !props.addededSpellIds.has(spell.id) && props.addingSpellIds.has(spell.id),
+            }"
           >
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
+            <svg
+              v-if="props.addingSpellIds.has(spell.id) || props.addededSpellIds.has(spell.id)"
+              viewBox="0 0 24 24"
+              class="svg-icon"
+            >
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+        </div>
+        <div
+          class="table-row"
+          :class="{ active: spell.id === selectedId }"
+          @click="$emit('select', spell)"
+        >
+          <div class="col name">
+            <span class="cn-name" :class="{ invalid: !valid }">{{ spell.name }}</span>
+            <span class="en-name">{{ spell.english_name }}</span>
+          </div>
+          <div class="col level">{{ getLevelLabel(spell.level) }}</div>
+          <div class="col school">{{ getSchoolLabel(spell.school) }}</div>
+          <div class="col classes">{{ getClassNamesO(spell) }}</div>
+          <div class="col components">
+            <span :class="{ enabled: spell.need_verbal }">V</span>
+            <span :class="{ enabled: spell.need_somatic }">S</span>
+            <span :class="{ enabled: !!spell.material }">M</span>
+          </div>
+          <div class="col ritual">{{ spell.is_ritual ? '√' : '×' }}</div>
+          <div class="col concentration">{{ spell.need_concentration ? '√' : '×' }}</div>
+          <div class="col source">{{ getSourceLabel(spell.source) }}</div>
         </div>
       </div>
-      <button
-        class="table-row"
-        :class="{ active: spell.id === selectedId }"
-        @click="$emit('select', spell)"
-      >
-        <div class="col name">
-          <span class="cn-name" :class="{ invalid: !valid }">{{ spell.name }}</span>
-          <span class="en-name">{{ spell.english_name }}</span>
-        </div>
-        <div class="col level">{{ getLevelLabel(spell.level) }}</div>
-        <div class="col school">{{ getSchoolLabel(spell.school) }}</div>
-        <div class="col classes">{{ getClassNamesO(spell) }}</div>
-        <div class="col components">
-          <span :class="{ enabled: spell.need_verbal }">V</span>
-          <span :class="{ enabled: spell.need_somatic }">S</span>
-          <span :class="{ enabled: !!spell.material }">M</span>
-        </div>
-        <div class="col ritual">{{ spell.is_ritual ? '√' : '×' }}</div>
-        <div class="col concentration">{{ spell.need_concentration ? '√' : '×' }}</div>
-        <div class="col source">{{ getSourceLabel(spell.source) }}</div>
-      </button>
-    </div>
+    </RecycleScroller>
   </div>
 </template>
 
@@ -137,10 +154,14 @@ const toggleAdd = (id: string) => {
 .results-table {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  align-self: start;
-  max-height: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.spell-scroller {
+  flex: 1;
   overflow-y: auto;
+  scrollbar-gutter: stable; /* 新增：无论是否滚动，都保留滚动条占位 */
 }
 
 .table-header,
@@ -165,6 +186,7 @@ const toggleAdd = (id: string) => {
   font-family: inherit;
   border: 1px solid transparent; /* 提前把上下左右的 1px 位置全占好 */
   border-bottom: 1px dashed rgba(0, 0, 0, 0.1); /* 淡淡的分割线 */
+  height: 62px;
 }
 
 body.has-mouse .table-row:hover {
@@ -230,9 +252,11 @@ body.has-mouse .table-row:hover {
 
 .wrapper {
   width: 100%;
-  height: 100%;
   display: grid;
   grid-template-columns: 40px 1fr;
+
+  overflow-y: auto;
+  scrollbar-gutter: stable; /* 新增：无论是否滚动，都保留滚动条占位 */
 }
 
 .wrapper-item {
@@ -240,8 +264,8 @@ body.has-mouse .table-row:hover {
   display: grid;
   grid-template-columns: 40px 1fr;
   flex-shrink: 0;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 61px;
+
+  height: 62px;
 }
 
 .check-icon {

@@ -158,18 +158,6 @@ const filteredSpells = computed(() => {
   result = result.filter((spell) => searchKeys.value.sources.includes(spell.source))
   return result
 })
-// 处理点击外部关闭面板的逻辑
-const curtainLayerRef = ref<HTMLElement | null>(null)
-const handleDialogClick = (event: MouseEvent) => {
-  // 如果面板处于打开状态，并且点击的目标元素不在 curtain-layer 内部
-  if (
-    isFilterExpanded.value &&
-    curtainLayerRef.value &&
-    !curtainLayerRef.value.contains(event.target as Node)
-  ) {
-    isFilterExpanded.value = false // 自动收起面板
-  }
-}
 
 const closeEditDialog = () => {
   addingSpellIds.value.clear() // 取消选择的法术ID列表清空
@@ -204,8 +192,8 @@ const saveEditDialog = () => {
 
 <template>
   <div class="add-spell-dialog-mask" @click.self="closeEditDialog">
-    <div class="add-spell-feature-dialog" @click="handleDialogClick">
-      <div class="curtain-layer" ref="curtainLayerRef">
+    <div class="add-spell-feature-dialog">
+      <div class="curtain-layer">
         <div class="curtain-content" :class="{ 'is-open': isFilterExpanded }">
           <div class="curtain-inner">
             <SpellSearchBar v-model="searchKeys" />
@@ -320,10 +308,10 @@ body.has-mouse .btn-ghost:hover {
 .main-display {
   display: grid;
   grid-template-columns: 2fr 1fr;
-  overflow: auto;
   gap: 10px;
   font-family: Georgia, serif;
   flex: 1;
+  min-height: 0;
   padding: 0 16px;
 }
 

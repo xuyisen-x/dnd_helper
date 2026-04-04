@@ -9,6 +9,7 @@ import {
 import { useActiveCharacterStore } from '@/stores/active-character'
 import { storeToRefs } from 'pinia'
 import { computed, type ComputedRef } from 'vue'
+import { RecycleScroller } from 'vue-virtual-scroller'
 
 const store = useActiveCharacterStore()
 const { rule } = storeToRefs(store)
@@ -53,6 +54,14 @@ const postProcessedSpells: ComputedRef<[Spell, boolean][]> = computed(() => {
 
   return list
 })
+
+const scrollerItems = computed(() => {
+  return postProcessedSpells.value.map(([spell, valid]) => ({
+    id: spell.id, // 提取 spell.id 作为 RecycleScroller 追踪的唯一键 (key-field)
+    spell,
+    valid,
+  }))
+})
 </script>
 
 <template>
@@ -67,29 +76,35 @@ const postProcessedSpells: ComputedRef<[Spell, boolean][]> = computed(() => {
       <div class="col-header concentration">专注</div>
       <div class="col-header source">来源</div>
     </div>
-    <button
-      v-for="[spell, valid] in postProcessedSpells"
-      :key="spell.id"
-      class="table-row"
-      :class="{ active: spell.id === selectedId }"
-      @click="$emit('select', spell)"
+    <RecycleScroller
+      class="spell-scroller"
+      :items="scrollerItems"
+      :item-size="62"
+      key-field="id"
+      v-slot="{ item: { spell, valid } }"
     >
-      <div class="col name">
-        <span class="cn-name" :class="{ invalid: !valid }">{{ spell.name }}</span>
-        <span class="en-name">{{ spell.english_name }}</span>
+      <div
+        class="table-row"
+        :class="{ active: spell.id === selectedId }"
+        @click="$emit('select', spell)"
+      >
+        <div class="col name">
+          <span class="cn-name" :class="{ invalid: !valid }">{{ spell.name }}</span>
+          <span class="en-name">{{ spell.english_name }}</span>
+        </div>
+        <div class="col level">{{ getLevelLabel(spell.level) }}</div>
+        <div class="col school">{{ getSchoolLabel(spell.school) }}</div>
+        <div class="col classes">{{ getClassNamesO(spell) }}</div>
+        <div class="col components">
+          <span :class="{ enabled: spell.need_verbal }">V</span>
+          <span :class="{ enabled: spell.need_somatic }">S</span>
+          <span :class="{ enabled: !!spell.material }">M</span>
+        </div>
+        <div class="col ritual">{{ spell.is_ritual ? '√' : '×' }}</div>
+        <div class="col concentration">{{ spell.need_concentration ? '√' : '×' }}</div>
+        <div class="col source">{{ getSourceLabel(spell.source) }}</div>
       </div>
-      <div class="col level">{{ getLevelLabel(spell.level) }}</div>
-      <div class="col school">{{ getSchoolLabel(spell.school) }}</div>
-      <div class="col classes">{{ getClassNamesO(spell) }}</div>
-      <div class="col components">
-        <span :class="{ enabled: spell.need_verbal }">V</span>
-        <span :class="{ enabled: spell.need_somatic }">S</span>
-        <span :class="{ enabled: !!spell.material }">M</span>
-      </div>
-      <div class="col ritual">{{ spell.is_ritual ? '√' : '×' }}</div>
-      <div class="col concentration">{{ spell.need_concentration ? '√' : '×' }}</div>
-      <div class="col source">{{ getSourceLabel(spell.source) }}</div>
-    </button>
+    </RecycleScroller>
   </div>
 </template>
 
@@ -108,9 +123,13 @@ const postProcessedSpells: ComputedRef<[Spell, boolean][]> = computed(() => {
 .results-table {
   display: flex;
   flex-direction: column;
-  gap: 6px;
   max-height: 700px;
+}
+
+.spell-scroller {
+  flex: 1;
   overflow-y: auto;
+  scrollbar-gutter: stable; /* 新增：无论是否滚动，都保留滚动条占位 */
 }
 
 .table-header,
@@ -126,6 +145,8 @@ const postProcessedSpells: ComputedRef<[Spell, boolean][]> = computed(() => {
 .table-header {
   font-weight: 700;
   border-bottom: 1px solid var(--dnd-ink-secondary);
+  overflow-y: hidden;
+  scrollbar-gutter: stable;
 }
 
 .table-row {
@@ -137,9 +158,8 @@ const postProcessedSpells: ComputedRef<[Spell, boolean][]> = computed(() => {
   border-bottom: 1px dashed rgba(0, 0, 0, 0.1); /* 淡淡的分割线 */
 
   flex-shrink: 0;
-
-  content-visibility: auto;
-  contain-intrinsic-size: auto 61px;
+  height: 62px;
+  width: 100%;
 }
 
 body.has-mouse .table-row:hover {

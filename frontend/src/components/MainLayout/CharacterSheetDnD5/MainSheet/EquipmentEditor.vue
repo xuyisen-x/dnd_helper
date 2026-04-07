@@ -43,7 +43,7 @@ const saveEditDialog = () => {
       ...editDraft.value,
     }
   }
-  emit('close')
+  closeEditDialog()
 }
 
 const deleteEquipment = async () => {
@@ -54,7 +54,7 @@ const deleteEquipment = async () => {
   if (!confirmed) return
   const data = store.data as Dnd5Data
   data.equipment.splice(props.index, 1)
-  emit('close')
+  closeEditDialog()
 }
 
 // 处理当前充能输入
@@ -149,14 +149,6 @@ const longRestInfo = computed(() => {
               placeholder="1"
             />
           </div>
-
-          <!-- <div class="dialog-row">
-            <label class="dialog-field flex-none checkbox-field">
-              <span>同调</span>
-              <input v-model="editDraft.attunement" type="checkbox" class="checkbox-input" />
-            </label>
-          </div> -->
-
           <div class="filter-chip" @click="editDraft.attunement = !editDraft.attunement">
             <div class="check-icon" :class="{ checked: editDraft.attunement }">
               <svg v-if="editDraft.attunement" viewBox="0 0 24 24" class="svg-icon">

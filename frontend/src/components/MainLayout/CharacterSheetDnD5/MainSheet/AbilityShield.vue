@@ -424,8 +424,8 @@ const openConfig = (skillKey: string) => {
   bottom: -18px;
   right: 0;
   width: 100%;
-  text-align: center;
-  padding-left: 10px;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .line-stroke {

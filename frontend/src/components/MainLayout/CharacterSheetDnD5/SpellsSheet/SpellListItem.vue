@@ -243,13 +243,16 @@ const closeCustomEditor = () => {
   background: none;
   cursor: pointer;
   font-family: inherit;
-  border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+  border: 1px solid transparent;
+  border-bottom: 1px dashed rgba(0, 0, 0, 0.1); /* 淡淡的分割线 */
   align-items: center;
   padding: 10px 12px;
   text-align: left;
+  height: 62px;
 }
 .spell-item.active {
-  border-color: var(--dnd-dragon-red);
+  border: 1px solid transparent;
+  border-bottom: 1px dashed var(--dnd-dragon-red); /* 淡淡的分割线 */
   background: var(--dnd-parchment-card);
 }
 body.has-mouse .spell-item:hover {
@@ -306,6 +309,7 @@ body.has-mouse .spell-item:hover {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  min-width: 0;
 }
 
 .cn-name {
@@ -320,6 +324,7 @@ body.has-mouse .spell-item:hover {
   color: rgba(32, 24, 18, 0.7);
   margin: 0;
   line-height: normal;
+  white-space: nowrap;
 }
 
 .col-drag {

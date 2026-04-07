@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, ref, type ComponentPublicInstance } from 'vue'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import FeatureItem from './FeatureItem.vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
@@ -27,15 +27,33 @@ const targetFeatures = computed({
   },
 })
 
+type ChildInstance = InstanceType<typeof FeatureItem>
+const childRefsMap = ref(new Map<string, ChildInstance>())
+const setChildRef = (el: Element | ComponentPublicInstance | null, id: string) => {
+  const childInstance = el as ChildInstance | null
+  if (childInstance) {
+    childRefsMap.value.set(id, childInstance) // 组件挂载时，存入 Map
+  } else {
+    childRefsMap.value.delete(id) // 组件卸载时 (el 为 null)，从 Map 中移除，防止内存泄漏
+  }
+}
+
 const addFeature = () => {
+  const newId = nanoid()
   targetFeatures.value.push({
-    id: nanoid(),
+    id: newId,
     name: '',
     description: '',
     usageLimit: '',
     usageCount: 0,
     afterShortRest: '',
     afterLongRest: '',
+  })
+  nextTick(() => {
+    const newFeature = childRefsMap.value.get(newId)
+    if (newFeature) {
+      newFeature.openEditor() // 添加后立即打开编辑器
+    }
   })
 }
 </script>
@@ -53,6 +71,7 @@ const addFeature = () => {
       <FeatureItem
         v-for="(feature, index) in targetFeatures"
         :key="feature.id"
+        :ref="(el) => setChildRef(el, feature.id)"
         :featureKey="props.featureKey"
         :index="index"
       />

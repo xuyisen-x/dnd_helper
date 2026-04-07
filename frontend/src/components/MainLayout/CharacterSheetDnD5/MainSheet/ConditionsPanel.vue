@@ -66,7 +66,7 @@ const triggleActive = (index: number) => {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 10px;
-  height: 28px;
+  max-height: 65px;
 }
 
 .content {
@@ -75,8 +75,7 @@ const triggleActive = (index: number) => {
   flex-wrap: wrap;
   gap: 5px;
   min-width: 0;
-  overflow-x: auto;
-  flex-wrap: nowrap;
+  overflow-y: auto;
 }
 
 .condition-item {
@@ -90,6 +89,7 @@ const triggleActive = (index: number) => {
   padding-left: 10px;
   cursor: pointer;
   user-select: none;
+  height: 28px;
 }
 
 .condition-item.active {
@@ -107,6 +107,7 @@ const triggleActive = (index: number) => {
   align-items: center;
   justify-content: center;
   padding-left: 10px;
+  height: 28px;
 }
 
 .add-input {

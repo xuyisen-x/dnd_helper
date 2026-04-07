@@ -129,10 +129,6 @@ onUnmounted(() => {
 .scale-wrapper {
   /* 必须 hidden，Safari 才会忽略 transform 之前的原始尺寸 */
   overflow: visible;
-  /* 平滑过渡，让缩放看起来更丝滑 */
-  transition:
-    width 0.1s linear,
-    height 0.1s linear;
   /* 建立层叠上下文 */
   position: relative;
 }

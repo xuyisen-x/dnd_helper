@@ -111,6 +111,7 @@ body.has-mouse .nav-link:hover {
   background-color: var(--dnd-parchment-bg); /* 羊皮纸背景 */
   overflow-y: auto;
   overflow-x: visible;
+  scrollbar-gutter: stable; /* 新增：无论是否滚动，都保留滚动条占位 */
   position: relative;
 
   /* 这里的 padding 是为了让内容不贴边 */

@@ -97,6 +97,14 @@ onBeforeUnmount(() => {
   window.removeEventListener('scroll', handlePopoverUpdate, true)
   window.removeEventListener('resize', handlePopoverUpdate)
 })
+
+const openEditor = () => {
+  isEditOpen.value = true
+}
+
+defineExpose({
+  openEditor,
+})
 </script>
 
 <template>

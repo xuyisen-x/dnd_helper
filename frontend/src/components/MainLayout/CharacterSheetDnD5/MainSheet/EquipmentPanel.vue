@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, ref, type ComponentPublicInstance } from 'vue'
 import type { Dnd5Data } from '@/stores/rules/dnd5'
 import EquipmentItem from './EquipmentItem.vue'
 import { useActiveCharacterStore } from '@/stores/active-character'
@@ -14,9 +14,21 @@ const sheet = computed({
 })
 const { attunedCount } = useDnd5Logic(sheet)
 
+type ChildInstance = InstanceType<typeof EquipmentItem>
+const childRefsMap = ref(new Map<string, ChildInstance>())
+const setChildRef = (el: Element | ComponentPublicInstance | null, id: string) => {
+  const childInstance = el as ChildInstance | null
+  if (childInstance) {
+    childRefsMap.value.set(id, childInstance) // 组件挂载时，存入 Map
+  } else {
+    childRefsMap.value.delete(id) // 组件卸载时 (el 为 null)，从 Map 中移除，防止内存泄漏
+  }
+}
+
 const addFeature = () => {
+  const newId = nanoid()
   store.data.equipment.push({
-    id: nanoid(),
+    id: newId,
     name: '',
     description: '',
     quantity: 1,
@@ -25,6 +37,12 @@ const addFeature = () => {
     chargesCurrent: 0,
     afterShortRest: '',
     afterLongRest: '',
+  })
+  nextTick(() => {
+    const newFeature = childRefsMap.value.get(newId)
+    if (newFeature) {
+      newFeature.openEditor() // 添加后立即打开编辑器
+    }
   })
 }
 </script>
@@ -51,11 +69,12 @@ const addFeature = () => {
             v-for="(equip, index) in store.data.equipment"
             :key="equip.id"
             :index="index"
+            :ref="(el) => setChildRef(el, equip.id)"
           />
         </VueDraggable>
         <div v-if="store.data.equipment.length === 0" class="empty-tip">点击下方按钮添加</div>
         <div class="equipment-footer">
-          <button class="btn-add" @click="addFeature">+ 添加特性</button>
+          <button class="btn-add" @click="addFeature">+ 添加装备或物品</button>
         </div>
       </div>
     </div>

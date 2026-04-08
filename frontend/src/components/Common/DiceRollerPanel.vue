@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 import { useDiceBox } from '@/composables/useDiceBox'
 import DiceIcon from '../Icons/DiceIcon.vue'
 import MutiDiceIcon from '../Icons/MutiDiceIcon.vue'
@@ -144,20 +144,24 @@ const rollDice = async () => {
 }
 
 // 用于记录和显示骰子解析相关错误
-const foledNotationOrMessage = ref<string>('')
-const isCurrentInputValid = ref<boolean>(true)
-
-watch(completedRollNotation, (newVal) => {
+const validationState = computed(() => {
+  const newVal = completedRollNotation.value
   if (newVal.trim() === '') {
     // 允许空输入
-    isCurrentInputValid.value = true
-    foledNotationOrMessage.value = ''
-    return
+    return {
+      isValid: true,
+      messageOrNotation: '',
+    }
   }
   const [isValid, result] = checkNotationValidAndFold(newVal)
-  isCurrentInputValid.value = isValid
-  foledNotationOrMessage.value = result
+  return {
+    isValid,
+    messageOrNotation: result,
+  }
 })
+
+const isCurrentInputValid = computed(() => validationState.value.isValid)
+const foledNotationOrMessage = computed(() => validationState.value.messageOrNotation)
 
 const containnerRef = ref(null)
 onClickOutside(containnerRef, () => {

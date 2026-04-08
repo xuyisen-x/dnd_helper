@@ -257,7 +257,7 @@ const selectedEntry = computed(() => {
   position: relative;
   top: -5px; /* 微调位置，使其与其他节点对齐 */
 }
-.btn-add:hover {
+body.has-mouse .btn-add:hover {
   color: var(--dnd-dragon-red);
   border: 1px solid var(--dnd-dragon-red);
 }

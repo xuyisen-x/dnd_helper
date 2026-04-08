@@ -263,7 +263,7 @@ const mouseLeft = () => {
 }
 
 .expression-node.hovered {
-  border: 1px solid var(--dnd-ink-secondary);
+  box-shadow: 0 0 0 1px var(--dnd-ink-secondary);
   border-radius: 4px;
 }
 </style>

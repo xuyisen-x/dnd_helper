@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, defineAsyncComponent } from 'vue'
 import DiceDiv from './components/Common/DiceDiv.vue'
 import DiceRollerPanel from './components/Common/DiceRollerPanel.vue'
 import ToastContainer from './components/Common/ToastContainer.vue'
 import DiceResultContainer from './components/Common/DiceResultContainer.vue'
 import ConfirmationDialog from './components/Common/ConfirmationDialog.vue'
 import { isUsingMouse } from './composables/useGlobalState'
+
+const SideDrawer = __TAURI__
+  ? defineAsyncComponent(() => import('./components/Common/SideDrawerTauri.vue'))
+  : defineAsyncComponent(() => import('./components/Common/SideDrawerWeb.vue'))
 
 const enableHover = (e: PointerEvent) => {
   // 说明移动了鼠标
@@ -23,7 +27,7 @@ const disableHover = () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   if (isUsingMouse.value) {
     document.body.classList.add('has-mouse')
   }
@@ -31,6 +35,12 @@ onMounted(() => {
   window.addEventListener('pointermove', enableHover, { passive: true })
   // 触摸开始 -> 认为是触屏操作
   window.addEventListener('touchstart', disableHover, { passive: true })
+  // Tauri环境下，要增加文件处理的逻辑
+  if (__TAURI__) {
+    const { useFileManager } = await import('./composables/useFileManager')
+    const { handleInitialFile } = useFileManager()
+    await handleInitialFile()
+  }
 })
 
 onUnmounted(() => {
@@ -45,6 +55,7 @@ onUnmounted(() => {
   <DiceResultContainer />
   <ToastContainer />
   <ConfirmationDialog />
+  <SideDrawer />
   <router-view />
 </template>
 

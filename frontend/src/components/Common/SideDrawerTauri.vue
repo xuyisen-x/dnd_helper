@@ -242,6 +242,7 @@ body.has-mouse .tab-btn:hover {
   border-radius: 6px;
   cursor: pointer;
   transition: background-color 0.2s;
+  border: 1px solid transparent;
 }
 
 .history-item:hover {

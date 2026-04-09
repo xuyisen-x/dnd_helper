@@ -10,20 +10,7 @@ const router = createRouter({
     {
       path: '/main',
       name: 'main',
-      redirect: '/main/character-sheet',
       component: () => import('../views/MainLayout.vue'),
-      children: [
-        {
-          path: 'character-sheet',
-          name: 'character-sheet',
-          component: () => import('../views/MainLayout/CharacterSheetView.vue'),
-        },
-        {
-          path: 'about',
-          name: 'about',
-          component: () => import('../views/MainLayout/AboutView.vue'),
-        },
-      ],
     },
   ],
 })

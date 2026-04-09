@@ -8,23 +8,35 @@ import topLevelAwait from 'vite-plugin-top-level-await'
 import { visualizer } from 'rollup-plugin-visualizer'
 
 // https://vite.dev/config/
-export default defineConfig({
-  plugins: [
-    vue(),
-    vueDevTools(),
-    wasm(),
-    topLevelAwait(),
-    process.env.REPORT === 'true' &&
-      visualizer({
-        open: true, // 只有在这个模式下才自动打开浏览器
-        gzipSize: true, // 显示 gzip 后的大小
-        brotliSize: true, // 显示 brotli 后的大小
-        filename: 'stats.html', // 分析图生成的文件名
-      }),
-  ],
-  resolve: {
-    alias: {
-      '@': fileURLToPath(new URL('./src', import.meta.url)),
+export default defineConfig(() => {
+  const platform = process.env.TAURI_ENV_PLATFORM
+  const isTauri = !!platform
+  const isMobile = platform === 'ios' || platform === 'android'
+  const isDesktop = platform === 'darwin' || platform === 'windows'
+
+  return {
+    plugins: [
+      vue(),
+      vueDevTools(),
+      wasm(),
+      topLevelAwait(),
+      process.env.REPORT === 'true' &&
+        visualizer({
+          open: true, // 只有在这个模式下才自动打开浏览器
+          gzipSize: true, // 显示 gzip 后的大小
+          brotliSize: true, // 显示 brotli 后的大小
+          filename: 'stats.html', // 分析图生成的文件名
+        }),
+    ],
+    resolve: {
+      alias: {
+        '@': fileURLToPath(new URL('./src', import.meta.url)),
+      },
     },
-  },
+    define: {
+      __TAURI__: JSON.stringify(isTauri),
+      __DESKTOP__: JSON.stringify(isDesktop),
+      __MOBILE__: JSON.stringify(isMobile),
+    },
+  }
 })

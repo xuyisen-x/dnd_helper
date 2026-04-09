@@ -1,19 +1,12 @@
+<script lang="ts" setup>
+import CharacterSheetView from './MainLayout/CharacterSheetView.vue'
+</script>
+
 <template>
   <div class="app-layout">
-    <header class="top-nav">
-      <div class="nav-container">
-        <RouterLink to="/main/character-sheet" class="nav-link">
-          <span>角色卡</span>
-        </RouterLink>
-        <RouterLink to="/main/about" class="nav-link">
-          <span>关于</span>
-        </RouterLink>
-      </div>
-    </header>
-
     <main class="main-content">
       <div class="content-wrapper">
-        <RouterView></RouterView>
+        <CharacterSheetView />
       </div>
     </main>
   </div>
@@ -23,87 +16,11 @@
 .app-layout {
   display: grid;
   /* 头部固定高度，剩下给内容 */
-  grid-template-rows: 40px 1fr;
+  grid-template-rows: 1fr;
   height: 100vh;
   width: 100vw;
   background-color: var(--color-background-mute); /* 整体背景偏深一点，突出纸张 */
   overflow: hidden;
-}
-
-/* --- 顶部导航 --- */
-.top-nav {
-  background-color: var(--color-background-mute); /* 与背景融合 */
-  display: flex;
-  align-items: flex-end; /* 让标签底部对齐 */
-  padding: 0 20px;
-  border-bottom: 1px solid var(--dnd-gold); /* 金色分割线 */
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); /* 轻微投影 */
-  z-index: 10;
-}
-
-.nav-container {
-  display: flex;
-  gap: 8px;
-  width: 100%;
-  /* max-width: 1200px; 限制导航内容宽度 */
-  margin: 0 auto;
-  overflow-x: auto;
-  /* 隐藏滚动条 */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.nav-container::-webkit-scrollbar {
-  display: none;
-}
-
-/* --- 导航链接 (标签页风格) --- */
-.nav-link {
-  text-decoration: none;
-  color: var(--dnd-ink-secondary); /* 未选中：浅墨色 */
-  font-weight: 600;
-  font-size: 0.95rem;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-
-  min-width: 100px;
-  height: 30px; /* 标签高度 */
-  padding: 0 1.5rem;
-
-  /* 形状：上方圆角，像文件夹标签 */
-  border-radius: 8px 8px 0 0;
-  border: 1px solid transparent;
-
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  position: relative;
-  opacity: 0.7;
-}
-
-body.has-mouse .nav-link:hover {
-  color: var(--dnd-dragon-red); /* 悬停变红 */
-  background-color: rgba(255, 255, 255, 0.3);
-  opacity: 1;
-}
-
-/* --- 选中状态 --- */
-.nav-link.router-link-active {
-  color: var(--dnd-dragon-red); /* 选中文字变红 */
-  background-color: var(--dnd-parchment-bg); /* 背景变亮（羊皮纸色） */
-
-  /* 边框处理：让它看起来像连着下面的内容 */
-  border: 1px solid var(--dnd-gold);
-  border-bottom: 1px solid var(--dnd-parchment-bg); /* 底部颜色与内容区一致，造成无缝效果 */
-  border-top: 3px solid var(--dnd-dragon-red); /* 顶部加粗红线强调 */
-
-  font-weight: bold;
-  opacity: 1;
-}
-
-.icon {
-  font-size: 1.1rem;
-  margin-bottom: 2px;
 }
 
 /* --- 主内容区 --- */

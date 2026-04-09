@@ -104,6 +104,7 @@ fn create_app_window(app: &tauri::AppHandle, file_path: Option<String>) {
     .inner_size(1200.0, 800.0)
     .resizable(true)
     .fullscreen(false)
+    .zoom_hotkeys_enabled(true) // 开启快捷键缩放
     .build()
     .expect("failed to create window");
 

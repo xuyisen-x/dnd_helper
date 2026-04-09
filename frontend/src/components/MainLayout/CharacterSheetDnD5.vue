@@ -34,7 +34,7 @@ const sheetRef = ref<HTMLElement | null>(null) // 绑定最内层
 const updateLayout = async () => {
   // 1. 计算缩放比例
   const currentWidth = window.innerWidth
-  const availableWidth = currentWidth - 120
+  const availableWidth = currentWidth - 80
 
   let ratio = availableWidth / BASE_WIDTH
   // 限制在 0.8 - 1.0 之间

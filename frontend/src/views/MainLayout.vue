@@ -37,7 +37,6 @@ import CharacterSheetView from './MainLayout/CharacterSheetView.vue'
 
 .content-wrapper {
   margin: 0 auto;
-  padding: 20px;
   min-height: 100%;
 }
 
